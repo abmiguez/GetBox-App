@@ -1,0 +1,308 @@
+package es.getbox.android.getboxapp.box;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+
+import org.apache.commons.lang.ObjectUtils.Null;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.os.AsyncTask;
+import android.os.Environment;
+import android.util.Log;
+import android.widget.Toast;
+
+import com.box.boxandroidlibv2.BoxAndroidClient;
+import com.box.boxandroidlibv2.activities.OAuthActivity;
+import com.box.boxandroidlibv2.dao.BoxAndroidOAuthData;
+import com.box.boxjavalibv2.authorization.OAuthRefreshListener;
+import com.box.boxjavalibv2.dao.BoxOAuthToken;
+import com.box.boxjavalibv2.interfaces.IAuthData;
+import com.box.boxjavalibv2.requests.requestobjects.BoxFileRequestObject;
+import com.box.boxjavalibv2.requests.requestobjects.BoxFileUploadRequestObject;
+import com.box.boxjavalibv2.requests.requestobjects.BoxFolderRequestObject;
+
+import es.getbox.android.getboxapp.interfaces.AsyncTaskCompleteListener;
+import es.getbox.android.getboxapp.utils.Item;
+
+public class BoxStorageProvider { 
+
+	private Context context;
+	private BoxAndroidClient mClient;
+	public static final String CLIENT_ID = "nq0so01we5nic9rqysh6zmn5fd1g15ma";
+    public static final String CLIENT_SECRET = "g5O8FfBPaeTYJR35aVhVfZ9VURBn2rZ6";
+    public static final String REDIRECT_URL = "http://localhost/";
+	
+    public BoxStorageProvider(Context context){
+    	this.context=context;
+    }
+    
+    public BoxAndroidClient getClient(){
+    	return this.mClient;
+    }
+    
+    public void onAuthenticated(int resultCode, Intent data) {
+   	 if (Activity.RESULT_OK != resultCode) {
+   		Toast.makeText(context, "fail", Toast.LENGTH_LONG).show();
+       }
+       else {
+    	   BoxAndroidOAuthData oauth = data.getParcelableExtra(OAuthActivity.BOX_CLIENT_OAUTH);
+           BoxAndroidClient client = new BoxAndroidClient(this.CLIENT_ID, this.CLIENT_SECRET, null, null);
+           client.authenticate(oauth);
+           if (client == null) {
+               Toast.makeText(context, "fail", Toast.LENGTH_LONG).show();
+           }
+           else {
+           	this.mClient=client;
+           	String a=oauth.getAccessToken();
+           	try{
+           		try{
+                    FileOutputStream bt = new FileOutputStream(Environment.getExternalStorageDirectory().getPath()+"/boxtoken.token");
+                    ObjectOutputStream os = new ObjectOutputStream(bt);
+                    os.writeObject(a);
+                    os.close();
+                 }catch(FileNotFoundException e){
+                    e.printStackTrace();
+                    Log.i("Box",e.getMessage());
+                 }catch(IOException e){
+                    e.printStackTrace();
+                    Log.i("Box",e.getMessage());
+                 }
+           	}catch(Exception e){}
+           	mClient.addOAuthRefreshListener(new OAuthRefreshListener() {
+
+                @Override
+                public void onRefresh(IAuthData newAuthData) {
+                	try{
+                   		BoxOAuthToken oauthObject = mClient.getAuthData();
+                   		try{
+                            FileOutputStream bt = new FileOutputStream(Environment.getExternalStorageDirectory().getPath()+"/boxtoken.token");
+                            ObjectOutputStream os = new ObjectOutputStream(bt);
+                            os.writeObject(oauthObject);
+                            os.close();
+                         }catch(FileNotFoundException e){
+                            e.printStackTrace();
+                            Log.i("Box",e.getMessage());
+                         }catch(IOException e){
+                            e.printStackTrace();
+                            Log.i("Box",e.getMessage());
+                         }
+                   	}catch(Exception e){}
+                }
+
+            });
+               Toast.makeText(context, "authenticated", Toast.LENGTH_LONG).show();
+           }
+       }
+   }
+    
+    public void autenticar(BoxOAuthToken oauthObject){   	
+    	BoxAndroidClient client = new BoxAndroidClient(this.CLIENT_ID, this.CLIENT_SECRET, null, null);
+		client.authenticate(oauthObject);
+		if (client == null) {
+			Toast.makeText(context, "fail", Toast.LENGTH_LONG).show();
+		}
+		else {
+        	this.mClient=client;
+        	mClient.addOAuthRefreshListener(new OAuthRefreshListener() {
+
+             @Override
+             public void onRefresh(IAuthData newAuthData) {
+            	 try{
+            		 BoxOAuthToken oauthObject = mClient.getAuthData();
+            		 try{
+                         FileOutputStream bt = new FileOutputStream(Environment.getExternalStorageDirectory().getPath()+"/boxtoken.token");
+                         ObjectOutputStream os = new ObjectOutputStream(bt);
+                         os.writeObject(oauthObject);
+                         os.close();
+                      }catch(FileNotFoundException e){
+                         e.printStackTrace();
+                         Log.i("Box",e.getMessage());
+                      }catch(IOException e){
+                         e.printStackTrace();
+                         Log.i("Box",e.getMessage());
+                      }
+            	 }catch(Exception e){}
+             }
+
+         });
+            Toast.makeText(context, "authenticated", Toast.LENGTH_LONG).show();
+        }
+    }
+    
+    public void getFiles(String directory_path,AsyncTaskCompleteListener<ArrayList<Item>> cb,boolean dialog){
+    	BoxListDirectory task = new BoxListDirectory(directory_path,cb, this.getClient());
+        task.execute();
+    }
+    
+    public void downloadFile(String file_name, String file_id) {
+        final String fPath= file_id;
+        final String fName=  file_name;
+        AsyncTask<Null, Integer, Null> task = new AsyncTask<Null, Integer, Null>() {
+
+            @Override
+            protected void onPostExecute(Null result) {
+                Toast.makeText(context, "done downloading", Toast.LENGTH_LONG).show();
+                super.onPostExecute(result);
+            }
+
+            @Override
+            protected void onPreExecute() {
+                Toast.makeText(context, "start downloading", Toast.LENGTH_LONG).show();
+                super.onPreExecute();
+            }
+
+            @Override
+            protected Null doInBackground(Null... params) {
+                BoxAndroidClient client = mClient;
+                try {
+                    File f = new File(Environment.getExternalStorageDirectory(), fName);
+                    System.out.println(f.getAbsolutePath());
+                    client.getFilesManager().downloadFile(fPath, f, null, null);
+                }
+                catch (Exception e) {
+                }
+                return null;
+            }
+        };
+        task.execute();
+    }
+
+    public void uploadFile(String file_name, String file_id) {
+        final String fPath=file_id;
+        final String fName=file_name;
+        AsyncTask<Null, Integer, Null> task = new AsyncTask<Null, Integer, Null>() {
+
+            @Override
+            protected void onPostExecute(Null result) {
+                Toast.makeText(context, "done uploading", Toast.LENGTH_LONG).show();
+                super.onPostExecute(result);
+            }
+
+            @Override
+            protected void onPreExecute() {
+                Toast.makeText(context, "start uploading", Toast.LENGTH_LONG).show();
+                super.onPreExecute();
+            }
+
+            @Override
+            protected Null doInBackground(Null... params) {
+                BoxAndroidClient client = mClient;
+                try {
+                    File file = new File(fName);                    
+                    client.getFilesManager().uploadFile(
+                        BoxFileUploadRequestObject.uploadFileRequestObject(fPath, fName, file, client.getJSONParser()));
+                }
+                catch (Exception e) {
+                }
+                return null;
+            }
+        };
+        task.execute();
+    }    
+    
+    
+    public void deleteFile(String file_name, String file_id) {
+        final String fPath=file_id;
+        final String fName=file_name;
+        AsyncTask<Null, Integer, Null> task = new AsyncTask<Null, Integer, Null>() {
+
+            @Override
+            protected void onPostExecute(Null result) {
+                Toast.makeText(context, "done deleting", Toast.LENGTH_LONG).show();
+                super.onPostExecute(result);
+            }
+
+            @Override
+            protected void onPreExecute() {
+                Toast.makeText(context, "start deleting", Toast.LENGTH_LONG).show();
+                super.onPreExecute();
+            }
+
+            @Override
+            protected Null doInBackground(Null... params) {
+                BoxAndroidClient client = mClient;
+                try {
+                	BoxFileRequestObject requestObj =
+                		    BoxFileRequestObject.deleteFileRequestObject();
+                		client.getFilesManager().deleteFile(fPath, requestObj);
+                }
+                catch (Exception e) {
+                }
+                return null;
+            }
+        };
+        task.execute();
+    }    
+    
+    public void deleteFolder(String file_name, String file_id) {
+        final String fPath=file_id;
+        final String fName=file_name;
+        AsyncTask<Null, Integer, Null> task = new AsyncTask<Null, Integer, Null>() {
+
+            @Override
+            protected void onPostExecute(Null result) {
+                Toast.makeText(context, "done deleting", Toast.LENGTH_LONG).show();
+                super.onPostExecute(result);
+            }
+
+            @Override
+            protected void onPreExecute() {
+                Toast.makeText(context, "start deleting", Toast.LENGTH_LONG).show();
+                super.onPreExecute();
+            }
+
+            @Override
+            protected Null doInBackground(Null... params) {
+                BoxAndroidClient client = mClient;
+                try {
+                	BoxFolderRequestObject requestObj =
+                		    BoxFolderRequestObject.deleteFolderRequestObject(true);
+                		client.getFoldersManager().deleteFolder(fPath, requestObj);
+                }
+                catch (Exception e) {
+                }
+                return null;
+            }
+        };
+        task.execute();
+    }   
+    
+    public void uploadFolder(String file_name, String file_id) {
+        final String fPath=file_id;
+        final String fName=file_name;
+        AsyncTask<Null, Integer, Null> task = new AsyncTask<Null, Integer, Null>() {
+
+            @Override
+            protected void onPostExecute(Null result) {
+                Toast.makeText(context, "done uploading", Toast.LENGTH_LONG).show();
+                super.onPostExecute(result);
+            }
+
+            @Override
+            protected void onPreExecute() {
+                Toast.makeText(context, "start uploading", Toast.LENGTH_LONG).show();
+                super.onPreExecute();
+            }
+
+            @Override
+            protected Null doInBackground(Null... params) {
+                BoxAndroidClient client = mClient;
+                try {
+                    File file = new File(fName);                    
+                    client.getFoldersManager().createFolder(
+                        BoxFolderRequestObject.createFolderRequestObject(fName,fPath));
+                }
+                catch (Exception e) {
+                }
+                return null;
+            }
+        };
+        task.execute();
+    }    
+}
