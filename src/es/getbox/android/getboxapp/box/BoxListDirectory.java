@@ -19,11 +19,13 @@ public class BoxListDirectory extends AsyncTask<Void, Void, ArrayList<Item>> {
 	private BoxAndroidClient mClient;
     private AsyncTaskCompleteListener<ArrayList<Item>>callback;
     private String mPath;
+    private int boxAccount;
 	
-	public BoxListDirectory(String path, AsyncTaskCompleteListener<ArrayList<Item>> cb, BoxAndroidClient client){
+	public BoxListDirectory(String path, AsyncTaskCompleteListener<ArrayList<Item>> cb, BoxAndroidClient client, int boxAccount){
 		this.mClient=client;
 		this.callback = cb;
 		this.mPath=path;
+		this.boxAccount=boxAccount;
     }
 	
     @Override
@@ -45,6 +47,8 @@ public class BoxListDirectory extends AsyncTask<Void, Void, ArrayList<Item>> {
         }
         catch (BoxSDKException e) {
         	Log.i("Box","boxexcep");   
+        }catch(Exception e){
+        	Log.i("a","ex");
         }
     	ArrayList<BoxTypedObject> boxObjects = files.getEntries();
     	ArrayList<Item> result=new ArrayList<Item>();
@@ -53,8 +57,8 @@ public class BoxListDirectory extends AsyncTask<Void, Void, ArrayList<Item>> {
 	    	for(int i=0; i<=boxObjects.size()-1;i++){
 	    		BoxTypedObject bto= boxObjects.get(i);
 	    		BoxItem bi=(BoxItem) bto;
-	    		item=new Item(bi.getName(),bi.getId(),"box");
-	        	result.add(item);
+	    		item=new Item(bi.getName(),bi.getId(),"box",boxAccount);
+	    		result.add(item);
 	    	}    	
     	}
     	return result;

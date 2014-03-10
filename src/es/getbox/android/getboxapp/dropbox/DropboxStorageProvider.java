@@ -2,7 +2,6 @@ package es.getbox.android.getboxapp.dropbox;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
@@ -13,15 +12,14 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.dropbox.client2.DropboxAPI;
-import com.dropbox.client2.DropboxAPI.Entry;
-import com.dropbox.client2.RESTUtility;
 import com.dropbox.client2.android.AndroidAuthSession;
-import com.dropbox.client2.exception.DropboxException;
 import com.dropbox.client2.session.AccessTokenPair;
 import com.dropbox.client2.session.AppKeyPair;
 import com.dropbox.client2.session.Session.AccessType;
 
 import es.getbox.android.getboxapp.interfaces.AsyncTaskCompleteListener;
+import es.getbox.android.getboxapp.utils.Item;
+import es.getbox.android.getboxapp.utils.SQL;
 
 public class DropboxStorageProvider {
 
@@ -32,19 +30,27 @@ public class DropboxStorageProvider {
 
 	/* Dropbox preferences name and access key */
 	final static private String ACCOUNT_PREFS_NAME = "prefs";
-    final static private String ACCESS_KEY_NAME = "ACCESS_KEY";
-    final static private String ACCESS_SECRET_NAME = "ACCESS_SECRET";
+   // final static private String ACCESS_KEY_NAME = "ACCESS_KEY";
+    //final static private String ACCESS_SECRET_NAME = "ACCESS_SECRET";
 
-	private static DropboxStorageProvider s_Instance = null;
 	private DropboxAPI<AndroidAuthSession> mDBApi = null;
 	private Context mContext;
+	private int dropboxAccount;
+	private SQL sql;
 	
-	public DropboxStorageProvider(Context context){
+	public DropboxAPI<AndroidAuthSession> getApi(){
+		return this.mDBApi;
+	}
+	
+	public DropboxStorageProvider(Context context,int dropboxAccount){
 		this.mContext=context;
+		this.dropboxAccount=dropboxAccount;
+		sql=new SQL(context);
+		sql.openDatabase();		
 	}
 	
 	public boolean startAuthentication() {
-		AndroidAuthSession session = buildSession(mContext);
+		AndroidAuthSession session = buildSession();
 		if (session == null) {
 			Log.e(TAG, "failed to build Dropbox authentication session");
 			return false;
@@ -60,7 +66,8 @@ public class DropboxStorageProvider {
 
 		// if we have already authenticated, we only need to set
 		// the token pair
-		String[] keys = getKeys(mContext);
+		//Esto esta comentado para permitir multiples cuentas
+		String[] keys = getKeys();
 		if (keys != null) {
 			return true;
 		}
@@ -68,11 +75,11 @@ public class DropboxStorageProvider {
 		return true;
 	}
 	
-	private AndroidAuthSession buildSession(Context context) {
+	private AndroidAuthSession buildSession() {
 		AppKeyPair appKeyPair = new AppKeyPair(APP_KEY, APP_SECRET);
 		AndroidAuthSession session;
 
-		String[] stored = getKeys(context);
+		String[] stored = getKeys();
 		if (stored != null) {
 			AccessTokenPair accessToken = new AccessTokenPair(stored[0],
 					stored[1]);
@@ -85,10 +92,10 @@ public class DropboxStorageProvider {
 		return session;
 	}
 
-	public boolean finishAuthentication(Context context) {
+	public boolean finishAuthentication() {
 		// if we have already authenticated, we only need to check
 		// the token pair
-		String[] keys = getKeys(context);
+		String[] keys = getKeys();
 		if (keys != null) {
 
 			// we are authenticated
@@ -112,7 +119,7 @@ public class DropboxStorageProvider {
 				AccessTokenPair tokens = session.getAccessTokenPair();
 
 				// store access keys
-				storeKeys(context, tokens.key, tokens.secret);
+				storeKeys(tokens.key, tokens.secret);
 
 				// done
 				return true;
@@ -125,35 +132,32 @@ public class DropboxStorageProvider {
 		return false;
 	}
 	
-	private void storeKeys(Context context, String key, String secret) {
-		// Save the access key for later
-		SharedPreferences prefs = context.getSharedPreferences(
-				ACCOUNT_PREFS_NAME, 0);
-		Editor edit = prefs.edit();
-		edit.putString(ACCESS_KEY_NAME, key);
-		edit.putString(ACCESS_SECRET_NAME, secret);
-		edit.commit();
+	private void storeKeys(String key, String secret) {	
+		sql.insertDropbox(dropboxAccount, key, secret,getUser());
 	}
 
-	private void clearKeys(Context context) {
-		SharedPreferences prefs = context.getSharedPreferences(
+	private void clearKeys() {
+		SharedPreferences prefs = mContext.getSharedPreferences(
 				ACCOUNT_PREFS_NAME, 0);
 		Editor edit = prefs.edit();
 		edit.clear();
 		edit.commit();
 	}
 
-	private String[] getKeys(Context context) {
-		SharedPreferences prefs = context.getSharedPreferences(
-				ACCOUNT_PREFS_NAME, 0);
-		String key = prefs.getString(ACCESS_KEY_NAME, null);
-		String secret = prefs.getString(ACCESS_SECRET_NAME, null);
-		if (key != null && secret != null) {
-			String[] ret = new String[2];
-			ret[0] = key;
-			ret[1] = secret;
-			return ret;
-		} else { 
+	private String[] getKeys() {
+		ArrayList<String> tokens =sql.getDropboxTokens(dropboxAccount);
+		try{
+			String key= tokens.get(0);
+			String secret= tokens.get(1);
+			if (key != null && secret != null) {
+				String[] ret = new String[2];
+				ret[0] = key;
+				ret[1] = secret;
+				return ret;
+			} else { 
+				return null;
+			}
+		}catch(Exception e){
 			return null;
 		}
 	}
@@ -172,12 +176,29 @@ public class DropboxStorageProvider {
 			mDBApi.getSession().unlink();
 
 			// remove keys
-			clearKeys(mContext);
+			clearKeys();
 		}
 	}
+	
+	public String getUserName(){
+		return sql.getDropboxUserName(dropboxAccount);
+	}
+	
+	public String getUser(){
+		DropboxGetUser dgu=new DropboxGetUser(mDBApi);
+		try {
+			dgu.execute();
+			String a=dgu.get();
+			return a;
+		} catch (InterruptedException e) {
+			return "";
+		} catch (ExecutionException e) {
+			return "";
+		}				
+	}
 
-	public void getFiles(String directory_path, AsyncTaskCompleteListener<ArrayList<String>> cb,boolean dialog) {
-		DropboxListDirectory ld = new DropboxListDirectory(mContext, mDBApi, directory_path, cb, dialog);
+	public void getFiles(String directory_path, AsyncTaskCompleteListener<ArrayList<Item>> cb,boolean dialog) {
+		DropboxListDirectory ld = new DropboxListDirectory(mContext, mDBApi, directory_path, cb, dialog, dropboxAccount);
     	ld.execute();
 	}
 	

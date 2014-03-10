@@ -19,31 +19,34 @@ import com.dropbox.client2.exception.DropboxServerException;
 import com.dropbox.client2.exception.DropboxUnlinkedException;
 
 import es.getbox.android.getboxapp.interfaces.AsyncTaskCompleteListener;
+import es.getbox.android.getboxapp.utils.Item;
 
 
-public class DropboxListDirectory extends AsyncTask<Void, Void, ArrayList<String>> {
+public class DropboxListDirectory extends AsyncTask<Void, Void, ArrayList<Item>> {
 
 	private final ProgressDialog dialog;
 
     private Context mContext;
     private DropboxAPI<AndroidAuthSession> mApi;
     private String mPath;
-    private ArrayList<String> folderName;
+    private ArrayList<Item> folderName;
     private String mErrorMsg;
     private boolean errores;
-    private AsyncTaskCompleteListener<ArrayList<String>>callback;
+    private AsyncTaskCompleteListener<ArrayList<Item>>callback;
     private boolean isDialog;
+    private int dropboxAccount;
     
     public DropboxListDirectory(Context context, DropboxAPI<AndroidAuthSession> api,
-			String dropboxPath, AsyncTaskCompleteListener<ArrayList<String>> cb, boolean isD) {
+			String dropboxPath, AsyncTaskCompleteListener<ArrayList<Item>> cb, boolean isD, int dropboxAccount) {
     	mContext=context;
 		mApi = api;
         mPath = dropboxPath;
-        folderName=new ArrayList<String>();
+        folderName=new ArrayList<Item>();
         this.errores=true;
         isDialog=isD;
         dialog=new ProgressDialog(mContext);
         this.callback = cb;
+        this.dropboxAccount=dropboxAccount;
     }
     
     @Override
@@ -55,8 +58,8 @@ public class DropboxListDirectory extends AsyncTask<Void, Void, ArrayList<String
     }
     
     @Override
-    protected ArrayList<String> doInBackground(Void... params) {
-    	ArrayList<String> archives= new ArrayList<String>();
+    protected ArrayList<Item> doInBackground(Void... params) {
+    	ArrayList<Item> archives= new ArrayList<Item>();
     	try {
 
             Entry dirent = mApi.metadata(mPath, 0, null, true, null);    
@@ -72,9 +75,9 @@ public class DropboxListDirectory extends AsyncTask<Void, Void, ArrayList<String
 		    		Entry e = contents1.get(i);
 		    		String a = e.fileName();  
 		    		if(String.valueOf(e.isDir).equalsIgnoreCase("true")){
-		           		folderName.add(a);
+		           		folderName.add(new Item(a,mPath+a,"dropbox",dropboxAccount));
 		           	}else{
-		           		archives.add(a);
+		           		archives.add(new Item(a,mPath+a,"dropbox",dropboxAccount));
 		           	}		    		
 		    	}
 		    }            
@@ -128,7 +131,7 @@ public class DropboxListDirectory extends AsyncTask<Void, Void, ArrayList<String
     }
 	
 	@Override
-    protected void onPostExecute(ArrayList<String> result) {
+    protected void onPostExecute(ArrayList<Item> result) {
         if (!this.errores) {
             showToast(mErrorMsg);
         }

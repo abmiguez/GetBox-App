@@ -1,9 +1,41 @@
-<menu xmlns:android="http://schemas.android.com/apk/res/android" >
-
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/action_settings"
+        android:id="@+id/actualizar"
         android:orderInCategory="100"
         android:showAsAction="never"
-        android:title="@string/action_settings"/>
+        android:title="Actualizar"/>
+    
 
+    
+    <item
+        android:id="@+id/subir"
+        android:orderInCategory="101"
+        android:showAsAction="never"
+        android:title="Subir">
+    
+        <menu>
+        	<item
+       		android:id="@+id/subir_archivo"
+        	android:orderInCategory="102"
+        	android:showAsAction="never"
+        	android:title="Subir Archivo"/>
+        	<item
+       		android:id="@+id/subir_foto"
+        	android:orderInCategory="103"
+        	android:showAsAction="never"
+        	android:title="Subir Foto"/>
+    	</menu>    
+    </item>
+    
+    <item
+        android:id="@+id/nueva_carpeta"
+        android:orderInCategory="104"
+        android:showAsAction="never"
+        android:title="Nueva Carpeta"/>
+        
+    <item
+        android:id="@+id/salir"
+        android:orderInCategory="105"
+        android:showAsAction="never"
+        android:title="Salir"/>
 </menu>

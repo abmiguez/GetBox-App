@@ -4,6 +4,10 @@
     android:versionCode="1"
     android:versionName="1.0" >
 
+    <uses-permission android:name="android.permission.INTERNET"></uses-permission>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+ 	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    
     <uses-sdk
         android:minSdkVersion="14"
         android:targetSdkVersion="18" />
@@ -14,7 +18,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name="es.getbox.android.getboxapp.SplashScreenActivity"
+            android:name="es.getbox.android.getboxapp.GetBoxActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -24,7 +28,7 @@
         </activity>
         
         <activity
-            android:name="es.getbox.android.getboxapp.GetBoxActivity"
+            android:name="es.getbox.android.getboxapp.SplashScreenActivity"
             android:label="@string/app_name" >   
         </activity>
         <activity

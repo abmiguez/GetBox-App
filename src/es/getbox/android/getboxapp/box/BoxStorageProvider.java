@@ -22,6 +22,7 @@ import com.box.boxandroidlibv2.activities.OAuthActivity;
 import com.box.boxandroidlibv2.dao.BoxAndroidOAuthData;
 import com.box.boxjavalibv2.authorization.OAuthRefreshListener;
 import com.box.boxjavalibv2.dao.BoxOAuthToken;
+import com.box.boxjavalibv2.exceptions.AuthFatalFailureException;
 import com.box.boxjavalibv2.interfaces.IAuthData;
 import com.box.boxjavalibv2.requests.requestobjects.BoxFileRequestObject;
 import com.box.boxjavalibv2.requests.requestobjects.BoxFileUploadRequestObject;
@@ -29,17 +30,24 @@ import com.box.boxjavalibv2.requests.requestobjects.BoxFolderRequestObject;
 
 import es.getbox.android.getboxapp.interfaces.AsyncTaskCompleteListener;
 import es.getbox.android.getboxapp.utils.Item;
+import es.getbox.android.getboxapp.utils.SQL;
 
 public class BoxStorageProvider { 
 
+	final static private String TAG = "BoxSP";
 	private Context context;
+	private int boxAccount;
 	private BoxAndroidClient mClient;
 	public static final String CLIENT_ID = "nq0so01we5nic9rqysh6zmn5fd1g15ma";
     public static final String CLIENT_SECRET = "g5O8FfBPaeTYJR35aVhVfZ9VURBn2rZ6";
     public static final String REDIRECT_URL = "http://localhost/";
+    private SQL sql;
 	
-    public BoxStorageProvider(Context context){
+    public BoxStorageProvider(Context context, int newBoxAccount){
     	this.context=context;
+    	this.boxAccount=newBoxAccount;
+    	this.sql=new SQL(context);
+		this.sql.openDatabase();	
     }
     
     public BoxAndroidClient getClient(){
@@ -59,40 +67,22 @@ public class BoxStorageProvider {
            }
            else {
            	this.mClient=client;
-           	String a=oauth.getAccessToken();
-           	try{
-           		try{
-                    FileOutputStream bt = new FileOutputStream(Environment.getExternalStorageDirectory().getPath()+"/boxtoken.token");
-                    ObjectOutputStream os = new ObjectOutputStream(bt);
-                    os.writeObject(a);
-                    os.close();
-                 }catch(FileNotFoundException e){
-                    e.printStackTrace();
-                    Log.i("Box",e.getMessage());
-                 }catch(IOException e){
-                    e.printStackTrace();
-                    Log.i("Box",e.getMessage());
-                 }
-           	}catch(Exception e){}
+           	String accesstoken=oauth.getAccessToken();
+           	Log.i(TAG,accesstoken);
+           	sql.insertBox(boxAccount, accesstoken);
+           	Log.i(TAG,"done");
            	mClient.addOAuthRefreshListener(new OAuthRefreshListener() {
 
                 @Override
                 public void onRefresh(IAuthData newAuthData) {
-                	try{
-                   		BoxOAuthToken oauthObject = mClient.getAuthData();
-                   		try{
-                            FileOutputStream bt = new FileOutputStream(Environment.getExternalStorageDirectory().getPath()+"/boxtoken.token");
-                            ObjectOutputStream os = new ObjectOutputStream(bt);
-                            os.writeObject(oauthObject);
-                            os.close();
-                         }catch(FileNotFoundException e){
-                            e.printStackTrace();
-                            Log.i("Box",e.getMessage());
-                         }catch(IOException e){
-                            e.printStackTrace();
-                            Log.i("Box",e.getMessage());
-                         }
-                   	}catch(Exception e){}
+                	BoxOAuthToken oauthObject;
+					try {
+						oauthObject = mClient.getAuthData();
+						String accesstoken=oauthObject.getAccessToken();
+					} catch (AuthFatalFailureException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}                	
                 }
 
             });
@@ -101,7 +91,9 @@ public class BoxStorageProvider {
        }
    }
     
-    public void autenticar(BoxOAuthToken oauthObject){   	
+    public void autenticate(){  
+    	BoxOAuthToken oauthObject=new BoxOAuthToken();
+    	oauthObject.setAccessToken(sql.getBoxTokens(boxAccount));
     	BoxAndroidClient client = new BoxAndroidClient(this.CLIENT_ID, this.CLIENT_SECRET, null, null);
 		client.authenticate(oauthObject);
 		if (client == null) {
@@ -115,28 +107,16 @@ public class BoxStorageProvider {
              public void onRefresh(IAuthData newAuthData) {
             	 try{
             		 BoxOAuthToken oauthObject = mClient.getAuthData();
-            		 try{
-                         FileOutputStream bt = new FileOutputStream(Environment.getExternalStorageDirectory().getPath()+"/boxtoken.token");
-                         ObjectOutputStream os = new ObjectOutputStream(bt);
-                         os.writeObject(oauthObject);
-                         os.close();
-                      }catch(FileNotFoundException e){
-                         e.printStackTrace();
-                         Log.i("Box",e.getMessage());
-                      }catch(IOException e){
-                         e.printStackTrace();
-                         Log.i("Box",e.getMessage());
-                      }
+            		 String accesstoken=oauthObject.getAccessToken();
             	 }catch(Exception e){}
              }
 
          });
-            Toast.makeText(context, "authenticated", Toast.LENGTH_LONG).show();
         }
     }
     
     public void getFiles(String directory_path,AsyncTaskCompleteListener<ArrayList<Item>> cb,boolean dialog){
-    	BoxListDirectory task = new BoxListDirectory(directory_path,cb, this.getClient());
+    	BoxListDirectory task = new BoxListDirectory(directory_path,cb, this.getClient(),boxAccount);
         task.execute();
     }
     
@@ -294,7 +274,6 @@ public class BoxStorageProvider {
             protected Null doInBackground(Null... params) {
                 BoxAndroidClient client = mClient;
                 try {
-                    File file = new File(fName);                    
                     client.getFoldersManager().createFolder(
                         BoxFolderRequestObject.createFolderRequestObject(fName,fPath));
                 }

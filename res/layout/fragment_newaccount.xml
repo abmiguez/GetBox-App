@@ -1,0 +1,33 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:orientation="vertical" >
+
+	<TextView 
+	    android:id="@+id/textNewAccount" 
+	    android:layout_width="fill_parent" 
+	    android:layout_height="wrap_content" 
+	    android:text= "@string/new_account"
+	    android:gravity="center"	    
+		android:layout_marginTop="100dp"
+	    android:textSize="16sp"/> 
+	    
+	<Button 
+		android:id="@+id/buttonNewDropbox"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/textNewAccount"
+		android:layout_centerHorizontal="true"
+		android:layout_marginTop="40dp"
+		android:text="@string/dropbox" />
+	
+	<Button 
+		android:id="@+id/buttonNewBox"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/buttonNewDropbox"
+		android:layout_centerHorizontal="true"
+		android:layout_marginTop="40dp"
+		android:text="@string/box" />
+
+</RelativeLayout>
