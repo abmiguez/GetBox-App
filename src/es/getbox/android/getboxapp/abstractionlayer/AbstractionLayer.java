@@ -6,6 +6,8 @@ import com.box.boxandroidlibv2.activities.OAuthActivity;
 
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
+import android.view.View;
 
 import es.getbox.android.getboxapp.GetBoxActivity;
 import es.getbox.android.getboxapp.box.BoxStorageProvider;
@@ -141,8 +143,31 @@ public class AbstractionLayer{
 		newBAccount=true;
 	}
 	
-	public void deleteAccount(){
-		
+	public void deleteAccount(String id,int position){
+		this.sql.openDatabase();
+		if(id=="dropbox"){
+			dsp.remove(position);
+			dbAccounts.remove(position);
+			this.sql.deleteDropbox(position);
+			if(position<newDropboxAccount){
+				for (int i=position+1;i<newDropboxAccount;i++){
+					this.sql.updateDropboxAccount(position,position-1);
+				}
+			}	
+			newDropboxAccount--;
+		}
+		if(id=="box"){
+			bsp.remove(position);
+			bAccounts.remove(position);
+			this.sql.deleteBox(position);
+			if(position<newBoxAccount){
+				for (int i=position+1;i<newBoxAccount;i++){
+					this.sql.updateBoxAccount(position,position-1);
+				}
+			}			
+			newBoxAccount--;
+		}
+		this.sql.closeDatabase();
 	}
 	
 	public void getFiles(AsyncTaskCompleteListener<ArrayList<Item>> cb){

@@ -253,6 +253,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         case 0:
     		args.putInt(FragmentArchives.ARG_ARCHIVE_NUMBER, position);
             fragment.setArguments(args);
+            listDirectory.clear();
             aLayer.getFiles(this);
             aLayer.restartRoutes();
     		boolArchives=true;
@@ -517,7 +518,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
             menu.setHeaderTitle(
                 accounts.getAdapter().getItem(info.position).toString());
      
-            inflater.inflate(R.menu.context_menu_accounts, menu);
+            inflater.inflate(R.menu.context_menu_dbaccounts, menu);
         }
         
         if(v.getId() == R.id.BAccounts)
@@ -528,7 +529,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
             menu.setHeaderTitle(
                 accounts.getAdapter().getItem(info.position).toString());
      
-            inflater.inflate(R.menu.context_menu_accounts, menu);
+            inflater.inflate(R.menu.context_menu_baccounts, menu);
         }
     }
     
@@ -569,12 +570,30 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
             	builder.setMessage("¿Seguro que deseas borrar?").setPositiveButton("Si", dialogClickListener)
             	    .setNegativeButton("No", dialogClickListener).show();
                 return true;
-            case R.id.deleteAccount:
-            	aLayer.deleteAccount();
+            case R.id.deleteDBAccount:
+            	aLayer.deleteAccount("dropbox",info.position);
+            	restartAccountsFragment();
     			return true;
+            case R.id.deleteBAccount:
+            	aLayer.deleteAccount("box",info.position);
+                restartAccountsFragment();
+            	return true;
             default:
             	return super.onContextItemSelected(item);
         }
+    }
+    
+    private void restartAccountsFragment(){
+    	Fragment fragment;
+        Bundle args = new Bundle();
+    	fragment = new FragmentAccounts();
+    	args.putInt(FragmentAccounts.ARG_ACCOUNTS_NUMBER, 1);
+    	args.putStringArrayList("arrayDB", aLayer.getDbAccounts());
+    	args.putStringArrayList("arrayB", aLayer.getbAccounts());
+    	fragment.setArguments(args);
+    	boolArchives=false;
+        FragmentManager fragmentManager = getFragmentManager();
+        fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).commit();
     }
     
     

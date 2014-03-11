@@ -2,7 +2,7 @@
 <menu
   xmlns:android="http://schemas.android.com/apk/res/android">
  
-<item android:id="@+id/deleteAccount"
+<item android:id="@+id/deleteDBAccount"
     android:title="@string/delete_account"></item>
  
 </menu>

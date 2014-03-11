@@ -122,11 +122,12 @@ public class SQL{
     	}    	
     }
     
-    public void updateDropbox(int dropboxAccount,String tokenKey, String tokenSecret, String userName){
+    public void updateDropboxAccount(int dropboxAccount,int newDropboxAccount){
     	db.beginTransaction();
     	try {
-    		db.execSQL( "insert into dropboxTokens (dropboxAccount,tokenKey, tokenSecret, userName) "
-    					         + " values ('"+dropboxAccount+"','"+tokenKey+"','"+tokenSecret+"','"+userName+"');" );
+    		db.execSQL( " update dropboxTokens "
+    				+ " set dropboxAccount =  '" + newDropboxAccount + "'"
+    				+ " where dropboxAccount = '" + dropboxAccount + "' " );
     		db.setTransactionSuccessful();
     	}
     	catch (SQLiteException e2) {
@@ -169,11 +170,29 @@ public class SQL{
     	}    	
     }
     
-    public void updateBox(int boxAccount,String token){
+    public void updateBoxAccount(int boxAccount,int newBoxAccount){
     	db.beginTransaction();
     	try {
-    		db.execSQL( "insert into boxTokens (boxAccount,token) "
-    					         + " values ('"+boxAccount+"','"+token+"');" );
+    		db.execSQL( " update boxTokens "
+    				+ " set boxAccount =  '" + newBoxAccount + "'"
+    				+ " where boxAccount = '" + boxAccount + "' " );
+    		db.setTransactionSuccessful();
+    	}
+    	catch (SQLiteException e2) {
+    		//report problem 
+    		Toast.makeText(context, e2.getMessage(), Toast.LENGTH_LONG).show();
+    	}
+    	finally {
+    		db.endTransaction();
+    	}    	
+    }
+    
+    public void updateBoxToken(int boxAccount,String token){
+    	db.beginTransaction();
+    	try {
+    		db.execSQL( " update boxTokens "
+    				+ " set token =  '" + token + "'"
+    				+ " where boxAccount = '" + boxAccount + "' " );
     		db.setTransactionSuccessful();
     	}
     	catch (SQLiteException e2) {

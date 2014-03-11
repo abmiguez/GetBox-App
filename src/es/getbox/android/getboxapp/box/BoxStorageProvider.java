@@ -83,6 +83,9 @@ public class BoxStorageProvider<mClient> {
 					try {
 						oauthObject = mClient.getAuthData();
 						String accesstoken=oauthObject.getAccessToken();
+						sql.openDatabase();
+			           	sql.updateBoxToken(boxAccount, accesstoken);
+			            sql.closeDatabase();
 					} catch (AuthFatalFailureException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -117,6 +120,9 @@ public class BoxStorageProvider<mClient> {
             	 try{
             		 BoxOAuthToken oauthObject = mClient.getAuthData();
             		 String accesstoken=oauthObject.getAccessToken();
+            		 sql.openDatabase();
+			         sql.updateBoxToken(boxAccount, accesstoken);
+			         sql.closeDatabase();
             	 }catch(Exception e){}
              }
  
