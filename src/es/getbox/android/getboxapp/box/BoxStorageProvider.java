@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang.ObjectUtils.Null;
 
@@ -23,16 +24,19 @@ import com.box.boxandroidlibv2.dao.BoxAndroidOAuthData;
 import com.box.boxjavalibv2.authorization.OAuthRefreshListener;
 import com.box.boxjavalibv2.dao.BoxOAuthToken;
 import com.box.boxjavalibv2.exceptions.AuthFatalFailureException;
+import com.box.boxjavalibv2.exceptions.BoxServerException;
 import com.box.boxjavalibv2.interfaces.IAuthData;
 import com.box.boxjavalibv2.requests.requestobjects.BoxFileRequestObject;
 import com.box.boxjavalibv2.requests.requestobjects.BoxFileUploadRequestObject;
 import com.box.boxjavalibv2.requests.requestobjects.BoxFolderRequestObject;
+import com.box.restclientv2.exceptions.BoxRestException;
 
+import es.getbox.android.getboxapp.dropbox.DropboxGetUser;
 import es.getbox.android.getboxapp.interfaces.AsyncTaskCompleteListener;
 import es.getbox.android.getboxapp.utils.Item;
 import es.getbox.android.getboxapp.utils.SQL;
 
-public class BoxStorageProvider { 
+public class BoxStorageProvider<mClient> { 
 
 	final static private String TAG = "BoxSP";
 	private Context context;
@@ -46,8 +50,7 @@ public class BoxStorageProvider {
     public BoxStorageProvider(Context context, int newBoxAccount){
     	this.context=context;
     	this.boxAccount=newBoxAccount;
-    	this.sql=new SQL(context);
-		this.sql.openDatabase();	
+    	this.sql=new SQL(context);	
     }
     
     public BoxAndroidClient getClient(){
@@ -55,7 +58,8 @@ public class BoxStorageProvider {
     }
     
     public void onAuthenticated(int resultCode, Intent data) {
-   	 if (Activity.RESULT_OK != resultCode) {
+		
+    	if (Activity.RESULT_OK != resultCode) {
    		Toast.makeText(context, "fail", Toast.LENGTH_LONG).show();
        }
        else {
@@ -69,7 +73,7 @@ public class BoxStorageProvider {
            	this.mClient=client;
            	String accesstoken=oauth.getAccessToken();
            	Log.i(TAG,accesstoken);
-           	sql.insertBox(boxAccount, accesstoken);
+           	
            	Log.i(TAG,"done");
            	mClient.addOAuthRefreshListener(new OAuthRefreshListener() {
 
@@ -86,12 +90,17 @@ public class BoxStorageProvider {
                 }
 
             });
-               Toast.makeText(context, "authenticated", Toast.LENGTH_LONG).show();
+           	this.sql.openDatabase();
+           	sql.insertBox(boxAccount, accesstoken,getUser());
+            Toast.makeText(context, "authenticated", Toast.LENGTH_LONG).show();
+       		this.sql.closeDatabase();
            }
        }
+
    }
     
-    public void autenticate(){  
+    public void autenticate(){ 
+		this.sql.openDatabase();
     	BoxOAuthToken oauthObject=new BoxOAuthToken();
     	oauthObject.setAccessToken(sql.getBoxTokens(boxAccount));
     	BoxAndroidClient client = new BoxAndroidClient(this.CLIENT_ID, this.CLIENT_SECRET, null, null);
@@ -110,9 +119,30 @@ public class BoxStorageProvider {
             		 String accesstoken=oauthObject.getAccessToken();
             	 }catch(Exception e){}
              }
-
+ 
          });
         }
+		this.sql.closeDatabase();
+    }
+    
+    public String getUserName(){
+		this.sql.openDatabase();
+    	String account_aux= sql.getBoxUserName(boxAccount);
+		this.sql.closeDatabase();
+		return account_aux;
+	}
+    
+    public String getUser(){
+    	BoxGetUser dgu=new BoxGetUser(mClient);
+		try {
+			dgu.execute();
+			String a=dgu.get();
+			return a;
+		} catch (InterruptedException e) {
+			return "";
+		} catch (ExecutionException e) {
+			return "";
+		}
     }
     
     public void getFiles(String directory_path,AsyncTaskCompleteListener<ArrayList<Item>> cb,boolean dialog){

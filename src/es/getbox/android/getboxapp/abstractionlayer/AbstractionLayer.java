@@ -56,6 +56,7 @@ public class AbstractionLayer{
 		newDropboxAccount=sql.countAll("dropboxTokens");
 		newBoxAccount=sql.countAll("boxTokens");
 		dbAccounts=new ArrayList<String>();
+		bAccounts=new ArrayList<String>();
 		
 		dsp=new ArrayList<DropboxStorageProvider>();
 		bsp=new ArrayList<BoxStorageProvider>();
@@ -67,7 +68,8 @@ public class AbstractionLayer{
 		directoriosDropbox=new String[100];
 		directoriosBox=new String[100];
 		directoriosDropbox[posicionActualDropbox]=rutaDropboxActual;
-		directoriosBox[posicionActualBox]=rutaBoxActual;		
+		directoriosBox[posicionActualBox]=rutaBoxActual;	
+		sql.closeDatabase();	
 	}
 	
 	public void restartRoutes(){
@@ -80,23 +82,28 @@ public class AbstractionLayer{
 	}
 
 	public void startAutentication(){
+		this.sql.openDatabase();
 		for(int i=0;i<newDropboxAccount;i++){
 			dsp.add(new DropboxStorageProvider(context,i));
 			dsp.get(i).startAuthentication();
     	}
-		
+		bAccounts.clear();
 		for(int i=0;i<newBoxAccount;i++){
 			bsp.add(new BoxStorageProvider(context,i));
     	   	bsp.get(i).autenticate();
+    	   	bAccounts.add(sql.getBoxUserName(i));
         }
+		this.sql.closeDatabase();
 	}
 	
 	public void finishAutentication(){
+		this.sql.openDatabase();
 		dbAccounts.clear();
 		for(int i=0;i<newDropboxAccount;i++){
         	dsp.get(i).finishAuthentication();        	
         	dbAccounts.add(sql.getDropboxUserName(i));
-        }		
+        }
+		this.sql.closeDatabase();		
 	}
 	
 	public void newDBAccountFinish(){
@@ -104,7 +111,7 @@ public class AbstractionLayer{
 			if(dsp_aux.finishAuthentication()){
 				newDBAccount=false;
 				dsp.add(dsp_aux);
-				dbAccounts.add(dsp.get(newDropboxAccount).getUser());
+				dbAccounts.add(dsp.get(newDropboxAccount).getUserName());
 				newDropboxAccount++;
 			}
         }
@@ -117,19 +124,25 @@ public class AbstractionLayer{
 	}
 	
 	public void newBAccountFinish(int resultCode, Intent data){
-		bsp_aux.onAuthenticated(resultCode, data);
-        bsp.add(bsp_aux);
-        newBAccount=false;
+		if (newBAccount==true) {
+			bsp_aux.onAuthenticated(resultCode, data);
+	        bsp.add(bsp_aux);
+	        bAccounts.add(bsp.get(newBoxAccount).getUserName());
+	        newBAccount=false;
+			newBoxAccount++;
+		}
 	}
 	
 	public void newBAccount(GetBoxActivity gbActivity){
 		bsp_aux=new BoxStorageProvider(context,newBoxAccount);
 		Intent intent = OAuthActivity.createOAuthActivityIntent(context, bsp_aux.CLIENT_ID, bsp_aux.CLIENT_SECRET, false,
                 bsp_aux.REDIRECT_URL);
-        gbActivity.startActivityForResult(intent, AUTH_BOX_REQUEST);
-		
+        gbActivity.startActivityForResult(intent, AUTH_BOX_REQUEST);		
 		newBAccount=true;
-		newBoxAccount++;
+	}
+	
+	public void deleteAccount(){
+		
 	}
 	
 	public void getFiles(AsyncTaskCompleteListener<ArrayList<Item>> cb){

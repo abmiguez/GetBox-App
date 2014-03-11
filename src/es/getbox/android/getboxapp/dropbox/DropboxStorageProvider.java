@@ -45,8 +45,7 @@ public class DropboxStorageProvider {
 	public DropboxStorageProvider(Context context,int dropboxAccount){
 		this.mContext=context;
 		this.dropboxAccount=dropboxAccount;
-		sql=new SQL(context);
-		sql.openDatabase();		
+		sql=new SQL(context);		
 	}
 	
 	public boolean startAuthentication() {
@@ -133,7 +132,9 @@ public class DropboxStorageProvider {
 	}
 	
 	private void storeKeys(String key, String secret) {	
+		this.sql.openDatabase();
 		sql.insertDropbox(dropboxAccount, key, secret,getUser());
+		this.sql.closeDatabase();
 	}
 
 	private void clearKeys() {
@@ -145,6 +146,7 @@ public class DropboxStorageProvider {
 	}
 
 	private String[] getKeys() {
+		this.sql.openDatabase();
 		ArrayList<String> tokens =sql.getDropboxTokens(dropboxAccount);
 		try{
 			String key= tokens.get(0);
@@ -153,11 +155,14 @@ public class DropboxStorageProvider {
 				String[] ret = new String[2];
 				ret[0] = key;
 				ret[1] = secret;
+				this.sql.closeDatabase();
 				return ret;
 			} else { 
+				this.sql.closeDatabase();
 				return null;
 			}
 		}catch(Exception e){
+			this.sql.closeDatabase();
 			return null;
 		}
 	}
@@ -181,7 +186,10 @@ public class DropboxStorageProvider {
 	}
 	
 	public String getUserName(){
-		return sql.getDropboxUserName(dropboxAccount);
+		this.sql.openDatabase();
+		String account_aux=sql.getDropboxUserName(dropboxAccount);
+		this.sql.closeDatabase();
+		return account_aux;
 	}
 	
 	public String getUser(){

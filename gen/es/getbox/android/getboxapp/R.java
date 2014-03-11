@@ -58,42 +58,43 @@ public final class R {
         public static final int splash_screen=0x7f02001e;
     }
     public static final class id {
+        public static final int BAccounts=0x7f090019;
+        public static final int DBAccounts=0x7f090017;
         public static final int PickerListView=0x7f090010;
-        public static final int accounts=0x7f090017;
-        public static final int actualizar=0x7f090020;
+        public static final int actualizar=0x7f090023;
         public static final int archivo=0x7f090015;
-        public static final int archivos=0x7f090018;
-        public static final int back_page=0x7f090026;
-        public static final int borrar=0x7f09001f;
+        public static final int archivos=0x7f09001a;
+        public static final int borrar=0x7f090022;
         public static final int boxItemMain=0x7f090008;
         public static final int btnChoose=0x7f090012;
-        public static final int buttonNewBox=0x7f09001c;
-        public static final int buttonNewDropbox=0x7f09001b;
+        public static final int buttonNewBox=0x7f09001e;
+        public static final int buttonNewDropbox=0x7f09001d;
         public static final int content_frame=0x7f090001;
         public static final int customTitle=0x7f09000e;
-        public static final int descargar=0x7f09001e;
+        public static final int deleteAccount=0x7f090020;
+        public static final int descargar=0x7f090021;
         public static final int drawer_layout=0x7f090000;
         public static final int folderChooserSpinner=0x7f09000f;
-        public static final int forward_page=0x7f090027;
         public static final int icon=0x7f090009;
-        public static final int label=0x7f09001d;
+        public static final int label=0x7f09001f;
         public static final int left_drawer=0x7f090002;
         public static final int metaline=0x7f09000c;
         public static final int metaline_description=0x7f09000d;
         public static final int name=0x7f09000b;
-        public static final int nueva_carpeta=0x7f090024;
+        public static final int nueva_carpeta=0x7f090027;
         public static final int oauthview=0x7f090003;
         public static final int password_edit=0x7f090007;
         public static final int password_view=0x7f090006;
         public static final int path=0x7f090014;
-        public static final int salir=0x7f090025;
+        public static final int salir=0x7f090028;
         public static final int spinner=0x7f09000a;
-        public static final int subir=0x7f090021;
-        public static final int subir_archivo=0x7f090022;
-        public static final int subir_foto=0x7f090023;
+        public static final int subir=0x7f090024;
+        public static final int subir_archivo=0x7f090025;
+        public static final int subir_foto=0x7f090026;
+        public static final int textBox=0x7f090018;
         public static final int textDropbox=0x7f090016;
-        public static final int textNewAccount=0x7f09001a;
-        public static final int textViewPendiente=0x7f090019;
+        public static final int textNewAccount=0x7f09001c;
+        public static final int textViewPendiente=0x7f09001b;
         public static final int textView_navigationItem=0x7f090013;
         public static final int transfersLayout=0x7f090011;
         public static final int username_edit=0x7f090005;
@@ -122,9 +123,9 @@ public final class R {
         public static final int splash_screen=0x7f030013;
     }
     public static final class menu {
-        public static final int context_menu=0x7f080000;
-        public static final int get_box=0x7f080001;
-        public static final int web_menu=0x7f080002;
+        public static final int context_menu_accounts=0x7f080000;
+        public static final int context_menu_archivos=0x7f080001;
+        public static final int get_box=0x7f080002;
     }
     public static final class string {
         public static final int action_websearch=0x7f040012;
@@ -144,6 +145,7 @@ public final class R {
         public static final int boxandroidlibv2_alert_dialog_text_entry=0x7f040003;
         public static final int boxandroidlibv2_alert_dialog_username=0x7f040004;
         public static final int boxandroidlibv2_title_activity_oauth=0x7f040005;
+        public static final int delete_account=0x7f040017;
         public static final int drawer_close=0x7f040011;
         public static final int drawer_open=0x7f040010;
         public static final int dropbox=0x7f040015;

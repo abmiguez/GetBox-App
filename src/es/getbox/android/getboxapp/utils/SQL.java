@@ -33,6 +33,10 @@ public class SQL{
         }
     }//createDatabase
     
+    public void closeDatabase(){
+    	db.close();
+    }
+    
     ///////////////////////////////////////////////////////////////////
     public void createTables() {
     	db.beginTransaction();
@@ -56,7 +60,7 @@ public class SQL{
 			//create table
 			db.execSQL("create table boxTokens ("
 					+ " ID integer PRIMARY KEY autoincrement, " 
-			        + " boxAccount integer, token text);  ");
+			        + " boxAccount integer, token text, userName text);  ");
 			db.setTransactionSuccessful();
     		
 		    //Toast.makeText(context, "Table was created", Toast.LENGTH_LONG).show();
@@ -134,11 +138,10 @@ public class SQL{
     	}    	
     }
     
-    public void deleteDropbox(int dropboxAccount,String tokenKey, String tokenSecret, String userName){
+    public void deleteDropbox(int dropboxAccount){
     	db.beginTransaction();
     	try {
-    		db.execSQL( "insert into dropboxTokens (dropboxAccount,tokenKey, tokenSecret, userName) "
-    					         + " values ('"+dropboxAccount+"','"+tokenKey+"','"+tokenSecret+"','"+userName+"');" );
+    		db.execSQL( "delete from dropboxTokens where dropboxAccount='"+dropboxAccount+"';" );
     		db.setTransactionSuccessful();
     	}
     	catch (SQLiteException e2) {
@@ -150,11 +153,11 @@ public class SQL{
     	}    	
     }
     
-    public void insertBox(int boxAccount,String token){
+    public void insertBox(int boxAccount,String token,String username){
     	db.beginTransaction();
     	try {
-    		db.execSQL( "insert into boxTokens (boxAccount,token) "
-    					         + " values ('"+boxAccount+"','"+token+"');" );
+    		db.execSQL( "insert into boxTokens (boxAccount,token,userName) "
+    					         + " values ('"+boxAccount+"','"+token+"','"+username+"');" );
     		db.setTransactionSuccessful();
     	}
     	catch (SQLiteException e2) {
@@ -182,11 +185,10 @@ public class SQL{
     	}    	
     }
     
-    public void deleteBox(int boxAccount,String token){
+    public void deleteBox(int boxAccount){
     	db.beginTransaction();
     	try {
-    		db.execSQL( "insert into boxTokens (boxAccount,token) "
-    					         + " values ('"+boxAccount+"','"+token+"');" );
+    		db.execSQL( "delete from boxTokens where boxAccount='"+boxAccount+"';" );
     		db.setTransactionSuccessful();
     	}
     	catch (SQLiteException e2) {
@@ -274,6 +276,28 @@ public class SQL{
 		}    	
     	return token;
     } 
+    
+    public String getBoxUserName(int boxAccount) {
+    	String userName="";
+    	try {
+    		String mySQL ="select userName from boxTokens where " +
+    				"boxAccount="+boxAccount+"";
+			Cursor c = db.rawQuery(mySQL, null);
+			//String bdLogs="";
+			if (c != null ) {
+					if  (c.moveToLast()) {
+						do {
+							userName=c.getString(c.getColumnIndex("userName"));
+						}while (c.moveToPrevious());
+					}
+			}
+			//Toast.makeText(context, bdLogs, Toast.LENGTH_LONG).show();
+			c.close();
+		} catch (Exception e) {
+			Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
+		}    	
+    	return userName;
+    }
     
     public void dropTable(String tableName){
     	try {

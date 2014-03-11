@@ -32,6 +32,7 @@
     <string name="app_not_available">Sorry, there\'s no web browser available</string>
     <string name="new_account">Añade tu cuenta de Dropbox o Box</string>   
     <string name="dropbox">Dropbox</string> 
-    <string name="box">Box</string>
+    <string name="box">Box</string>    
+    <string name="delete_account">Eliminar cuenta</string>
     
 </resources>

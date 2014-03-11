@@ -31,11 +31,7 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import com.box.boxandroidlibv2.activities.OAuthActivity;
-
 import es.getbox.android.getboxapp.abstractionlayer.AbstractionLayer;
-import es.getbox.android.getboxapp.box.BoxStorageProvider;
-import es.getbox.android.getboxapp.dropbox.DropboxStorageProvider;
 import es.getbox.android.getboxapp.fragments.FragmentArchives;
 import es.getbox.android.getboxapp.fragments.FragmentClose;
 import es.getbox.android.getboxapp.fragments.FragmentAccounts;
@@ -43,7 +39,6 @@ import es.getbox.android.getboxapp.fragments.FragmentNewAccount;
 import es.getbox.android.getboxapp.fragments.FragmentOptions;
 import es.getbox.android.getboxapp.interfaces.AsyncTaskCompleteListener;
 import es.getbox.android.getboxapp.utils.Item;
-import es.getbox.android.getboxapp.utils.SQL;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -265,7 +260,8 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         case 1:        	
         	fragment = new FragmentAccounts();
         	args.putInt(FragmentAccounts.ARG_ACCOUNTS_NUMBER, position);
-        	args.putStringArrayList("array", aLayer.getDbAccounts());
+        	args.putStringArrayList("arrayDB", aLayer.getDbAccounts());
+        	args.putStringArrayList("arrayB", aLayer.getbAccounts());
         	fragment.setArguments(args);
         	boolArchives=false;
         break;
@@ -417,7 +413,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
     private void actualizar(String ruta,boolean dialog){
     	if (ruta==""){
     		//dsp.getFiles(rutaActual,this,dialog);
-    	}else{
+    	}else{ 
     		//dsp.getFiles(ruta,this,dialog);
     	}
     	
@@ -510,18 +506,29 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
             menu.setHeaderTitle(
                 archivos.getAdapter().getItem(info.position).toString());
      
-            inflater.inflate(R.menu.context_menu, menu);
+            inflater.inflate(R.menu.context_menu_archivos, menu);
         }
         
-        if(v.getId() == R.id.accounts)
+        if(v.getId() == R.id.DBAccounts)
         {
-            AdapterView.AdapterContextMenuInfo info =
+            AdapterView.AdapterContextMenuInfo info = 
                 (AdapterView.AdapterContextMenuInfo)menuInfo;
-            ListView accounts = (ListView) findViewById (R.id.accounts);
+            ListView accounts = (ListView) findViewById (R.id.DBAccounts);
             menu.setHeaderTitle(
                 accounts.getAdapter().getItem(info.position).toString());
      
-            inflater.inflate(R.menu.context_menu, menu);
+            inflater.inflate(R.menu.context_menu_accounts, menu);
+        }
+        
+        if(v.getId() == R.id.BAccounts)
+        {
+            AdapterView.AdapterContextMenuInfo info =
+                (AdapterView.AdapterContextMenuInfo)menuInfo;
+            ListView accounts = (ListView) findViewById (R.id.BAccounts);
+            menu.setHeaderTitle(
+                accounts.getAdapter().getItem(info.position).toString());
+     
+            inflater.inflate(R.menu.context_menu_accounts, menu);
         }
     }
     
@@ -562,6 +569,9 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
             	builder.setMessage("¿Seguro que deseas borrar?").setPositiveButton("Si", dialogClickListener)
             	    .setNegativeButton("No", dialogClickListener).show();
                 return true;
+            case R.id.deleteAccount:
+            	aLayer.deleteAccount();
+    			return true;
             default:
             	return super.onContextItemSelected(item);
         }

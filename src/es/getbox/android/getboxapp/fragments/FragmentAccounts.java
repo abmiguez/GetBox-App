@@ -11,7 +11,8 @@ import android.widget.ListView;
 
 public class FragmentAccounts extends Fragment {
     public static final String ARG_ACCOUNTS_NUMBER = "accounts_number";
-    public ListView accounts;
+    public ListView DBaccounts;
+    public ListView Baccounts;
     private View rootView;
     
     public FragmentAccounts() {}
@@ -20,12 +21,19 @@ public class FragmentAccounts extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_accounts, container, false);
-        accounts = (ListView) rootView.findViewById (R.id.accounts);
-        accounts.setAdapter(new ArrayAdapter<String>(getActivity(), 
+        DBaccounts = (ListView) rootView.findViewById (R.id.DBAccounts);
+        DBaccounts.setAdapter(new ArrayAdapter<String>(getActivity(), 
         		 android.R.layout.simple_list_item_1, 
         		 android.R.id.text1, 
-        		 getArguments().getStringArrayList("array")));
-        getActivity().registerForContextMenu(accounts);
+        		 getArguments().getStringArrayList("arrayDB")));
+        getActivity().registerForContextMenu(DBaccounts);
+        
+        Baccounts = (ListView) rootView.findViewById (R.id.BAccounts);
+        Baccounts.setAdapter(new ArrayAdapter<String>(getActivity(), 
+        		 android.R.layout.simple_list_item_1, 
+        		 android.R.id.text1, 
+        		 getArguments().getStringArrayList("arrayB")));
+        getActivity().registerForContextMenu(Baccounts);
         int i = getArguments().getInt(ARG_ACCOUNTS_NUMBER);
         String option = getResources().getStringArray(R.array.options_array)[i];
         getActivity().setTitle(option);
