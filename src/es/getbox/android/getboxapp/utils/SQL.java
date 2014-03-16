@@ -8,6 +8,7 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.os.Environment;
+import android.util.Log;
 import android.widget.Toast;
 
 public class SQL{
@@ -44,7 +45,7 @@ public class SQL{
 			//create table
 			db.execSQL("create table dropboxTokens ("
 					+ " ID integer PRIMARY KEY autoincrement, " 
-			        + " dropboxAccount integer, tokenKey text, tokenSecret text, userName text);  ");
+			        + " dropboxAccount integer, tokenKey text, tokenSecret text, userName text, space number);  ");
 			db.setTransactionSuccessful();
     		
 		    //Toast.makeText(context, "Table was created", Toast.LENGTH_LONG).show();
@@ -60,7 +61,7 @@ public class SQL{
 			//create table
 			db.execSQL("create table boxTokens ("
 					+ " ID integer PRIMARY KEY autoincrement, " 
-			        + " boxAccount integer, token text, userName text);  ");
+			        + " boxAccount integer, token text, userName text, space number);  ");
 			db.setTransactionSuccessful();
     		
 		    //Toast.makeText(context, "Table was created", Toast.LENGTH_LONG).show();
@@ -106,11 +107,11 @@ public class SQL{
     	}    	
     }
     
-    public void insertDropbox(int dropboxAccount,String tokenKey, String tokenSecret, String userName){
+    public void insertDropbox(int dropboxAccount,String tokenKey, String tokenSecret, String userName, long space){
     	db.beginTransaction();
     	try {
-    		db.execSQL( "insert into dropboxTokens (dropboxAccount,tokenKey, tokenSecret, userName) "
-    					         + " values ('"+dropboxAccount+"','"+tokenKey+"','"+tokenSecret+"','"+userName+"');" );
+    		db.execSQL( "insert into dropboxTokens (dropboxAccount,tokenKey, tokenSecret, userName, space) "
+    					         + " values ('"+dropboxAccount+"','"+tokenKey+"','"+tokenSecret+"','"+userName+"','"+space+"');" );
     		db.setTransactionSuccessful();
     	}
     	catch (SQLiteException e2) {
@@ -139,6 +140,23 @@ public class SQL{
     	}    	
     }
     
+    public void updateDropboxSpace(int dropboxAccount,long space){
+    	db.beginTransaction();
+    	try {
+    		db.execSQL( " update dropboxTokens "
+    				+ " set space =  '" + space + "'"
+    				+ " where dropboxAccount = '" + dropboxAccount + "' " );
+    		db.setTransactionSuccessful();
+    	}
+    	catch (SQLiteException e2) {
+    		//report problem 
+    		Toast.makeText(context, e2.getMessage(), Toast.LENGTH_LONG).show();
+    	}
+    	finally {
+    		db.endTransaction();
+    	}    	
+    }
+    
     public void deleteDropbox(int dropboxAccount){
     	db.beginTransaction();
     	try {
@@ -154,11 +172,12 @@ public class SQL{
     	}    	
     }
     
-    public void insertBox(int boxAccount,String token,String username){
+    public void insertBox(int boxAccount,String token,String username, long space){
     	db.beginTransaction();
+    	Log.i("a",""+space);
     	try {
-    		db.execSQL( "insert into boxTokens (boxAccount,token,userName) "
-    					         + " values ('"+boxAccount+"','"+token+"','"+username+"');" );
+    		db.execSQL( "insert into boxTokens (boxAccount,token,userName,space) "
+    					         + " values ('"+boxAccount+"','"+token+"','"+username+"','"+space+"');" );
     		db.setTransactionSuccessful();
     	}
     	catch (SQLiteException e2) {
@@ -187,11 +206,29 @@ public class SQL{
     	}    	
     }
     
+    
     public void updateBoxToken(int boxAccount,String token){
     	db.beginTransaction();
     	try {
     		db.execSQL( " update boxTokens "
     				+ " set token =  '" + token + "'"
+    				+ " where boxAccount = '" + boxAccount + "' " );
+    		db.setTransactionSuccessful();
+    	}
+    	catch (SQLiteException e2) {
+    		//report problem 
+    		Toast.makeText(context, e2.getMessage(), Toast.LENGTH_LONG).show();
+    	}
+    	finally {
+    		db.endTransaction();
+    	}    	
+    }
+    
+    public void updateBoxSpace(int boxAccount,long space){
+    	db.beginTransaction();
+    	try {
+    		db.execSQL( " update boxTokens "
+    				+ " set space =  '" + space + "'"
     				+ " where boxAccount = '" + boxAccount + "' " );
     		db.setTransactionSuccessful();
     	}
@@ -274,6 +311,28 @@ public class SQL{
     	return userName;
     }
     
+    public long getDropboxSpace(int dropboxAccount) {
+    	long space=0;
+    	try {
+    		String mySQL ="select space from dropboxTokens where " +
+    				"dropboxAccount="+dropboxAccount+"";
+			Cursor c = db.rawQuery(mySQL, null);
+			//String bdLogs="";
+			if (c != null ) {
+					if  (c.moveToLast()) {
+						do {
+							space=c.getLong(c.getColumnIndex("space"));
+						}while (c.moveToPrevious());
+					}
+			}
+			//Toast.makeText(context, bdLogs, Toast.LENGTH_LONG).show();
+			c.close();
+		} catch (Exception e) {
+			Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
+		}    	
+    	return space;
+    }
+    
     public String getBoxTokens(int boxAccount) {
     	String token="";
     	try {
@@ -316,6 +375,28 @@ public class SQL{
 			Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
 		}    	
     	return userName;
+    }
+    
+    public long getBoxSpace(int boxAccount) {
+    	long space=0;
+    	try {
+    		String mySQL ="select space from boxTokens where " +
+    				"boxAccount="+boxAccount+"";
+			Cursor c = db.rawQuery(mySQL, null);
+			//String bdLogs="";
+			if (c != null ) {
+					if  (c.moveToLast()) {
+						do {
+							space=c.getLong(c.getColumnIndex("space"));
+						}while (c.moveToPrevious());
+					}
+			}
+			//Toast.makeText(context, bdLogs, Toast.LENGTH_LONG).show();
+			c.close();
+		} catch (Exception e) {
+			Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
+		}    	
+    	return space;
     }
     
     public void dropTable(String tableName){

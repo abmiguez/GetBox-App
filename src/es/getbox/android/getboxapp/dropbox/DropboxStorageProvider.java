@@ -8,6 +8,7 @@ import java.util.concurrent.ExecutionException;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -133,7 +134,7 @@ public class DropboxStorageProvider {
 	
 	private void storeKeys(String key, String secret) {	
 		this.sql.openDatabase();
-		sql.insertDropbox(dropboxAccount, key, secret,getUser());
+		sql.insertDropbox(dropboxAccount, key, secret,getUser(),getSpace());
 		this.sql.closeDatabase();
 	}
 
@@ -192,6 +193,19 @@ public class DropboxStorageProvider {
 		return account_aux;
 	}
 	
+	public long getSpaceUsed(){
+		this.sql.openDatabase();
+		long space=sql.getDropboxSpace(dropboxAccount);
+		this.sql.closeDatabase();
+		return space;
+	}
+	
+	public void setSpaceUsed(long space){
+		this.sql.openDatabase();
+		sql.updateDropboxSpace(dropboxAccount,space);
+		this.sql.closeDatabase();
+	}
+	
 	public String getUser(){
 		DropboxGetUser dgu=new DropboxGetUser(mDBApi);
 		try {
@@ -204,6 +218,19 @@ public class DropboxStorageProvider {
 			return "";
 		}				
 	}
+	
+	public long getSpace(){
+		DropboxGetSpace dgs=new DropboxGetSpace(mDBApi);
+		try {
+			dgs.execute();
+			long a=dgs.get();
+			return a;
+		} catch (InterruptedException e) {
+			return 0;
+		} catch (ExecutionException e) {
+			return 0;
+		}				
+	}
 
 	public void getFiles(String directory_path, AsyncTaskCompleteListener<ArrayList<Item>> cb,boolean dialog) {
 		DropboxListDirectory ld = new DropboxListDirectory(mContext, mDBApi, directory_path, cb, dialog, dropboxAccount);
@@ -211,7 +238,7 @@ public class DropboxStorageProvider {
 	}
 	
 	public void downloadFile(String file_name, String file_id) {
-		DropboxDownloadFile df=new DropboxDownloadFile(mContext, mDBApi,file_id, file_name);
+		DropboxDownloadFile df=new DropboxDownloadFile(mContext, mDBApi,file_id, Environment.getExternalStorageDirectory().getPath()+"/GetBox/"+file_name);
 		df.execute();
 	}
 	

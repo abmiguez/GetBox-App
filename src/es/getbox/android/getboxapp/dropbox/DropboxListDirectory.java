@@ -65,7 +65,7 @@ public class DropboxListDirectory extends AsyncTask<Void, Void, ArrayList<Item>>
             Entry dirent = mApi.metadata(mPath, 0, null, true, null);    
     		
             if (!dirent.isDir || dirent.contents == null) {
-                mErrorMsg = "Directorio vacío";
+                //mErrorMsg = "Directorio vacío";
                 this.errores=false;
             }
             List<Entry> contents1 = dirent.contents;
@@ -102,6 +102,8 @@ public class DropboxListDirectory extends AsyncTask<Void, Void, ArrayList<Item>>
             } else if (e.error == DropboxServerException._404_NOT_FOUND) {
                 // path not found (or if it was the thumbnail, can't be
                 // thumbnailed)
+            	this.errores=true;
+            	return folderName;
             } else if (e.error == DropboxServerException._406_NOT_ACCEPTABLE) {
                 // too many entries to return
             } else if (e.error == DropboxServerException._415_UNSUPPORTED_MEDIA) {
@@ -132,8 +134,9 @@ public class DropboxListDirectory extends AsyncTask<Void, Void, ArrayList<Item>>
 	
 	@Override
     protected void onPostExecute(ArrayList<Item> result) {
-        if (!this.errores) {
+		if (!this.errores) {
             showToast(mErrorMsg);
+			//Log.e("Errores dspList", mErrorMsg);
         }
         
         if (dialog.isShowing()&&isDialog) { 

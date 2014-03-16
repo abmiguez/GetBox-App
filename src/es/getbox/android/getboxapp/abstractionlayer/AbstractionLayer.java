@@ -7,7 +7,7 @@ import com.box.boxandroidlibv2.activities.OAuthActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
-import android.view.View;
+import android.widget.Toast;
 
 import es.getbox.android.getboxapp.GetBoxActivity;
 import es.getbox.android.getboxapp.box.BoxStorageProvider;
@@ -31,16 +31,14 @@ public class AbstractionLayer{
 	private ArrayList<String> bAccounts;
 	private boolean newDBAccount;
 	private boolean newBAccount;
+	private int accountsCounter;
+	private int accountsUsed;
 	public final static int AUTH_BOX_REQUEST = 2;
 	
 	
 	//Rutas para la navegación entre los directorios
-    private String rutaDropboxActual;
-    private String rutaBoxActual;
-    private String[] directoriosDropbox;
-    private String[] directoriosBox;
-    private int posicionActualDropbox;
-    private int posicionActualBox;
+   private ArrayList<String> directoriosDropbox;
+    private int posicionActual;
 	
 	//SQL
 	private SQL sql;
@@ -59,28 +57,165 @@ public class AbstractionLayer{
 		newBoxAccount=sql.countAll("boxTokens");
 		dbAccounts=new ArrayList<String>();
 		bAccounts=new ArrayList<String>();
+		accountsCounter=0;
+		accountsUsed=0;
 		
 		dsp=new ArrayList<DropboxStorageProvider>();
 		bsp=new ArrayList<BoxStorageProvider>();
 		
-		posicionActualDropbox=0;
-		posicionActualBox=0;
-		rutaDropboxActual="/";
-		rutaBoxActual="0";
-		directoriosDropbox=new String[100];
-		directoriosBox=new String[100];
-		directoriosDropbox[posicionActualDropbox]=rutaDropboxActual;
-		directoriosBox[posicionActualBox]=rutaBoxActual;	
+		directoriosDropbox=new ArrayList<String>();
+		directoriosDropbox.add("/");
+		posicionActual=0;
 		sql.closeDatabase();	
 	}
 	
+	public void uploadFile(String file_name){
+		long longDB=0;
+		long longB=0;
+		int intDB=0;
+		int intB=0;
+		for(int i=0;i<newDropboxAccount;i++){
+			if(dsp.get(i).getSpaceUsed()>longDB){
+				longDB=dsp.get(i).getSpaceUsed();
+				intDB=i;
+			}
+        }
+        for(int i=0;i<newBoxAccount;i++){
+        	if(bsp.get(i).getSpaceUsed()>longB){
+				longB=bsp.get(i).getSpaceUsed();
+				intB=i;
+			}
+        }
+        if(longDB>longB){
+        	String rutaDropbox="";
+    		for(int i=0;i<directoriosDropbox.size();i++){
+            	rutaDropbox=rutaDropbox+directoriosDropbox.get(i);
+            }
+        	dsp.get(intDB).uploadFile(file_name, rutaDropbox);
+        	dsp.get(intDB).setSpaceUsed(dsp.get(intDB).getSpace());
+        }else{
+        	bsp.get(intB).uploadFile(file_name,
+        			bsp.get(intB).getDirectory(posicionActual));
+        	bsp.get(intB).setSpaceUsed(bsp.get(intB).getSpace());
+        }
+	}
+	
+	public void uploadFolder(String file_name){
+		String rutaDropbox="";
+		for(int i=0;i<directoriosDropbox.size();i++){
+        	rutaDropbox=rutaDropbox+directoriosDropbox.get(i);
+        }
+		long longDB=0;
+		long longB=0;
+		int intDB=0;
+		int intB=0;
+		for(int i=0;i<newDropboxAccount;i++){
+			if(dsp.get(i).getSpaceUsed()>longDB){
+				longDB=dsp.get(i).getSpaceUsed();
+				intDB=i;
+			}
+        }
+        for(int i=0;i<newBoxAccount;i++){
+        	if(bsp.get(i).getSpaceUsed()>longB){
+				longB=bsp.get(i).getSpaceUsed();
+				intB=i;
+			}
+        }
+        if(longDB>longB){
+        	dsp.get(intDB).uploadFolder(file_name, rutaDropbox);
+        }else{
+        	bsp.get(intB).uploadFolder(file_name, 
+        			bsp.get(intB).getDirectory(posicionActual));
+        }
+	}
+	
+	public boolean enableWidget(){
+		accountsCounter++;
+		if(accountsCounter==accountsUsed){
+			accountsCounter=0;
+			accountsUsed=0;
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
+	public boolean enableBack(){
+		if(posicionActual==0){
+			return true;
+		}		
+		if(accountsCounter==accountsUsed){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
+	public int getPosicionActual() {
+		return posicionActual;
+	}
+
+	public String getRoute() {
+		String route="";
+		for(int i=1;i<=posicionActual;i++){
+			route=route+directoriosDropbox.get(i);
+		}
+		return route.substring(0, route.length()-1);
+	}
+	
+	public void download(Item item){
+		if(item.getName().indexOf(".")>0){
+			if(item.getLocation()=="dropbox"){
+				dsp.get(item.getAccount()).downloadFile(item.getName(),item.getId());
+			}else{
+				if(item.getLocation()=="box"){
+					bsp.get(item.getAccount()).downloadFile(item.getName(),item.getId());
+				}
+			}
+		}else{
+			Toast.makeText(context, "No se pueden descargar directorios", Toast.LENGTH_LONG).show();
+		}
+	}
+	
+	public void delete(Item item){
+		String rutaDropbox="";
+		for(int i=0;i<directoriosDropbox.size();i++){
+        	rutaDropbox=rutaDropbox+directoriosDropbox.get(i);
+        }
+		if(item.getName().indexOf(".")>0){
+			if(item.getLocation()=="dropbox"){
+				dsp.get(item.getAccount()).deleteFile(item.getName(),rutaDropbox+item.getName());
+				dsp.get(item.getAccount()).setSpaceUsed(dsp.get(item.getAccount()).getSpace());
+			}else{
+				if(item.getLocation()=="box"){
+					bsp.get(item.getAccount()).deleteFile(item.getName(),item.getId());
+					bsp.get(item.getAccount()).setSpaceUsed(bsp.get(item.getAccount()).getSpace());
+				}
+			}
+		}else{ 
+			for(int i=0;i<newDropboxAccount;i++){
+				dsp.get(i).deleteFolder(item.getName(),item.getId());
+	        }
+			for(int i=0;i<newBoxAccount;i++){
+	        	if(bsp.get(i).getDirectory(posicionActual)!=""){
+	        		ArrayList<Item>aux=bsp.get(i).getCurrentDirectory();
+	        		for(int j=0;j<aux.size();j++){
+		        		if(aux.get(j).getName().equals(item.getName())){
+		        			bsp.get(i).deleteFolder(item.getName(),aux.get(j).getId());
+		        		}
+		        	}
+	        	}
+	        }
+		}
+	}
+	
 	public void restartRoutes(){
-		posicionActualDropbox=0;
-		posicionActualBox=0;
-		rutaDropboxActual="/";
-		rutaBoxActual="0";
-		directoriosDropbox[posicionActualDropbox]=rutaDropboxActual;
-		directoriosBox[posicionActualBox]=rutaBoxActual;
+		directoriosDropbox.clear();
+		directoriosDropbox.add("/");
+		posicionActual=0;
+		for(int i=0;i<newBoxAccount;i++){
+			bsp.get(i).restartRoutes();
+		}
 	}
 
 	public void startAutentication(){
@@ -170,45 +305,78 @@ public class AbstractionLayer{
 		this.sql.closeDatabase();
 	}
 	
-	public void getFiles(AsyncTaskCompleteListener<ArrayList<Item>> cb){
+	public void saveDirectory(ArrayList<Item> result, String location, int account){
+		if(location=="box"){
+    		bsp.get(account).saveDirectory(result);
+		}
+	}
+	public void navigateTo(String route,AsyncTaskCompleteListener<ArrayList<Item>> cb){
+		String rutaDropbox="";
+		for(int i=0;i<directoriosDropbox.size();i++){
+        	rutaDropbox=rutaDropbox+directoriosDropbox.get(i);
+        }		
+		this.directoriosDropbox.add(route+"/");
+		for(int i=0;i<newDropboxAccount;i++){
+        	dsp.get(i).getFiles(rutaDropbox+route+"/",cb,false);
+        	accountsUsed++;
+        }
+		
+        for(int i=0;i<newBoxAccount;i++){
+        	if(bsp.get(i).getDirectory(posicionActual)!=""){
+        		ArrayList<Item>aux=bsp.get(i).getCurrentDirectory();
+        		for(int j=0;j<aux.size();j++){
+	        		if(aux.get(j).getName().equals(route)){
+	                	bsp.get(i).getFiles(aux.get(j).getId(),cb,false);
+	                	accountsUsed++;
+	                	bsp.get(i).addDirectory(aux.get(j).getId());
+	        		}else{
+	        			bsp.get(i).addDirectory("");
+	        		}
+	        	}
+        	}
+        }
+		posicionActual++;
+	}
+	
+	public boolean goBack(AsyncTaskCompleteListener<ArrayList<Item>> cb){
+		if(posicionActual==0){
+			return false;
+		}else{
+			String rutaDropbox="";
+			for(int i=0;i<directoriosDropbox.size()-1;i++){
+	        	rutaDropbox=rutaDropbox+directoriosDropbox.get(i);
+	        }		
+			this.directoriosDropbox.remove(posicionActual);
+			for(int i=0;i<newDropboxAccount;i++){
+	        	dsp.get(i).getFiles(rutaDropbox,cb,false);
+	        	accountsUsed++;
+	        }
+			
+	        for(int i=0;i<newBoxAccount;i++){
+	        	if(bsp.get(i).getDirectory(posicionActual-1)!=""){
+	        		bsp.get(i).getFiles(bsp.get(i).getDirectory(posicionActual-1),cb,false);
+	            	accountsUsed++;
+		            bsp.get(i).removeDirectory(posicionActual);
+		        }else{
+		        	bsp.get(i).addDirectory("");
+		        }
+	        }			
+			
+			posicionActual--;
+			return true;
+		}
+	}
+	
+	public void initFiles(AsyncTaskCompleteListener<ArrayList<Item>> cb){
 		for(int i=0;i<newDropboxAccount;i++){
         	dsp.get(i).getFiles("/",cb,false);
+        	accountsUsed++;
         }
         for(int i=0;i<newBoxAccount;i++){
         	bsp.get(i).getFiles("0",cb,false);
+        	accountsUsed++;
         }
-	}
-	
-	public DropboxStorageProvider getDsp_aux() {
-		return dsp_aux;
-	}
-
-	public void setDsp_aux(DropboxStorageProvider dsp_aux) {
-		this.dsp_aux = dsp_aux;
-	}
-
-	public BoxStorageProvider getBsp_aux() {
-		return bsp_aux;
-	}
-
-	public void setBsp_aux(BoxStorageProvider bsp_aux) {
-		this.bsp_aux = bsp_aux;
-	}
-
-	public ArrayList<DropboxStorageProvider> getDsp() {
-		return dsp;
-	}
-
-	public void setDsp(ArrayList<DropboxStorageProvider> dsp) {
-		this.dsp = dsp;
-	}
-
-	public ArrayList<BoxStorageProvider> getBsp() {
-		return bsp;
-	}
-
-	public void setBsp(ArrayList<BoxStorageProvider> bsp) {
-		this.bsp = bsp;
+        restartRoutes();
 	}
 
 	public int getNewBoxAccount() {
@@ -257,61 +425,5 @@ public class AbstractionLayer{
 
 	public void setNewBAccount(boolean newBAccount) {
 		this.newBAccount = newBAccount;
-	}
-
-	public String getRutaDropboxActual() {
-		return rutaDropboxActual;
-	}
-
-	public void setRutaDropboxActual(String rutaDropboxActual) {
-		this.rutaDropboxActual = rutaDropboxActual;
-	}
-
-	public String getRutaBoxActual() {
-		return rutaBoxActual;
-	}
-
-	public void setRutaBoxActual(String rutaBoxActual) {
-		this.rutaBoxActual = rutaBoxActual;
-	}
-
-	public String[] getDirectoriosDropbox() {
-		return directoriosDropbox;
-	}
-
-	public void setDirectoriosDropbox(String[] directoriosDropbox) {
-		this.directoriosDropbox = directoriosDropbox;
-	}
-
-	public String[] getDirectoriosBox() {
-		return directoriosBox;
-	}
-
-	public void setDirectoriosBox(String[] directoriosBox) {
-		this.directoriosBox = directoriosBox;
-	}
-
-	public int getPosicionActualDropbox() {
-		return posicionActualDropbox;
-	}
-
-	public void setPosicionActualDropbox(int posicionActualDropbox) {
-		this.posicionActualDropbox = posicionActualDropbox;
-	}
-
-	public int getPosicionActualBox() {
-		return posicionActualBox;
-	}
-
-	public void setPosicionActualBox(int posicionActualBox) {
-		this.posicionActualBox = posicionActualBox;
-	}
-
-	public Context getContext() {
-		return context;
-	}
-
-	public void setContext(Context context) {
-		this.context = context;
 	}
 }

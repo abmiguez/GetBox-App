@@ -1,10 +1,6 @@
 package es.getbox.android.getboxapp.box;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
@@ -24,19 +20,16 @@ import com.box.boxandroidlibv2.dao.BoxAndroidOAuthData;
 import com.box.boxjavalibv2.authorization.OAuthRefreshListener;
 import com.box.boxjavalibv2.dao.BoxOAuthToken;
 import com.box.boxjavalibv2.exceptions.AuthFatalFailureException;
-import com.box.boxjavalibv2.exceptions.BoxServerException;
 import com.box.boxjavalibv2.interfaces.IAuthData;
 import com.box.boxjavalibv2.requests.requestobjects.BoxFileRequestObject;
 import com.box.boxjavalibv2.requests.requestobjects.BoxFileUploadRequestObject;
 import com.box.boxjavalibv2.requests.requestobjects.BoxFolderRequestObject;
-import com.box.restclientv2.exceptions.BoxRestException;
 
-import es.getbox.android.getboxapp.dropbox.DropboxGetUser;
 import es.getbox.android.getboxapp.interfaces.AsyncTaskCompleteListener;
 import es.getbox.android.getboxapp.utils.Item;
 import es.getbox.android.getboxapp.utils.SQL;
 
-public class BoxStorageProvider<mClient> { 
+public class BoxStorageProvider { 
 
 	final static private String TAG = "BoxSP";
 	private Context context;
@@ -46,13 +39,19 @@ public class BoxStorageProvider<mClient> {
     public static final String CLIENT_SECRET = "g5O8FfBPaeTYJR35aVhVfZ9VURBn2rZ6";
     public static final String REDIRECT_URL = "http://localhost/";
     private SQL sql;
+    private ArrayList<Item> currentDirectory;
+    private ArrayList<String> directories;
+    private long space;
 	
     public BoxStorageProvider(Context context, int newBoxAccount){
     	this.context=context;
     	this.boxAccount=newBoxAccount;
-    	this.sql=new SQL(context);	
+    	this.sql=new SQL(context);
+    	this.currentDirectory=new ArrayList<Item>();
+    	this.directories=new ArrayList<String>();
+    	this.directories.add("0");
     }
-    
+        
     public BoxAndroidClient getClient(){
     	return this.mClient;
     }
@@ -79,14 +78,15 @@ public class BoxStorageProvider<mClient> {
 
                 @Override
                 public void onRefresh(IAuthData newAuthData) {
-                	BoxOAuthToken oauthObject;
-					try {
-						oauthObject = mClient.getAuthData();
-						String accesstoken=oauthObject.getAccessToken();
+                	try {
+						BoxOAuthToken oauthObject=mClient.getAuthData();
+						String accesstoken=newAuthData.getAccessToken();
 						sql.openDatabase();
 			           	sql.updateBoxToken(boxAccount, accesstoken);
 			            sql.closeDatabase();
-					} catch (AuthFatalFailureException e) {
+			            oauthObject.setAccessToken(accesstoken);
+			            mClient.authenticate(oauthObject);
+					} catch (Exception e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}                	
@@ -94,7 +94,7 @@ public class BoxStorageProvider<mClient> {
 
             });
            	this.sql.openDatabase();
-           	sql.insertBox(boxAccount, accesstoken,getUser());
+           	sql.insertBox(boxAccount, accesstoken,getUser(),getSpace());
             Toast.makeText(context, "authenticated", Toast.LENGTH_LONG).show();
        		this.sql.closeDatabase();
            }
@@ -118,11 +118,13 @@ public class BoxStorageProvider<mClient> {
              @Override
              public void onRefresh(IAuthData newAuthData) {
             	 try{
-            		 BoxOAuthToken oauthObject = mClient.getAuthData();
-            		 String accesstoken=oauthObject.getAccessToken();
+            		 BoxOAuthToken oauthObject=mClient.getAuthData();
+            		 String accesstoken=newAuthData.getAccessToken();
             		 sql.openDatabase();
 			         sql.updateBoxToken(boxAccount, accesstoken);
 			         sql.closeDatabase();
+			         oauthObject.setAccessToken(accesstoken);
+			         mClient.authenticate(oauthObject);
             	 }catch(Exception e){}
              }
  
@@ -148,6 +150,32 @@ public class BoxStorageProvider<mClient> {
 			return "";
 		} catch (ExecutionException e) {
 			return "";
+		}
+    }
+    
+    public long getSpaceUsed(){
+		this.sql.openDatabase();
+    	long space= sql.getBoxSpace(boxAccount);
+		this.sql.closeDatabase();
+		return space;
+	}
+    
+    public void setSpaceUsed(long space){
+		this.sql.openDatabase();
+    	sql.updateBoxSpace(boxAccount,space);
+		this.sql.closeDatabase();
+	}
+    
+    public long getSpace(){
+    	BoxGetSpace dgs=new BoxGetSpace(mClient);
+		try {
+			dgs.execute();
+			long a=dgs.get();
+			return a;
+		} catch (InterruptedException e) {
+			return 0;
+		} catch (ExecutionException e) {
+			return 0;
 		}
     }
     
@@ -177,7 +205,7 @@ public class BoxStorageProvider<mClient> {
             protected Null doInBackground(Null... params) {
                 BoxAndroidClient client = mClient;
                 try {
-                    File f = new File(Environment.getExternalStorageDirectory(), fName);
+                    File f = new File(Environment.getExternalStorageDirectory().getPath()+"/GetBox/", fName);
                     System.out.println(f.getAbsolutePath());
                     client.getFilesManager().downloadFile(fPath, f, null, null);
                 }
@@ -212,9 +240,10 @@ public class BoxStorageProvider<mClient> {
                 try {
                     File file = new File(fName);                    
                     client.getFilesManager().uploadFile(
-                        BoxFileUploadRequestObject.uploadFileRequestObject(fPath, fName, file, client.getJSONParser()));
+                        BoxFileUploadRequestObject.uploadFileRequestObject(fPath, file.getName(), file, client.getJSONParser()));
                 }
                 catch (Exception e) {
+                	Log.i("BoxSP",e.getMessage()+", "+fName);
                 }
                 return null;
             }
@@ -319,5 +348,36 @@ public class BoxStorageProvider<mClient> {
             }
         };
         task.execute();
-    }    
+    }   
+    
+
+    public void restartRoutes(){
+    	directories.clear();
+    	directories.add("0");
+    	currentDirectory.clear();
+    }
+    
+    public ArrayList<String> getDirectories() {
+		return directories;
+	}
+    
+    public String getDirectory(int position) {
+		return directories.get(position);
+	}
+
+	public void addDirectory(String folder) {
+		this.directories.add(folder);
+	}
+	
+	public void removeDirectory(int position){
+		this.directories.remove(position);
+	}
+
+	public void saveDirectory(ArrayList<Item> currentDirectory){
+    	this.currentDirectory=currentDirectory;
+    }
+    
+    public ArrayList<Item> getCurrentDirectory(){
+    	return this.currentDirectory;
+    }
 }

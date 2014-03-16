@@ -27,9 +27,11 @@ import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.Collections;
 
 import es.getbox.android.getboxapp.abstractionlayer.AbstractionLayer;
 import es.getbox.android.getboxapp.fragments.FragmentArchives;
@@ -211,7 +213,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         	this.finish();
 			return true;	
         case R.id.actualizar:
-        	actualizar("",true);
+        	//actualizar("",true);
         	return true;
         
         case R.id.nueva_carpeta:
@@ -254,7 +256,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
     		args.putInt(FragmentArchives.ARG_ARCHIVE_NUMBER, position);
             fragment.setArguments(args);
             listDirectory.clear();
-            aLayer.getFiles(this);
+            aLayer.initFiles(this);
             aLayer.restartRoutes();
     		boolArchives=true;
         break;
@@ -384,8 +386,8 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
    	 	builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() { 
    	 		public void onClick(DialogInterface dialog, int whichButton) { 	
             	String nC=nCarpeta.getText().toString();
-            	//dsp.uploadFolder(rutaActual+nC,nC);
-            	actualizar("",false);
+            	aLayer.uploadFolder(nC);
+            	//actualizar("",false);
             	Date date = new Date();
                 DateFormat df = new SimpleDateFormat("dd-MM-yyyy kk:mm");
                 String fecha = df.format(date);            	
@@ -411,18 +413,14 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
 		}
 	}//onClick
     
-    private void actualizar(String ruta,boolean dialog){
-    	if (ruta==""){
-    		//dsp.getFiles(rutaActual,this,dialog);
-    	}else{ 
-    		//dsp.getFiles(ruta,this,dialog);
-    	}
-    	
-    }
     
     public void onTaskComplete(ArrayList<Item> result) {
     	try{
+    		archivos = (ListView) findViewById (R.id.archivos);
+    		archivos.setEnabled(false);
+    		
 	    	if(result.size()>0){
+	    		aLayer.saveDirectory(result,result.get(0).getLocation(),result.get(0).getAccount());
 		    	for(int i=0;i<result.size();i++){
 		    		listDirectory.add(result.get(i));
 		    	}
@@ -431,15 +429,36 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
 	        hs.addAll(listDirectory);
 	        listDirectory.clear();
 	        listDirectory.addAll(hs);
-	    	if(listDirectory.size()>0){    		
+	        Collections.sort(listDirectory, new Comparator<Item>(){
+	        	 
+				@Override
+				public int compare(Item o1, Item o2) {
+					return (o1.getName().toLowerCase()).compareTo(o2.getName().toLowerCase());
+				}
+				
+				
+			});
+	             
+	    	//if(listDirectory.size()>0){  
+	    		ArrayList<Item> aux=new ArrayList<Item> ();
+	 	        for(int i=0; i<listDirectory.size();i++){
+	 	        	if(listDirectory.get(i).getName().indexOf(".")>0){
+	 	        		aux.add(listDirectory.get(i));
+	 	        		listDirectory.remove(i);
+	 	        	}
+	 	        }
+	 	        for(int i=0; i<aux.size();i++){
+	 	        	listDirectory.add(aux.get(i));
+	 	        }
 	    		Myonclicklistneer myonclicklistneer = new Myonclicklistneer();
 	    		archivos = (ListView) findViewById (R.id.archivos);
 	            archivos.setAdapter(new CustomIconLabelAdapter(this));
 	            registerForContextMenu(archivos);
 	            archivos.setOnItemClickListener(myonclicklistneer);
-	    	}else{
+	    	/*}else{
 	    		showToast("null");
-	    	}    	
+	    	}*/    
+	            archivos.setEnabled(aLayer.enableWidget());
     	}catch(Exception e){}
     }
     
@@ -449,15 +468,11 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long arg3) {
         	if( (listDirectory.get(position).getName()).indexOf(".")<0 ) {
-        		
-        		
-        		/*rutaActual=(rutaActual.concat(folderName.get(position))).concat("/");
-	        	posicionActual++;
-	        	carpetaActual[posicionActual]=(folderName.get(position)).concat("/");
-	        	actualizar("",false);
-	        	if(posicionActual!=0){
-	        		setTitle(rutaActual.substring(1, rutaActual.length()-1));
-	        	}*/
+        		String aux=listDirectory.get(position).getName();
+        		aLayer.navigateTo(listDirectory.get(position).getName(),GetBoxActivity.this);
+        		listDirectory.clear();
+        		mTitle = aux;
+                getActionBar().setTitle(aLayer.getRoute());
         	}
         }
 
@@ -539,24 +554,19 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
     	        (AdapterContextMenuInfo) item.getMenuInfo();
         switch (item.getItemId()) {
             case R.id.descargar:
-            	//dsp.downloadFile(Environment.getExternalStorageDirectory().getPath()+"/MyDropbox/"+folderName.get(info.position), rutaActual+folderName.get(info.position)); 
-            	Date date = new Date();
-                DateFormat df = new SimpleDateFormat("dd-MM-yyyy kk:mm");
-                String fecha = df.format(date);
-    			return true;
+            	aLayer.download(listDirectory.get(info.position));
+            	return true;
             case R.id.borrar:
-            	//positionArray=info.position;
+            	final int index=info.position;
             	DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
             	    @Override
             	    public void onClick(DialogInterface dialog, int which) {
             	        switch (which){
             	        case DialogInterface.BUTTON_POSITIVE:
-            	        	//dsp.deleteFile(rutaActual+folderName.get(positionArray));
-                    		actualizar("",false);
+            	        	
+            	        	aLayer.delete(listDirectory.get(index));
+                    		//actualizar("",false);
             	        	showToast("Borrado con exito");
-            	        	Date date = new Date();
-                            DateFormat df = new SimpleDateFormat("dd-MM-yyyy kk:mm");
-                            String fecha = df.format(date);
                 			break;
 
             	        case DialogInterface.BUTTON_NEGATIVE:
@@ -624,10 +634,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         if (resultCode == RESULT_OK && requestCode == 555) {
             try{
             	if (data.hasExtra("archivo_seleccionado")) {
-            //	dsp.uploadFile(rutaActual, data.getExtras().getString("archivo_seleccionado"));
-            	Date date = new Date();
-                DateFormat df = new SimpleDateFormat("dd-MM-yyyy kk:mm");
-                String fecha = df.format(date);
+                aLayer.uploadFile(data.getExtras().getString("archivo_seleccionado"));
             }
             }catch(NullPointerException e){
             	Log.i(TAG,"Se ha saido del gestor sin seleccionar archivo");
@@ -643,36 +650,27 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         Toast error = Toast.makeText(this, msg, Toast.LENGTH_LONG);
         error.show();
     }
-    /*
+    
     public void onBackPressed(){
-    	switch(nlayout){
-    	case 0:	
+    	if(boolArchives==false){
     		this.finish();
-    	break;
-    	
-    	case 1:
-    		if (mLoggedIn && posicionActual==0) {
-    			this.finish();
-    		}else{
-    			if(mLoggedIn){
-    				rutaActual=rutaActual.replace(carpetaActual[posicionActual],"");
-    				posicionActual--;
-    				actualizar("",false);
-    	    		if(posicionActual!=0){
-    	        		setTitle(rutaActual.substring(1, rutaActual.length()-1));
-    	        	}else{
-    	        		setTitle("Archivos");    	       
-    	        	}
-    			}else{
-    				showLogIn();
-    			}    			
+    	}else{
+    		if(aLayer.enableBack()){
+	    		if(aLayer.goBack(this)){
+	    			listDirectory.clear();
+	    			if(aLayer.getPosicionActual()>0){
+	    				mTitle = aLayer.getRoute();
+	                    getActionBar().setTitle(mTitle);
+	    			}
+	    			else{
+	    				mTitle = mOptionTitles[0];
+	                    getActionBar().setTitle(mTitle);
+	    			}
+	    		}else{
+	    			this.finish();
+	    		}
     		}
-    	break;
-
-    	default:
-    		this.finish();
-    		break;
     	}
     	
-    }   */
+    }   
 }

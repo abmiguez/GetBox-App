@@ -42,25 +42,27 @@ public class BoxListDirectory extends AsyncTask<Void, Void, ArrayList<Item>> {
     @Override
     protected ArrayList<Item> doInBackground(Void... params) {
     	BoxCollection files=new BoxAndroidCollection();
+    	ArrayList<Item> result=new ArrayList<Item>();
     	try {
     		files=mClient.getFoldersManager().getFolderItems(mPath, null);
+
+        	ArrayList<BoxTypedObject> boxObjects = files.getEntries();
+        	if(boxObjects.size()>0){
+    	    	Item item=new Item();
+    	    	for(int i=0; i<=boxObjects.size()-1;i++){
+    	    		BoxTypedObject bto= boxObjects.get(i);
+    	    		BoxItem bi=(BoxItem) bto;
+    	    		item=new Item(bi.getName(),bi.getId(),"box",boxAccount);
+    	    		result.add(item);
+    	    	}    	
+        	}
         }
         catch (BoxSDKException e) {
-        	Log.i("Box","boxexcep");   
+        	Log.i("Box","boxexcep"+e.getMessage()); 
+        	
         }catch(Exception e){
         	Log.i("a","ex");
         }
-    	ArrayList<BoxTypedObject> boxObjects = files.getEntries();
-    	ArrayList<Item> result=new ArrayList<Item>();
-    	if(boxObjects.size()>0){
-	    	Item item=new Item();
-	    	for(int i=0; i<=boxObjects.size()-1;i++){
-	    		BoxTypedObject bto= boxObjects.get(i);
-	    		BoxItem bi=(BoxItem) bto;
-	    		item=new Item(bi.getName(),bi.getId(),"box",boxAccount);
-	    		result.add(item);
-	    	}    	
-    	}
     	return result;
     }
 }

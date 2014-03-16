@@ -7,12 +7,12 @@ import com.dropbox.client2.DropboxAPI.Account;
 import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.exception.DropboxException;
 
-public class DropboxGetUser extends AsyncTask<Void, Void, String> {
+public class DropboxGetSpace extends AsyncTask<Void, Void, Long> {
 
     private DropboxAPI<AndroidAuthSession> mApi;
-    private String account;
+    private long space;
     
-    public DropboxGetUser(DropboxAPI<AndroidAuthSession> api) {
+    public DropboxGetSpace(DropboxAPI<AndroidAuthSession> api) {
     	mApi = api;
     }
     
@@ -20,16 +20,16 @@ public class DropboxGetUser extends AsyncTask<Void, Void, String> {
     protected void onPreExecute (){}
     
     @Override
-    protected String doInBackground(Void... params) {
+    protected Long doInBackground(Void... params) {
     	try{
 			Account a=this.mApi.accountInfo();
-			this.account= a.displayName;
+			this.space= a.quota-a.quotaNormal-a.quotaShared;
 		}catch(DropboxException e){
-			this.account="";
+			this.space=0;
 		}
-        return this.account;
+        return this.space;
     }
 	
 	@Override
-    protected void onPostExecute(String result) {}
+    protected void onPostExecute(Long result) {}
 }
