@@ -17,9 +17,10 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
+        
         <activity
-            android:name="es.getbox.android.getboxapp.GetBoxActivity"
-            android:label="@string/app_name" >
+            android:name="es.getbox.android.getboxapp.SplashScreenActivity"
+            android:label="@string/app_name" >               
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -28,9 +29,10 @@
         </activity>
         
         <activity
-            android:name="es.getbox.android.getboxapp.SplashScreenActivity"
-            android:label="@string/app_name" >   
+            android:name="es.getbox.android.getboxapp.GetBoxActivity"
+            android:label="@string/app_name" >
         </activity>
+        
         <activity
             android:name="es.getbox.android.getboxapp.FileExplorerActivity"   
             android:label="@string/app_name" >          

@@ -35,9 +35,10 @@ public class DropboxListDirectory extends AsyncTask<Void, Void, ArrayList<Item>>
     private AsyncTaskCompleteListener<ArrayList<Item>>callback;
     private boolean isDialog;
     private int dropboxAccount;
+    private DropboxStorageProvider dsp;
     
     public DropboxListDirectory(Context context, DropboxAPI<AndroidAuthSession> api,
-			String dropboxPath, AsyncTaskCompleteListener<ArrayList<Item>> cb, boolean isD, int dropboxAccount) {
+			String dropboxPath, AsyncTaskCompleteListener<ArrayList<Item>> cb, boolean isD, int dropboxAccount,DropboxStorageProvider dsp) {
     	mContext=context;
 		mApi = api;
         mPath = dropboxPath;
@@ -47,6 +48,7 @@ public class DropboxListDirectory extends AsyncTask<Void, Void, ArrayList<Item>>
         dialog=new ProgressDialog(mContext);
         this.callback = cb;
         this.dropboxAccount=dropboxAccount;
+        this.dsp=dsp;
     }
     
     @Override
@@ -85,6 +87,7 @@ public class DropboxListDirectory extends AsyncTask<Void, Void, ArrayList<Item>>
 		    	folderName.add(archives.get(i));
 		    }
             this.errores = true;
+            this.dsp.setNoLocation(true);
             return folderName;
 
         } catch (DropboxUnlinkedException e) {
@@ -102,6 +105,7 @@ public class DropboxListDirectory extends AsyncTask<Void, Void, ArrayList<Item>>
             } else if (e.error == DropboxServerException._404_NOT_FOUND) {
                 // path not found (or if it was the thumbnail, can't be
                 // thumbnailed)
+            	this.dsp.setNoLocation(false);
             	this.errores=true;
             	return folderName;
             } else if (e.error == DropboxServerException._406_NOT_ACCEPTABLE) {

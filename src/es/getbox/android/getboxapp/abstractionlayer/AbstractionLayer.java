@@ -1,6 +1,9 @@
 package es.getbox.android.getboxapp.abstractionlayer;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 import com.box.boxandroidlibv2.activities.OAuthActivity;
 
@@ -35,10 +38,13 @@ public class AbstractionLayer{
 	private int accountsUsed;
 	public final static int AUTH_BOX_REQUEST = 2;
 	
+	//Plugins
+	private StoragePolicyPlugin spp;
 	
 	//Rutas para la navegación entre los directorios
    private ArrayList<String> directoriosDropbox;
     private int posicionActual;
+   
 	
 	//SQL
 	private SQL sql;
@@ -62,6 +68,7 @@ public class AbstractionLayer{
 		
 		dsp=new ArrayList<DropboxStorageProvider>();
 		bsp=new ArrayList<BoxStorageProvider>();
+		spp=new StoragePolicyPlugin();
 		
 		directoriosDropbox=new ArrayList<String>();
 		directoriosDropbox.add("/");
@@ -69,64 +76,45 @@ public class AbstractionLayer{
 		sql.closeDatabase();	
 	}
 	
-	public void uploadFile(String file_name){
-		long longDB=0;
-		long longB=0;
-		int intDB=0;
-		int intB=0;
-		for(int i=0;i<newDropboxAccount;i++){
-			if(dsp.get(i).getSpaceUsed()>longDB){
-				longDB=dsp.get(i).getSpaceUsed();
-				intDB=i;
-			}
-        }
-        for(int i=0;i<newBoxAccount;i++){
-        	if(bsp.get(i).getSpaceUsed()>longB){
-				longB=bsp.get(i).getSpaceUsed();
-				intB=i;
-			}
-        }
-        if(longDB>longB){
+	public Item uploadFile(String file_name){
+        int[] cuenta=spp.storagePolicy(newDropboxAccount, newBoxAccount, dsp, bsp);
+        Item item;
+        File aux=new File(file_name);        
+        if(cuenta[0]==0){
         	String rutaDropbox="";
     		for(int i=0;i<directoriosDropbox.size();i++){
             	rutaDropbox=rutaDropbox+directoriosDropbox.get(i);
             }
-        	dsp.get(intDB).uploadFile(file_name, rutaDropbox);
-        	dsp.get(intDB).setSpaceUsed(dsp.get(intDB).getSpace());
+        	dsp.get(cuenta[1]).uploadFile(file_name, rutaDropbox);
+        	//dsp.get(cuenta[1]).setSpaceUsed(dsp.get(cuenta[1]).getSpace());
+        	item=new Item(aux.getName(),rutaDropbox+file_name,"dropbox",cuenta[1]);
         }else{
-        	bsp.get(intB).uploadFile(file_name,
-        			bsp.get(intB).getDirectory(posicionActual));
-        	bsp.get(intB).setSpaceUsed(bsp.get(intB).getSpace());
+        	bsp.get(cuenta[1]).uploadFile(file_name,
+        			bsp.get(cuenta[1]).getDirectory(posicionActual));
+        	//bsp.get(cuenta[1]).setSpaceUsed(bsp.get(cuenta[1]).getSpace());
+        	item=new Item(aux.getName(),bsp.get(cuenta[1]).getDirectory(posicionActual)+file_name,"box",cuenta[1]);
         }
+		return item;
 	}
 	
-	public void uploadFolder(String file_name){
+	public Item uploadFolder(String file_name){
 		String rutaDropbox="";
 		for(int i=0;i<directoriosDropbox.size();i++){
         	rutaDropbox=rutaDropbox+directoriosDropbox.get(i);
         }
-		long longDB=0;
-		long longB=0;
-		int intDB=0;
-		int intB=0;
-		for(int i=0;i<newDropboxAccount;i++){
-			if(dsp.get(i).getSpaceUsed()>longDB){
-				longDB=dsp.get(i).getSpaceUsed();
-				intDB=i;
-			}
-        }
-        for(int i=0;i<newBoxAccount;i++){
-        	if(bsp.get(i).getSpaceUsed()>longB){
-				longB=bsp.get(i).getSpaceUsed();
-				intB=i;
-			}
-        }
-        if(longDB>longB){
-        	dsp.get(intDB).uploadFolder(file_name, rutaDropbox);
+		Log.i("a",rutaDropbox);
+		int[] cuenta=spp.storagePolicy(newDropboxAccount, newBoxAccount, dsp, bsp);
+        Item item;
+        File aux=new File(file_name);        
+        if(cuenta[0]==0){
+        	dsp.get(cuenta[1]).uploadFolder(rutaDropbox+file_name, rutaDropbox);
+        	item=new Item(aux.getName(),rutaDropbox+file_name,"dropbox",cuenta[1]);
         }else{
-        	bsp.get(intB).uploadFolder(file_name, 
-        			bsp.get(intB).getDirectory(posicionActual));
+        	bsp.get(cuenta[1]).uploadFolder(file_name, 
+        			bsp.get(cuenta[1]).getDirectory(posicionActual));
+        	item=new Item(aux.getName(),bsp.get(cuenta[1]).getDirectory(posicionActual)+file_name,"box",cuenta[1]);
         }
+        return item;
 	}
 	
 	public boolean enableWidget(){
@@ -194,7 +182,9 @@ public class AbstractionLayer{
 			}
 		}else{ 
 			for(int i=0;i<newDropboxAccount;i++){
-				dsp.get(i).deleteFolder(item.getName(),item.getId());
+				if(dsp.get(i).getNoLocation()){
+					dsp.get(i).deleteFolder(item.getName(),item.getId());
+				}
 	        }
 			for(int i=0;i<newBoxAccount;i++){
 	        	if(bsp.get(i).getDirectory(posicionActual)!=""){
@@ -243,15 +233,17 @@ public class AbstractionLayer{
 		this.sql.closeDatabase();		
 	}
 	
-	public void newDBAccountFinish(){
+	public boolean newDBAccountFinish(){
 		if (newDBAccount==true) {
 			if(dsp_aux.finishAuthentication()){
 				newDBAccount=false;
 				dsp.add(dsp_aux);
 				dbAccounts.add(dsp.get(newDropboxAccount).getUserName());
 				newDropboxAccount++;
+				return true;
 			}
         }
+		return false;
 	}
 	
 	public void newDBAccount(){
@@ -260,14 +252,16 @@ public class AbstractionLayer{
 		dsp_aux.startAuthentication();
 	}
 	
-	public void newBAccountFinish(int resultCode, Intent data){
+	public boolean newBAccountFinish(int resultCode, Intent data){
 		if (newBAccount==true) {
 			bsp_aux.onAuthenticated(resultCode, data);
 	        bsp.add(bsp_aux);
 	        bAccounts.add(bsp.get(newBoxAccount).getUserName());
 	        newBAccount=false;
 			newBoxAccount++;
+			return true;
 		}
+		return false;
 	}
 	
 	public void newBAccount(GetBoxActivity gbActivity){
@@ -310,6 +304,28 @@ public class AbstractionLayer{
     		bsp.get(account).saveDirectory(result);
 		}
 	}
+	
+	public void actualize(AsyncTaskCompleteListener<ArrayList<Item>> cb){
+		if(posicionActual==0){
+			initFiles(cb);
+		}else{
+			String rutaDropbox="";
+			for(int i=0;i<directoriosDropbox.size();i++){
+	        	rutaDropbox=rutaDropbox+directoriosDropbox.get(i);
+	        }		
+			for(int i=0;i<newDropboxAccount;i++){
+	        	dsp.get(i).getFiles(rutaDropbox,cb,false);
+	        	accountsUsed++;
+	        }
+			for(int i=0;i<newBoxAccount;i++){
+	        	if(!bsp.get(i).getDirectory(posicionActual).equals("")){
+	        		bsp.get(i).getFiles(bsp.get(i).getDirectory(posicionActual),cb,false);
+	            	accountsUsed++;
+		        }
+	        }  
+		}
+	}
+	
 	public void navigateTo(String route,AsyncTaskCompleteListener<ArrayList<Item>> cb){
 		String rutaDropbox="";
 		for(int i=0;i<directoriosDropbox.size();i++){
@@ -321,18 +337,25 @@ public class AbstractionLayer{
         	accountsUsed++;
         }
 		
-        for(int i=0;i<newBoxAccount;i++){
-        	if(bsp.get(i).getDirectory(posicionActual)!=""){
+		for(int i=0;i<newBoxAccount;i++){
+        	if(!bsp.get(i).getDirectory(posicionActual).equals("")){
         		ArrayList<Item>aux=bsp.get(i).getCurrentDirectory();
+        		boolean entro=false;
         		for(int j=0;j<aux.size();j++){
 	        		if(aux.get(j).getName().equals(route)){
 	                	bsp.get(i).getFiles(aux.get(j).getId(),cb,false);
 	                	accountsUsed++;
 	                	bsp.get(i).addDirectory(aux.get(j).getId());
-	        		}else{
-	        			bsp.get(i).addDirectory("");
+	                	entro=true;
 	        		}
-	        	}
+        		}
+        		if(!entro){
+        			bsp.get(i).addDirectory("");
+            		bsp.get(i).saveDirectory(new ArrayList<Item>());
+        		}
+	        }else{
+        		bsp.get(i).addDirectory("");
+        		bsp.get(i).saveDirectory(new ArrayList<Item>());
         	}
         }
 		posicionActual++;
@@ -353,13 +376,14 @@ public class AbstractionLayer{
 	        }
 			
 	        for(int i=0;i<newBoxAccount;i++){
-	        	if(bsp.get(i).getDirectory(posicionActual-1)!=""){
+	        	if(!bsp.get(i).getDirectory(posicionActual-1).equals("")){
 	        		bsp.get(i).getFiles(bsp.get(i).getDirectory(posicionActual-1),cb,false);
 	            	accountsUsed++;
-		            bsp.get(i).removeDirectory(posicionActual);
 		        }else{
-		        	bsp.get(i).addDirectory("");
+		        	bsp.get(i).saveDirectory(new ArrayList<Item>());
 		        }
+
+	        	bsp.get(i).removeDirectory(posicionActual);
 	        }			
 			
 			posicionActual--;
@@ -368,6 +392,7 @@ public class AbstractionLayer{
 	}
 	
 	public void initFiles(AsyncTaskCompleteListener<ArrayList<Item>> cb){
+			
 		for(int i=0;i<newDropboxAccount;i++){
         	dsp.get(i).getFiles("/",cb,false);
         	accountsUsed++;
@@ -376,8 +401,10 @@ public class AbstractionLayer{
         	bsp.get(i).getFiles("0",cb,false);
         	accountsUsed++;
         }
+		
         restartRoutes();
 	}
+	
 
 	public int getNewBoxAccount() {
 		return newBoxAccount;

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <TextView 
+	    android:id="@+id/txtRgstrName" 
+	    android:layout_width="fill_parent" 
+	    android:layout_height="wrap_content" 
+	    android:text= "@string/name"	    	
+        android:layout_marginTop="10dp"		  
+	    android:textSize="12sp"/> 
+	
+   <EditText
+       android:id="@+id/edtTxtRgstrName"
+       android:inputType="text"
+       android:layout_width="fill_parent"
+       android:layout_height="wrap_content"
+       android:layout_below="@+id/txtRgstrName"
+       android:layout_marginTop="5dp"  
+	   android:textSize="12sp"/>
+   
+   <TextView 
+	    android:id="@+id/txtRgstrMail" 
+	    android:layout_width="fill_parent" 
+	    android:layout_height="wrap_content" 
+	    android:text= "@string/mail"
+		android:layout_below="@+id/edtTxtRgstrName"		
+        android:layout_marginTop="18dp"	  
+	    android:textSize="12sp"/>
+	
+   <EditText
+       android:id="@+id/edtTxtRgstrMail"
+       android:inputType="text"
+       android:layout_width="fill_parent"
+       android:layout_height="wrap_content"
+       android:layout_below="@+id/txtRgstrMail"
+       android:layout_marginTop="5dp"  
+	   android:textSize="12sp"/>
+   
+   <TextView 
+	    android:id="@+id/txtRgstrUser" 
+	    android:layout_width="fill_parent" 
+	    android:layout_height="wrap_content" 
+	    android:text= "@string/username"
+		android:layout_below="@+id/edtTxtRgstrMail"		
+        android:layout_marginTop="18dp"	  
+	    android:textSize="12sp"/>
+	
+   <EditText
+       android:id="@+id/edtTxtRgstrUser"
+       android:inputType="text"
+       android:layout_width="fill_parent"
+       android:layout_height="wrap_content"
+       android:layout_below="@+id/txtRgstrUser"
+       android:layout_marginTop="5dp"  
+	   android:textSize="12sp"/>
+   
+   <TextView 
+	    android:id="@+id/txtRgstrPass" 
+	    android:layout_width="fill_parent" 
+	    android:layout_height="wrap_content" 
+	    android:text= "@string/password"
+		android:layout_below="@+id/edtTxtRgstrUser"		
+        android:layout_marginTop="18dp"	  
+	    android:textSize="12sp"/>
+
+   <EditText
+       android:id="@+id/edtTxtRgstrPass"
+       android:inputType="textPassword"
+       android:layout_width="fill_parent"
+       android:layout_height="wrap_content"
+       android:layout_below="@+id/txtRgstrPass"
+       android:layout_marginTop="5dp"  
+	   android:textSize="12sp"/>
+   
+   <Button
+       android:id="@+id/buttonRgstrRegister"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:layout_alignParentLeft="true"
+       android:layout_below="@+id/edtTxtRgstrPass"
+       android:layout_marginTop="20dp"
+       android:text="@string/buttonRegister" />
+
+   <Button
+       android:id="@+id/buttonRgstrBack"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:layout_alignBaseline="@+id/buttonRgstrRegister"
+       android:layout_alignBottom="@+id/buttonRgstrRegister"
+       android:layout_alignParentRight="true"
+       android:text="@string/buttonBack" />
+
+</RelativeLayout>

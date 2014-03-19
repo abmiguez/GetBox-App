@@ -34,5 +34,12 @@
     <string name="dropbox">Dropbox</string> 
     <string name="box">Box</string>    
     <string name="delete_account">Eliminar cuenta</string>
+    <string name="username">Usuario:</string>
+    <string name="password">Contraseña:</string>
+    <string name="mail">Correo:</string>
+    <string name="name">Nombre:</string>
+    <string name="buttonLogin">Entrar</string>
+    <string name="buttonRegister">Registarse</string>    
+    <string name="buttonBack">Atras</string>
     
 </resources>

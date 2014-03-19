@@ -3,8 +3,16 @@
 	android:layout_height="fill_parent"
 	android:orientation="vertical" >
 
+    <TextView 
+	    android:id="@+id/textUserName" 
+	    android:layout_width="fill_parent" 
+	    android:layout_height="wrap_content" 
+	    android:textSize="18sp"/> 
+    
 	<TextView 
-	    android:id="@+id/textDropbox" 
+	    android:id="@+id/textDropbox"  
+		android:layout_marginTop="20dp"		
+		android:layout_below="@+id/textUserName"
 	    android:layout_width="fill_parent" 
 	    android:layout_height="wrap_content" 
 	    android:text= "@string/dropbox"	  

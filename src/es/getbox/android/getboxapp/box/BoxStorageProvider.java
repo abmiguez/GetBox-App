@@ -71,9 +71,6 @@ public class BoxStorageProvider {
            else {
            	this.mClient=client;
            	String accesstoken=oauth.getAccessToken();
-           	Log.i(TAG,accesstoken);
-           	
-           	Log.i(TAG,"done");
            	mClient.addOAuthRefreshListener(new OAuthRefreshListener() {
 
                 @Override

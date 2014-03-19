@@ -43,7 +43,7 @@ public class DropboxDeleteFile extends AsyncTask<Void, Void, Boolean> {
 	@Override
     protected void onPostExecute(Boolean result) {
         if (!result) {
-            showToast(mErrorMsg);
+           showToast(mErrorMsg);
         }
     }
 	

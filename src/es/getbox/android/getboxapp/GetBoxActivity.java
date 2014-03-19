@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
@@ -17,6 +18,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ArrayAdapter;
@@ -64,6 +66,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
 	//Rutas
 	private String rutaGetbox;
 	private String rutaBD;
+	private String rutaCamera;
 	
 	//Listar los directorios
 	private ArrayList<Item> listDirectory;
@@ -73,6 +76,11 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
 	private ListView archivos;
 	private Button buttonDropbox;
 	private Button buttonBox;
+	private Button buttonLgnLogin;
+	private Button buttonLgnRegister;
+	private Button buttonRgstrRegister;
+	private Button buttonRgstrBack;
+	private short button;
 	
 	//Drawer
 	private DrawerLayout mDrawerLayout;
@@ -97,11 +105,15 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         //Creamos los directorios de la aplicacion en el almacenamiento externo y el de la BD
         rutaGetbox=Environment.getExternalStorageDirectory().getPath()+"/GetBox/";
     	rutaBD=Environment.getExternalStorageDirectory().getPath()+"/GetBox/DB";
+    	rutaCamera=Environment.getExternalStorageDirectory().getPath()+"/GetBox/Photos";
     	
         File file=new File(rutaGetbox);
         if(!file.exists())
         	file.mkdirs();
         file=new File(rutaBD);
+        if(!file.exists())
+            file.mkdirs();
+        file=new File(rutaCamera);
         if(!file.exists())
             file.mkdirs();
         
@@ -110,13 +122,20 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         }  
         
         aLayer=new AbstractionLayer(this);
-		
 		boolArchives=false;
 		listDirectory=new ArrayList<Item>();		
 		
 		aLayer.startAutentication();
 		
-        showMain();
+		mPrefs = this.getSharedPreferences("LOGIN",0);
+        if (mPrefs.getBoolean("logueado",false)) {
+        	showMain();
+        	button=2;
+        } else {
+        	noTitle();
+        	showLogIn();
+        	button=0;
+        }
     }
     
     protected void onResume() {
@@ -193,7 +212,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
             DateFormat df = new SimpleDateFormat("yyyy-MM-dd-kk-mm-ss");
 
             String newPicFile = df.format(date) + ".jpg";
-            String outPath = Environment.getExternalStorageDirectory().getPath()+"/MyDropbox/" + newPicFile;
+            String outPath = rutaCamera + "/" + newPicFile;
             File outFile = new File(outPath);
 
             mCameraFileName = outFile.toString();
@@ -205,15 +224,13 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
             } catch (ActivityNotFoundException e) {
                 showToast("There doesn't seem to be a camera.");
             }
-            Date dates = new Date();
-            DateFormat dfs = new SimpleDateFormat("dd-MM-yyyy kk:mm");
-            String fecha = dfs.format(dates);
             return true;	
         case R.id.salir:
         	this.finish();
 			return true;	
         case R.id.actualizar:
-        	//actualizar("",true);
+        	listDirectory.clear();
+        	aLayer.actualize(this);
         	return true;
         
         case R.id.nueva_carpeta:
@@ -253,18 +270,18 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         fragment = new FragmentArchives();
         switch(position) {        
         case 0:
+            listDirectory.clear();    
+            aLayer.initFiles(this);
+    		boolArchives=true;
     		args.putInt(FragmentArchives.ARG_ARCHIVE_NUMBER, position);
             fragment.setArguments(args);
-            listDirectory.clear();
-            aLayer.initFiles(this);
-            aLayer.restartRoutes();
-    		boolArchives=true;
         break;
         case 1:        	
         	fragment = new FragmentAccounts();
         	args.putInt(FragmentAccounts.ARG_ACCOUNTS_NUMBER, position);
         	args.putStringArrayList("arrayDB", aLayer.getDbAccounts());
         	args.putStringArrayList("arrayB", aLayer.getbAccounts());
+        	args.putString("userName", mPrefs.getString("userName",""));
         	fragment.setArguments(args);
         	boolArchives=false;
         break;
@@ -283,15 +300,16 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         case 4:
         	fragment = new FragmentClose();
         	boolArchives=false;
-        	//mLoggedIn=false;
+        	mPrefs = getSharedPreferences("Splash",0);
 			SharedPreferences.Editor ed = mPrefs.edit();
-	        ed.putBoolean("intent",true);
-	        ed.commit();
+	        ed.putBoolean("splash",false);
+	        ed.commit();    				
+		    mPrefs = getSharedPreferences("LOGIN",0);
 	        ed = mPrefs.edit();
-	        //ed.putBoolean("logueado",mLoggedIn);
+	        ed.putBoolean("logueado",false);
 	        ed.commit();
         	Intent intento = new Intent(this,GetBoxActivity.class);
-			startActivity(intento);
+        	startActivity(intento);
 			this.finish();
         break;
     	}
@@ -304,6 +322,14 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         mDrawerList.setItemChecked(position, true);
         setTitle(mOptionTitles[position]);
         mDrawerLayout.closeDrawer(mDrawerList);  
+    }
+  
+    public void initArchives(View rootView){
+    	Myonclicklistneer myonclicklistneer = new Myonclicklistneer();
+		archivos = (ListView) rootView.findViewById (R.id.archivos);
+        archivos.setAdapter(new CustomIconLabelAdapter(this));
+        registerForContextMenu(archivos);
+        archivos.setOnItemClickListener(myonclicklistneer);
     }
     
     @Override
@@ -321,8 +347,9 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         // Sync the toggle state after onRestoreInstanceState has occurred.
-       //if(mPrefs.getBoolean("logueado",false))
-        mDrawerToggle.syncState();
+        if(mPrefs.getBoolean("logueado",false)){
+        	mDrawerToggle.syncState();
+        }
         
     }
 
@@ -376,6 +403,29 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         selectItem(0);
     }
     
+    private void noTitle(){
+    	setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+    	requestWindowFeature(Window.FEATURE_NO_TITLE);
+    }
+    
+    private void showLogIn(){  
+    	setContentView(R.layout.login);
+    	invalidateOptionsMenu();
+		buttonLgnLogin = (Button) findViewById(R.id.buttonLgnLogin);
+		buttonLgnLogin.setOnClickListener(this);
+		buttonLgnRegister = (Button) findViewById(R.id.buttonLgnRegister);
+		buttonLgnRegister.setOnClickListener(this);
+    }
+    
+    private void showRegister(){  
+    	setContentView(R.layout.register);
+    	invalidateOptionsMenu();
+		buttonRgstrRegister = (Button) findViewById(R.id.buttonRgstrRegister);
+		buttonRgstrRegister.setOnClickListener(this);
+		buttonRgstrBack = (Button) findViewById(R.id.buttonRgstrBack);
+		buttonRgstrBack.setOnClickListener(this);
+    }
+    
     private AlertDialog crearCarpetaDialog(){ 
     	AlertDialog.Builder builder = new AlertDialog.Builder(this);
     	final EditText nCarpeta = new EditText(this);
@@ -386,11 +436,8 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
    	 	builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() { 
    	 		public void onClick(DialogInterface dialog, int whichButton) { 	
             	String nC=nCarpeta.getText().toString();
-            	aLayer.uploadFolder(nC);
-            	//actualizar("",false);
-            	Date date = new Date();
-                DateFormat df = new SimpleDateFormat("dd-MM-yyyy kk:mm");
-                String fecha = df.format(date);            	
+            	listDirectory.add(aLayer.uploadFolder(nC));
+            	orderDirectory();
    	 		} 
    	 	});
    	 	builder.setNeutralButton("Cancel", new DialogInterface.OnClickListener() { 
@@ -403,14 +450,54 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
      } 
     
     public void onClick(View v) { 
-    	buttonDropbox=(Button) findViewById(R.id.buttonNewDropbox);
-    	buttonBox=(Button) findViewById(R.id.buttonNewBox);
-		if (v.getId()==buttonDropbox.getId() ){
-			aLayer.newDBAccount();
-		}
-		if (v.getId()==buttonBox.getId() ){
-			aLayer.newBAccount(this);
-		}
+    	switch (button) {
+    		case 0:
+    			if(v.getId()==buttonLgnLogin.getId()){
+    				EditText lgnUser=(EditText) findViewById(R.id.edtTxtLgnUser);
+    				mPrefs = getSharedPreferences("Splash",0);
+    				SharedPreferences.Editor ed = mPrefs.edit();
+			        ed.putBoolean("splash",true);
+			        ed.commit(); 
+    			    mPrefs = getSharedPreferences("LOGIN",0);
+    				ed = mPrefs.edit();
+			        ed.putBoolean("logueado",true);
+			        ed.commit();
+			        ed.putString("userName",lgnUser.getText().toString());
+			        ed.commit();
+			        
+			        Intent intent = new Intent(this,GetBoxActivity.class);
+					startActivity(intent);
+			        this.finish();
+				}
+				if(v.getId()==buttonLgnRegister.getId()){
+					showRegister();
+					button=1;
+				}
+    		break;
+    		
+    		case 1:
+    			if(v.getId()==buttonRgstrBack.getId()){
+					showLogIn();
+					button=0;
+				}
+				if(v.getId()==buttonRgstrRegister.getId()){
+					showLogIn();
+					button=0;
+				}
+    		break;
+    		
+    		case 2:
+    			buttonDropbox=(Button) findViewById(R.id.buttonNewDropbox);
+	        	buttonBox=(Button) findViewById(R.id.buttonNewBox);
+	
+	        	if (v.getId()==buttonDropbox.getId() ){
+	    			aLayer.newDBAccount();
+	    		}
+	    		if (v.getId()==buttonBox.getId() ){
+	    			aLayer.newBAccount(this);
+	    		}
+    		break;
+    	}
 	}//onClick
     
     
@@ -420,45 +507,26 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
     		archivos.setEnabled(false);
     		
 	    	if(result.size()>0){
-	    		aLayer.saveDirectory(result,result.get(0).getLocation(),result.get(0).getAccount());
-		    	for(int i=0;i<result.size();i++){
-		    		listDirectory.add(result.get(i));
-		    	}
+	    		if(result.get(0).getName().equals("")){
+	    			aLayer.saveDirectory(result,result.get(0).getLocation(),result.get(0).getAccount());
+	    		}else{
+		    		aLayer.saveDirectory(result,result.get(0).getLocation(),result.get(0).getAccount());
+			    	for(int i=0;i<result.size();i++){
+			    		listDirectory.add(result.get(i));
+			    	}
+	    		}
 	    	}
 	    	Set<Item> hs = new LinkedHashSet<Item>();
 	        hs.addAll(listDirectory);
 	        listDirectory.clear();
 	        listDirectory.addAll(hs);
-	        Collections.sort(listDirectory, new Comparator<Item>(){
-	        	 
-				@Override
-				public int compare(Item o1, Item o2) {
-					return (o1.getName().toLowerCase()).compareTo(o2.getName().toLowerCase());
-				}
-				
-				
-			});
-	             
-	    	//if(listDirectory.size()>0){  
-	    		ArrayList<Item> aux=new ArrayList<Item> ();
-	 	        for(int i=0; i<listDirectory.size();i++){
-	 	        	if(listDirectory.get(i).getName().indexOf(".")>0){
-	 	        		aux.add(listDirectory.get(i));
-	 	        		listDirectory.remove(i);
-	 	        	}
-	 	        }
-	 	        for(int i=0; i<aux.size();i++){
-	 	        	listDirectory.add(aux.get(i));
-	 	        }
-	    		Myonclicklistneer myonclicklistneer = new Myonclicklistneer();
-	    		archivos = (ListView) findViewById (R.id.archivos);
-	            archivos.setAdapter(new CustomIconLabelAdapter(this));
-	            registerForContextMenu(archivos);
-	            archivos.setOnItemClickListener(myonclicklistneer);
-	    	/*}else{
-	    		showToast("null");
-	    	}*/    
-	            archivos.setEnabled(aLayer.enableWidget());
+	        orderDirectory();
+    		Myonclicklistneer myonclicklistneer = new Myonclicklistneer();
+    		registerForContextMenu(archivos);
+            archivos.setOnItemClickListener(myonclicklistneer);
+
+            boolean auxBool=aLayer.enableWidget();
+	        archivos.setEnabled(auxBool);
     	}catch(Exception e){}
     }
     
@@ -468,6 +536,9 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long arg3) {
         	if( (listDirectory.get(position).getName()).indexOf(".")<0 ) {
+        		
+        		archivos = (ListView) findViewById (R.id.archivos);
+        		archivos.setEnabled(false);
         		String aux=listDirectory.get(position).getName();
         		aLayer.navigateTo(listDirectory.get(position).getName(),GetBoxActivity.this);
         		listDirectory.clear();
@@ -563,10 +634,11 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
             	    public void onClick(DialogInterface dialog, int which) {
             	        switch (which){
             	        case DialogInterface.BUTTON_POSITIVE:
-            	        	
             	        	aLayer.delete(listDirectory.get(index));
-                    		//actualizar("",false);
-            	        	showToast("Borrado con exito");
+                    		listDirectory.remove(index);
+                    		ListView archivos=(ListView) findViewById(R.id.archivos); 
+                    		archivos.setAdapter(new CustomIconLabelAdapter(GetBoxActivity.this));
+                    		showToast("Borrado con exito");
                 			break;
 
             	        case DialogInterface.BUTTON_NEGATIVE:
@@ -621,10 +693,10 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
                 if (uri == null && mCameraFileName != null) {
                     uri = Uri.fromFile(new File(mCameraFileName));
                 }
-                File file = new File(mCameraFileName);
-
+                Log.i(TAG,mCameraFileName);
                 if (uri != null) {
-                	//dsp.upPicture(this, PHOTO_DIR, file);
+                	listDirectory.add(aLayer.uploadFile(mCameraFileName));
+                	orderDirectory();
                 }
             }else {
                 Log.w(TAG, "Unknown Activity Result from mediaImport: "
@@ -634,16 +706,41 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         if (resultCode == RESULT_OK && requestCode == 555) {
             try{
             	if (data.hasExtra("archivo_seleccionado")) {
-                aLayer.uploadFile(data.getExtras().getString("archivo_seleccionado"));
+                listDirectory.add(aLayer.uploadFile(data.getExtras().getString("archivo_seleccionado")));
+                orderDirectory();
             }
             }catch(NullPointerException e){
             	Log.i(TAG,"Se ha saido del gestor sin seleccionar archivo");
             }
         }
         if (requestCode == aLayer.AUTH_BOX_REQUEST && aLayer.isNewBAccount()) {
-        	aLayer.newBAccountFinish(resultCode, data);          
+        	aLayer.newBAccountFinish(resultCode, data);
         } 
         
+    }
+    
+    private void orderDirectory(){
+    	Collections.sort(listDirectory, new Comparator<Item>(){
+	        	 
+			@Override
+			public int compare(Item o1, Item o2) {
+				return (o1.getName().toLowerCase()).compareTo(o2.getName().toLowerCase());
+			}
+			
+			
+		});
+		ArrayList<Item> aux=new ArrayList<Item> ();
+        for(int i=0; i<listDirectory.size();i++){
+        	if(listDirectory.get(i).getName().indexOf(".")>0){
+        		aux.add(listDirectory.get(i));
+        		listDirectory.remove(i);
+        	}
+        }
+        for(int i=0; i<aux.size();i++){
+        	listDirectory.add(aux.get(i));
+        }
+        archivos=(ListView) findViewById(R.id.archivos); 
+		archivos.setAdapter(new CustomIconLabelAdapter(GetBoxActivity.this));
     }
     
     private void showToast(String msg) {

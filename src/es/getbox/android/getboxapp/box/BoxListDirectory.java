@@ -56,6 +56,10 @@ public class BoxListDirectory extends AsyncTask<Void, Void, ArrayList<Item>> {
     	    		result.add(item);
     	    	}    	
         	}
+        	if(result.size()==0){
+        		Item item=new Item("","","box",boxAccount);
+	    		result.add(item);
+        	}
         }
         catch (BoxSDKException e) {
         	Log.i("Box","boxexcep"+e.getMessage()); 

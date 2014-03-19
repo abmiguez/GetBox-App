@@ -17,7 +17,7 @@ public class FragmentClose extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_config, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_close, container, false);
         
         return rootView;
     }

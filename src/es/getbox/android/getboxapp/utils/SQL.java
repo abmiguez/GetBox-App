@@ -79,7 +79,7 @@ public class SQL{
 			//create table
 			db.execSQL("create table parentDirectory ("
 					+ " ID integer PRIMARY KEY autoincrement, " 
-			        + " archive text);  ");
+			        + " name text, fid text, location text, account integer);  ");
 			db.setTransactionSuccessful();
     		
 		    //Toast.makeText(context, "Table was created", Toast.LENGTH_LONG).show();
@@ -91,11 +91,11 @@ public class SQL{
     	}
     }
     
-    public void insertDirectory(String archive){
+    public void insertDirectory(String name, String id, String location, int account){
     	db.beginTransaction();
     	try {
-    		db.execSQL( "insert into parentDirectory (archive) "
-    					         + " values ('"+archive+"');" );
+    		db.execSQL( "insert into parentDirectory (name,fid,location,account) "
+    					         + " values ('"+name+"','"+id+"','"+location+"','"+account+"');" );
     		db.setTransactionSuccessful();
     	}
     	catch (SQLiteException e2) {
@@ -105,6 +105,60 @@ public class SQL{
     	finally {
     		db.endTransaction();
     	}    	
+    }
+    
+    public void removeCacheDirectory(){
+    	db.beginTransaction();
+    	try {
+    		db.execSQL( "delete from parentDirectory;" );
+    		db.setTransactionSuccessful();
+    	}
+    	catch (SQLiteException e2) {
+    		//report problem 
+    		Toast.makeText(context, e2.getMessage(), Toast.LENGTH_LONG).show();
+    	}
+    	finally {
+    		db.endTransaction();
+    	}   
+    }
+    
+    public boolean isCacheDirectory(){
+    	//hard-coded SQL-select command with no arguments
+    	String mySQL ="select count(*) as Total from parentDirectory";
+    	Cursor c1 = db.rawQuery(mySQL, null);
+    	int index = c1.getColumnIndex("Total");
+    	//advance to the next record (first rec. if necessary)
+    	c1.moveToNext();
+    	if(c1.getInt(index)>0){
+    	    return true;
+    	}else{
+    		return false;
+    	}
+    }
+    
+    public ArrayList<Item> getCacheDirectory(){
+    	ArrayList<Item> array=new ArrayList<Item>();
+    	try {
+    		String mySQL ="select name,fid,location,account from parentDirectory;";
+			Cursor c = db.rawQuery(mySQL, null);
+			//String bdLogs="";
+			if (c != null ) {
+					if  (c.moveToLast()) {
+						do {
+							Item aux=new Item(c.getString(c.getColumnIndex("name")),
+									c.getString(c.getColumnIndex("fid")),
+									c.getString(c.getColumnIndex("location")),
+									c.getInt(c.getColumnIndex("account")));
+							array.add(aux);
+						}while (c.moveToPrevious());
+					}
+			}	
+			//Toast.makeText(context, bdLogs, Toast.LENGTH_LONG).show();
+			c.close();
+		} catch (Exception e) {
+			Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
+		}    	
+    	return array;
     }
     
     public void insertDropbox(int dropboxAccount,String tokenKey, String tokenSecret, String userName, long space){

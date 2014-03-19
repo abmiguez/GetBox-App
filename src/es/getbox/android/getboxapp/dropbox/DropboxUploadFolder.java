@@ -55,6 +55,7 @@ public class DropboxUploadFolder extends AsyncTask<Void, Void, Boolean> {
                 // thumbnailed)
             } else if (e.error == DropboxServerException._406_NOT_ACCEPTABLE) {
                 // too many entries to return
+            	return false;
             } else if (e.error == DropboxServerException._415_UNSUPPORTED_MEDIA) {
                 // can't be thumbnailed
             } else if (e.error == DropboxServerException._507_INSUFFICIENT_STORAGE) {

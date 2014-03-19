@@ -37,6 +37,7 @@ public class DropboxStorageProvider {
 	private DropboxAPI<AndroidAuthSession> mDBApi = null;
 	private Context mContext;
 	private int dropboxAccount;
+	private boolean isLoc;
 	private SQL sql;
 	
 	public DropboxAPI<AndroidAuthSession> getApi(){
@@ -46,6 +47,7 @@ public class DropboxStorageProvider {
 	public DropboxStorageProvider(Context context,int dropboxAccount){
 		this.mContext=context;
 		this.dropboxAccount=dropboxAccount;
+		this.isLoc=true;
 		sql=new SQL(context);		
 	}
 	
@@ -233,8 +235,16 @@ public class DropboxStorageProvider {
 	}
 
 	public void getFiles(String directory_path, AsyncTaskCompleteListener<ArrayList<Item>> cb,boolean dialog) {
-		DropboxListDirectory ld = new DropboxListDirectory(mContext, mDBApi, directory_path, cb, dialog, dropboxAccount);
+		DropboxListDirectory ld = new DropboxListDirectory(mContext, mDBApi, directory_path, cb, dialog, dropboxAccount,this);
     	ld.execute();
+	}
+	
+	public void setNoLocation(boolean loc){
+		this.isLoc=loc;
+	}
+	
+	public boolean getNoLocation(){
+		return this.isLoc;
 	}
 	
 	public void downloadFile(String file_name, String file_id) {
@@ -267,7 +277,6 @@ public class DropboxStorageProvider {
 	}
 	
 	public void deleteFolder(String file_name, String file_id) {
-
 		DropboxDeleteFile delf=new DropboxDeleteFile(mContext,mDBApi,file_id);
 		try{	
         	delf.execute();
