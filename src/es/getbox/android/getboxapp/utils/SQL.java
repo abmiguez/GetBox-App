@@ -61,7 +61,7 @@ public class SQL{
 			//create table
 			db.execSQL("create table boxTokens ("
 					+ " ID integer PRIMARY KEY autoincrement, " 
-			        + " boxAccount integer, token text, userName text, space number);  ");
+			        + " boxAccount integer, accesstoken text, refreshtoken text, userName text, space number);  ");
 			db.setTransactionSuccessful();
     		
 		    //Toast.makeText(context, "Table was created", Toast.LENGTH_LONG).show();
@@ -73,93 +73,7 @@ public class SQL{
     	}
     }
     
-    public void makeCacheDirectory(){
-    	db.beginTransaction();
-		try {
-			//create table
-			db.execSQL("create table parentDirectory ("
-					+ " ID integer PRIMARY KEY autoincrement, " 
-			        + " name text, fid text, location text, account integer);  ");
-			db.setTransactionSuccessful();
-    		
-		    //Toast.makeText(context, "Table was created", Toast.LENGTH_LONG).show();
-		} catch (SQLException e1) {			
-			//Toast.makeText(context, e1.getMessage(), Toast.LENGTH_LONG).show();
-		}
-		finally {
-    		db.endTransaction();
-    	}
-    }
     
-    public void insertDirectory(String name, String id, String location, int account){
-    	db.beginTransaction();
-    	try {
-    		db.execSQL( "insert into parentDirectory (name,fid,location,account) "
-    					         + " values ('"+name+"','"+id+"','"+location+"','"+account+"');" );
-    		db.setTransactionSuccessful();
-    	}
-    	catch (SQLiteException e2) {
-    		//report problem 
-    		Toast.makeText(context, e2.getMessage(), Toast.LENGTH_LONG).show();
-    	}
-    	finally {
-    		db.endTransaction();
-    	}    	
-    }
-    
-    public void removeCacheDirectory(){
-    	db.beginTransaction();
-    	try {
-    		db.execSQL( "delete from parentDirectory;" );
-    		db.setTransactionSuccessful();
-    	}
-    	catch (SQLiteException e2) {
-    		//report problem 
-    		Toast.makeText(context, e2.getMessage(), Toast.LENGTH_LONG).show();
-    	}
-    	finally {
-    		db.endTransaction();
-    	}   
-    }
-    
-    public boolean isCacheDirectory(){
-    	//hard-coded SQL-select command with no arguments
-    	String mySQL ="select count(*) as Total from parentDirectory";
-    	Cursor c1 = db.rawQuery(mySQL, null);
-    	int index = c1.getColumnIndex("Total");
-    	//advance to the next record (first rec. if necessary)
-    	c1.moveToNext();
-    	if(c1.getInt(index)>0){
-    	    return true;
-    	}else{
-    		return false;
-    	}
-    }
-    
-    public ArrayList<Item> getCacheDirectory(){
-    	ArrayList<Item> array=new ArrayList<Item>();
-    	try {
-    		String mySQL ="select name,fid,location,account from parentDirectory;";
-			Cursor c = db.rawQuery(mySQL, null);
-			//String bdLogs="";
-			if (c != null ) {
-					if  (c.moveToLast()) {
-						do {
-							Item aux=new Item(c.getString(c.getColumnIndex("name")),
-									c.getString(c.getColumnIndex("fid")),
-									c.getString(c.getColumnIndex("location")),
-									c.getInt(c.getColumnIndex("account")));
-							array.add(aux);
-						}while (c.moveToPrevious());
-					}
-			}	
-			//Toast.makeText(context, bdLogs, Toast.LENGTH_LONG).show();
-			c.close();
-		} catch (Exception e) {
-			Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
-		}    	
-    	return array;
-    }
     
     public void insertDropbox(int dropboxAccount,String tokenKey, String tokenSecret, String userName, long space){
     	db.beginTransaction();
@@ -226,12 +140,12 @@ public class SQL{
     	}    	
     }
     
-    public void insertBox(int boxAccount,String token,String username, long space){
+    public void insertBox(int boxAccount,String accesstoken,String username, long space){
     	db.beginTransaction();
     	Log.i("a",""+space);
     	try {
-    		db.execSQL( "insert into boxTokens (boxAccount,token,userName,space) "
-    					         + " values ('"+boxAccount+"','"+token+"','"+username+"','"+space+"');" );
+    		db.execSQL( "insert into boxTokens (boxAccount,accesstoken,refreshtoken,userName,space) "
+    					         + " values ('"+boxAccount+"','"+accesstoken+"','','"+username+"','"+space+"');" );
     		db.setTransactionSuccessful();
     	}
     	catch (SQLiteException e2) {
@@ -261,11 +175,11 @@ public class SQL{
     }
     
     
-    public void updateBoxToken(int boxAccount,String token){
+    public void updateBoxToken(int boxAccount,String refreshtoken){
     	db.beginTransaction();
     	try {
     		db.execSQL( " update boxTokens "
-    				+ " set token =  '" + token + "'"
+    				+ " set refreshtoken =  '" + refreshtoken + "'"
     				+ " where boxAccount = '" + boxAccount + "' " );
     		db.setTransactionSuccessful();
     	}
@@ -387,17 +301,17 @@ public class SQL{
     	return space;
     }
     
-    public String getBoxTokens(int boxAccount) {
+    public String getBoxAccessTokens(int boxAccount) {
     	String token="";
     	try {
-    		String mySQL ="select token from boxTokens where " +
+    		String mySQL ="select accesstoken from boxTokens where " +
     				"boxAccount="+boxAccount+"";
 			Cursor c = db.rawQuery(mySQL, null);
 			//String bdLogs="";
 			if (c != null ) {
 					if  (c.moveToLast()) {
 						do {
-							token=c.getString(c.getColumnIndex("token"));
+							token=c.getString(c.getColumnIndex("accesstoken"));
 						}while (c.moveToPrevious());
 					}
 			}
@@ -407,7 +321,29 @@ public class SQL{
 			Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
 		}    	
     	return token;
-    } 
+    }
+    
+    public String getBoxRefreshTokens(int boxAccount) {
+    	String token="";
+    	try {
+    		String mySQL ="select refreshtoken from boxTokens where " +
+    				"boxAccount="+boxAccount+"";
+			Cursor c = db.rawQuery(mySQL, null);
+			//String bdLogs="";
+			if (c != null ) {
+					if  (c.moveToLast()) {
+						do {
+							token=c.getString(c.getColumnIndex("refreshtoken"));
+						}while (c.moveToPrevious());
+					}
+			}
+			//Toast.makeText(context, bdLogs, Toast.LENGTH_LONG).show();
+			c.close();
+		} catch (Exception e) {
+			Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
+		}    	
+    	return token;
+    }
     
     public String getBoxUserName(int boxAccount) {
     	String userName="";

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+
+ 
+
+    <color name="sa_green">#8fb64f</color>
+
+    <color name="row_activated">#8fb64f</color>
+
+    <color name="accent_green">#8fb64f</color>
+
+ 
+
+</resources>

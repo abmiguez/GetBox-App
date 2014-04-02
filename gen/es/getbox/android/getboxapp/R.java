@@ -9,9 +9,14 @@ package es.getbox.android.getboxapp;
 
 public final class R {
     public static final class array {
-        public static final int options_array=0x7f070000;
+        public static final int options_array=0x7f080000;
     }
     public static final class attr {
+    }
+    public static final class color {
+        public static final int accent_green=0x7f060002;
+        public static final int row_activated=0x7f060001;
+        public static final int sa_green=0x7f060000;
     }
     public static final class dimen {
         /**  Default screen margins, per the Android Design guidelines. 
@@ -20,104 +25,108 @@ public final class R {
          screen margins) for sw720dp devices (e.g. 10" tablets) in landscape here.
     
          */
-        public static final int activity_horizontal_margin=0x7f060000;
-        public static final int activity_vertical_margin=0x7f060001;
-        public static final int webkitpadding=0x7f060002;
+        public static final int activity_horizontal_margin=0x7f070000;
+        public static final int activity_vertical_margin=0x7f070001;
+        public static final int webkitpadding=0x7f070002;
     }
     public static final class drawable {
         public static final int action_search=0x7f020000;
-        public static final int archiveicon=0x7f020001;
-        public static final int boxandroidlibv2_box_background_header=0x7f020002;
-        public static final int boxandroidlibv2_btn_bar_press=0x7f020003;
-        public static final int boxandroidlibv2_btn_bar_selector=0x7f020004;
-        public static final int boxandroidlibv2_btn_bar_white=0x7f020005;
-        public static final int boxandroidlibv2_btn_cta_blue=0x7f020006;
-        public static final int boxandroidlibv2_btn_cta_blue_press=0x7f020007;
-        public static final int boxandroidlibv2_btn_cta_states=0x7f020008;
-        public static final int boxandroidlibv2_btn_round_blue=0x7f020009;
-        public static final int boxandroidlibv2_btn_round_blue_press=0x7f02000a;
-        public static final int boxandroidlibv2_btn_toggle_round_blue_states=0x7f02000b;
-        public static final int boxandroidlibv2_generic=0x7f02000c;
-        public static final int boxandroidlibv2_ic_breadcrumb_arrow=0x7f02000d;
-        public static final int boxandroidlibv2_ic_newfolder=0x7f02000e;
-        public static final int boxandroidlibv2_ic_progress_spinner=0x7f02000f;
-        public static final int boxandroidlibv2_icon_folder_personal=0x7f020010;
-        public static final int boxandroidlibv2_line_divider=0x7f020011;
-        public static final int boxandroidlibv2_list_item_divider=0x7f020012;
-        public static final int boxandroidlibv2_list_item_selector=0x7f020013;
-        public static final int boxandroidlibv2_list_selected_state=0x7f020014;
-        public static final int boxandroidlibv2_modal_divider=0x7f020015;
-        public static final int boxandroidlibv2_navigation_selector=0x7f020016;
-        public static final int boxandroidlibv2_progress_spinner=0x7f020017;
-        public static final int boxandroidlibv2_rectangle_light_blue=0x7f020018;
-        public static final int boxandroidlibv2_rectangle_light_grey=0x7f020019;
-        public static final int drawer_shadow=0x7f02001a;
-        public static final int foldericon=0x7f02001b;
-        public static final int ic_drawer=0x7f02001c;
-        public static final int ic_launcher=0x7f02001d;
-        public static final int splash_screen=0x7f02001e;
+        public static final int activated_background=0x7f020001;
+        public static final int archiveicon=0x7f020002;
+        public static final int boxandroidlibv2_box_background_header=0x7f020003;
+        public static final int boxandroidlibv2_btn_bar_press=0x7f020004;
+        public static final int boxandroidlibv2_btn_bar_selector=0x7f020005;
+        public static final int boxandroidlibv2_btn_bar_white=0x7f020006;
+        public static final int boxandroidlibv2_btn_cta_blue=0x7f020007;
+        public static final int boxandroidlibv2_btn_cta_blue_press=0x7f020008;
+        public static final int boxandroidlibv2_btn_cta_states=0x7f020009;
+        public static final int boxandroidlibv2_btn_round_blue=0x7f02000a;
+        public static final int boxandroidlibv2_btn_round_blue_press=0x7f02000b;
+        public static final int boxandroidlibv2_btn_toggle_round_blue_states=0x7f02000c;
+        public static final int boxandroidlibv2_generic=0x7f02000d;
+        public static final int boxandroidlibv2_ic_breadcrumb_arrow=0x7f02000e;
+        public static final int boxandroidlibv2_ic_newfolder=0x7f02000f;
+        public static final int boxandroidlibv2_ic_progress_spinner=0x7f020010;
+        public static final int boxandroidlibv2_icon_folder_personal=0x7f020011;
+        public static final int boxandroidlibv2_line_divider=0x7f020012;
+        public static final int boxandroidlibv2_list_item_divider=0x7f020013;
+        public static final int boxandroidlibv2_list_item_selector=0x7f020014;
+        public static final int boxandroidlibv2_list_selected_state=0x7f020015;
+        public static final int boxandroidlibv2_modal_divider=0x7f020016;
+        public static final int boxandroidlibv2_navigation_selector=0x7f020017;
+        public static final int boxandroidlibv2_progress_spinner=0x7f020018;
+        public static final int boxandroidlibv2_rectangle_light_blue=0x7f020019;
+        public static final int boxandroidlibv2_rectangle_light_grey=0x7f02001a;
+        public static final int drawer_shadow=0x7f02001b;
+        public static final int foldericon=0x7f02001c;
+        public static final int getbox_logo=0x7f02001d;
+        public static final int ic_action_settings=0x7f02001e;
+        public static final int ic_drawer=0x7f02001f;
+        public static final int ic_launcher=0x7f020020;
+        public static final int my_action_button_overflow=0x7f020021;
+        public static final int splash_screen=0x7f020022;
     }
     public static final class id {
-        public static final int BAccounts=0x7f09001a;
-        public static final int DBAccounts=0x7f090018;
-        public static final int PickerListView=0x7f090010;
-        public static final int actualizar=0x7f090036;
-        public static final int archivo=0x7f090015;
-        public static final int archivos=0x7f09001b;
-        public static final int borrar=0x7f090033;
-        public static final int boxItemMain=0x7f090008;
-        public static final int btnChoose=0x7f090012;
-        public static final int buttonLgnLogin=0x7f090025;
-        public static final int buttonLgnRegister=0x7f090026;
-        public static final int buttonNewBox=0x7f09001f;
-        public static final int buttonNewDropbox=0x7f09001e;
-        public static final int buttonRgstrBack=0x7f090030;
-        public static final int buttonRgstrRegister=0x7f09002f;
-        public static final int content_frame=0x7f090001;
-        public static final int customTitle=0x7f09000e;
-        public static final int deleteBAccount=0x7f090034;
-        public static final int deleteDBAccount=0x7f090035;
-        public static final int descargar=0x7f090032;
-        public static final int drawer_layout=0x7f090000;
-        public static final int edtTxtLgnPass=0x7f090024;
-        public static final int edtTxtLgnUser=0x7f090022;
-        public static final int edtTxtRgstrMail=0x7f09002a;
-        public static final int edtTxtRgstrName=0x7f090028;
-        public static final int edtTxtRgstrPass=0x7f09002e;
-        public static final int edtTxtRgstrUser=0x7f09002c;
-        public static final int folderChooserSpinner=0x7f09000f;
-        public static final int icon=0x7f090009;
-        public static final int imageViewLogin=0x7f090020;
-        public static final int label=0x7f090031;
-        public static final int left_drawer=0x7f090002;
-        public static final int metaline=0x7f09000c;
-        public static final int metaline_description=0x7f09000d;
-        public static final int name=0x7f09000b;
-        public static final int nueva_carpeta=0x7f09003a;
-        public static final int oauthview=0x7f090003;
-        public static final int password_edit=0x7f090007;
-        public static final int password_view=0x7f090006;
-        public static final int path=0x7f090014;
-        public static final int salir=0x7f09003b;
-        public static final int spinner=0x7f09000a;
-        public static final int subir=0x7f090037;
-        public static final int subir_archivo=0x7f090038;
-        public static final int subir_foto=0x7f090039;
-        public static final int textBox=0x7f090019;
-        public static final int textDropbox=0x7f090017;
-        public static final int textNewAccount=0x7f09001d;
-        public static final int textUserName=0x7f090016;
-        public static final int textViewPendiente=0x7f09001c;
-        public static final int textView_navigationItem=0x7f090013;
-        public static final int transfersLayout=0x7f090011;
-        public static final int txtLgnPass=0x7f090023;
-        public static final int txtLgnUser=0x7f090021;
-        public static final int txtRgstrMail=0x7f090029;
-        public static final int txtRgstrName=0x7f090027;
-        public static final int txtRgstrPass=0x7f09002d;
-        public static final int txtRgstrUser=0x7f09002b;
-        public static final int username_edit=0x7f090005;
-        public static final int username_view=0x7f090004;
+        public static final int BAccounts=0x7f0a001a;
+        public static final int DBAccounts=0x7f0a0018;
+        public static final int PickerListView=0x7f0a0010;
+        public static final int actualizar=0x7f0a0036;
+        public static final int archivo=0x7f0a0015;
+        public static final int archivos=0x7f0a001b;
+        public static final int borrar=0x7f0a0033;
+        public static final int boxItemMain=0x7f0a0008;
+        public static final int btnChoose=0x7f0a0012;
+        public static final int buttonLgnLogin=0x7f0a0025;
+        public static final int buttonLgnRegister=0x7f0a0026;
+        public static final int buttonNewBox=0x7f0a001f;
+        public static final int buttonNewDropbox=0x7f0a001e;
+        public static final int buttonRgstrBack=0x7f0a0030;
+        public static final int buttonRgstrRegister=0x7f0a002f;
+        public static final int content_frame=0x7f0a0001;
+        public static final int customTitle=0x7f0a000e;
+        public static final int deleteBAccount=0x7f0a0034;
+        public static final int deleteDBAccount=0x7f0a0035;
+        public static final int descargar=0x7f0a0032;
+        public static final int drawer_layout=0x7f0a0000;
+        public static final int edtTxtLgnPass=0x7f0a0024;
+        public static final int edtTxtLgnUser=0x7f0a0022;
+        public static final int edtTxtRgstrMail=0x7f0a002a;
+        public static final int edtTxtRgstrName=0x7f0a0028;
+        public static final int edtTxtRgstrPass=0x7f0a002e;
+        public static final int edtTxtRgstrUser=0x7f0a002c;
+        public static final int folderChooserSpinner=0x7f0a000f;
+        public static final int icon=0x7f0a0009;
+        public static final int imageViewLogin=0x7f0a0020;
+        public static final int label=0x7f0a0031;
+        public static final int left_drawer=0x7f0a0002;
+        public static final int metaline=0x7f0a000c;
+        public static final int metaline_description=0x7f0a000d;
+        public static final int name=0x7f0a000b;
+        public static final int nueva_carpeta=0x7f0a003a;
+        public static final int oauthview=0x7f0a0003;
+        public static final int password_edit=0x7f0a0007;
+        public static final int password_view=0x7f0a0006;
+        public static final int path=0x7f0a0014;
+        public static final int salir=0x7f0a003b;
+        public static final int spinner=0x7f0a000a;
+        public static final int subir=0x7f0a0037;
+        public static final int subir_archivo=0x7f0a0038;
+        public static final int subir_foto=0x7f0a0039;
+        public static final int textBox=0x7f0a0019;
+        public static final int textDropbox=0x7f0a0017;
+        public static final int textNewAccount=0x7f0a001d;
+        public static final int textUserName=0x7f0a0016;
+        public static final int textViewPendiente=0x7f0a001c;
+        public static final int textView_navigationItem=0x7f0a0013;
+        public static final int transfersLayout=0x7f0a0011;
+        public static final int txtLgnPass=0x7f0a0023;
+        public static final int txtLgnUser=0x7f0a0021;
+        public static final int txtRgstrMail=0x7f0a0029;
+        public static final int txtRgstrName=0x7f0a0027;
+        public static final int txtRgstrPass=0x7f0a002d;
+        public static final int txtRgstrUser=0x7f0a002b;
+        public static final int username_edit=0x7f0a0005;
+        public static final int username_view=0x7f0a0004;
     }
     public static final class layout {
         public static final int activity_getbox=0x7f030000;
@@ -145,10 +154,10 @@ public final class R {
         public static final int splash_screen=0x7f030016;
     }
     public static final class menu {
-        public static final int context_menu_archivos=0x7f080000;
-        public static final int context_menu_baccounts=0x7f080001;
-        public static final int context_menu_dbaccounts=0x7f080002;
-        public static final int get_box=0x7f080003;
+        public static final int context_menu_archivos=0x7f090000;
+        public static final int context_menu_baccounts=0x7f090001;
+        public static final int context_menu_dbaccounts=0x7f090002;
+        public static final int get_box=0x7f090003;
     }
     public static final class string {
         public static final int action_websearch=0x7f040012;
@@ -185,15 +194,6 @@ public final class R {
     }
     public static final class style {
         /** 
-        Base application theme, dependent on API level. This theme is replaced
-        by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
-    
-
-            Theme customizations available in newer API levels can go in
-            res/values-vXX/styles.xml, while customizations related to
-            backward-compatibility can go here.
-        
-
         Base application theme for API 11+. This theme completely replaces
         AppBaseTheme from res/values/styles.xml on API 11+ devices.
     
@@ -205,11 +205,20 @@ public final class R {
     
  API 14 theme customizations can go here. 
          */
-        public static final int AppBaseTheme=0x7f050001;
+        public static final int AppBaseTheme=0x7f050006;
         /**  Application theme. 
  All customizations that are NOT specific to a particular API-level can go here. 
          */
-        public static final int AppTheme=0x7f050002;
+        public static final int AppTheme=0x7f050005;
+        public static final int MyActionBar=0x7f050003;
+        /** 
+        Base application theme, dependent on API level. This theme is replaced
+        by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
+    
+         */
+        public static final int MyTheme=0x7f050001;
         public static final int Theme_Boxandroidlibv2_DialogNoTitle=0x7f050000;
+        public static final int Theme_MyAppTheme_ActionBar_TitleTextStyle=0x7f050004;
+        public static final int customoverflow=0x7f050002;
     }
 }

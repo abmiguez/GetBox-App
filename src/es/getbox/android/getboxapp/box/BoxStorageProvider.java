@@ -1,6 +1,7 @@
 package es.getbox.android.getboxapp.box;
 
 import java.io.File;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
@@ -76,13 +77,15 @@ public class BoxStorageProvider {
                 @Override
                 public void onRefresh(IAuthData newAuthData) {
                 	try {
-						BoxOAuthToken oauthObject=mClient.getAuthData();
-						String accesstoken=newAuthData.getAccessToken();
+                		Log.i(TAG,"refrescando");
+                		BoxOAuthToken oauthObject=mClient.getAuthData();
+						String refreshtoken=newAuthData.getRefreshToken();
 						sql.openDatabase();
-			           	sql.updateBoxToken(boxAccount, accesstoken);
+			           	sql.updateBoxToken(boxAccount, refreshtoken);
 			            sql.closeDatabase();
-			            oauthObject.setAccessToken(accesstoken);
+			            oauthObject.setRefreshToken(refreshtoken);
 			            mClient.authenticate(oauthObject);
+			            
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -90,10 +93,13 @@ public class BoxStorageProvider {
                 }
 
             });
+
+           
            	this.sql.openDatabase();
            	sql.insertBox(boxAccount, accesstoken,getUser(),getSpace());
             Toast.makeText(context, "authenticated", Toast.LENGTH_LONG).show();
-       		this.sql.closeDatabase();
+            refresh();
+            this.sql.closeDatabase();
            }
        }
 
@@ -102,7 +108,11 @@ public class BoxStorageProvider {
     public void autenticate(){ 
 		this.sql.openDatabase();
     	BoxOAuthToken oauthObject=new BoxOAuthToken();
-    	oauthObject.setAccessToken(sql.getBoxTokens(boxAccount));
+    	oauthObject.setAccessToken(sql.getBoxAccessTokens(boxAccount));
+    	if(!sql.getBoxRefreshTokens(boxAccount).equals("")){
+    		Log.i(TAG,"hay refresh token");
+    		oauthObject.setRefreshToken(sql.getBoxRefreshTokens(boxAccount));
+    	}
     	BoxAndroidClient client = new BoxAndroidClient(this.CLIENT_ID, this.CLIENT_SECRET, null, null);
 		client.authenticate(oauthObject);
 		if (client == null) {
@@ -110,24 +120,44 @@ public class BoxStorageProvider {
 		}
 		else {
         	this.mClient=client;
+        	//mClient.
         	mClient.addOAuthRefreshListener(new OAuthRefreshListener() {
 
              @Override
              public void onRefresh(IAuthData newAuthData) {
             	 try{
-            		 BoxOAuthToken oauthObject=mClient.getAuthData();
-            		 String accesstoken=newAuthData.getAccessToken();
-            		 sql.openDatabase();
-			         sql.updateBoxToken(boxAccount, accesstoken);
-			         sql.closeDatabase();
-			         oauthObject.setAccessToken(accesstoken);
-			         mClient.authenticate(oauthObject);
+            		Log.i(TAG,"refrescando");
+            		BoxOAuthToken oauthObject=mClient.getAuthData();
+					String refreshtoken=newAuthData.getRefreshToken();
+					sql.openDatabase();
+		           	sql.updateBoxToken(boxAccount, refreshtoken);
+		            sql.closeDatabase();
+		            oauthObject.setRefreshToken(refreshtoken);
+		            mClient.authenticate(oauthObject);
             	 }catch(Exception e){}
              }
  
          });
+        refresh();
         }
 		this.sql.closeDatabase();
+    }
+    
+    public void refresh(){
+    	AsyncTask<Null, Integer, Boolean> task = new AsyncTask<Null, Integer, Boolean>() {
+    		@Override
+            protected Boolean doInBackground(Null... params) {
+    			try {
+    				mClient.getOAuthDataController().doRefresh();
+    				return true;
+    			} catch (AuthFatalFailureException e) {
+    				// TODO Auto-generated catch block
+    				e.printStackTrace();
+    				return false;
+    			}
+    		}
+        };
+        task.execute();
     }
     
     public String getUserName(){

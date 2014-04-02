@@ -117,6 +117,11 @@ public class AbstractionLayer{
         return item;
 	}
 	
+	public void restartWidget(){
+		accountsCounter=0;
+		accountsUsed=0;
+	}
+	
 	public boolean enableWidget(){
 		accountsCounter++;
 		if(accountsCounter==accountsUsed){

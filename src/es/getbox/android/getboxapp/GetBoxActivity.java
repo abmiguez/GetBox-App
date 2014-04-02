@@ -35,6 +35,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.Collections;
 
+
 import es.getbox.android.getboxapp.abstractionlayer.AbstractionLayer;
 import es.getbox.android.getboxapp.fragments.FragmentArchives;
 import es.getbox.android.getboxapp.fragments.FragmentClose;
@@ -42,6 +43,7 @@ import es.getbox.android.getboxapp.fragments.FragmentAccounts;
 import es.getbox.android.getboxapp.fragments.FragmentNewAccount;
 import es.getbox.android.getboxapp.fragments.FragmentOptions;
 import es.getbox.android.getboxapp.interfaces.AsyncTaskCompleteListener;
+import es.getbox.android.getboxapp.mysql.MySQL;
 import es.getbox.android.getboxapp.utils.Item;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
@@ -98,6 +100,9 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
    
 	//Capa de abstraccion
 	private AbstractionLayer aLayer;
+	
+	//Consultas mySQL
+	private MySQL mySql;
         
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -126,6 +131,8 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
 		listDirectory=new ArrayList<Item>();		
 		
 		aLayer.startAutentication();
+		
+		mySql=new MySQL();
 		
 		mPrefs = this.getSharedPreferences("LOGIN",0);
         if (mPrefs.getBoolean("logueado",false)) {
@@ -270,8 +277,9 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         fragment = new FragmentArchives();
         switch(position) {        
         case 0:
-            listDirectory.clear();    
-            aLayer.initFiles(this);
+            listDirectory.clear(); 
+            aLayer.restartWidget();   
+            aLayer.initFiles(this); 
     		boolArchives=true;
     		args.putInt(FragmentArchives.ARG_ARCHIVE_NUMBER, position);
             fragment.setArguments(args);
@@ -454,20 +462,28 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
     		case 0:
     			if(v.getId()==buttonLgnLogin.getId()){
     				EditText lgnUser=(EditText) findViewById(R.id.edtTxtLgnUser);
-    				mPrefs = getSharedPreferences("Splash",0);
-    				SharedPreferences.Editor ed = mPrefs.edit();
-			        ed.putBoolean("splash",true);
-			        ed.commit(); 
-    			    mPrefs = getSharedPreferences("LOGIN",0);
-    				ed = mPrefs.edit();
-			        ed.putBoolean("logueado",true);
-			        ed.commit();
-			        ed.putString("userName",lgnUser.getText().toString());
-			        ed.commit();
+    				EditText lgnPass=(EditText) findViewById(R.id.edtTxtLgnPass);
+    				if(true){//mySql.login(lgnUser.getText().toString(),lgnPass.getText().toString())){
+    					mPrefs = getSharedPreferences("Splash",0);
+    					SharedPreferences.Editor ed = mPrefs.edit();
+				        ed.putBoolean("splash",true);
+				        ed.commit(); 
+	    			    mPrefs = getSharedPreferences("LOGIN",0);
+	    				ed = mPrefs.edit();
+				        ed.putBoolean("logueado",true);
+				        ed.commit();
+				        ed.putString("userName",lgnUser.getText().toString());
+				        ed.commit();
 			        
-			        Intent intent = new Intent(this,GetBoxActivity.class);
-					startActivity(intent);
-			        this.finish();
+				        Intent intent = new Intent(this,GetBoxActivity.class);
+						startActivity(intent);
+				        this.finish();
+    				}else{
+    					showToast("Nombre de usuario o contraseña incorrectos");
+    					lgnUser.setText("");
+        				lgnPass.setText("");
+        				
+    				}
 				}
 				if(v.getId()==buttonLgnRegister.getId()){
 					showRegister();
