@@ -2,6 +2,7 @@ package es.getbox.android.getboxapp.mysql;
 
 import java.io.File;
 import java.sql.*;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang.ObjectUtils.Null;
 import org.jasypt.util.password.StrongPasswordEncryptor;
@@ -16,6 +17,8 @@ import android.widget.Toast;
 
 import com.box.boxandroidlibv2.BoxAndroidClient;
 
+import es.getbox.android.getboxapp.utils.SQL;
+
 public class MySQL {
 
 	static String host      = "192.168.1.135"; 
@@ -29,9 +32,11 @@ public class MySQL {
     
     private static Context context;
 
+	private SQL sql;
     
     public MySQL(Context context){
     	this.context=context;
+		sql=new SQL(context);
     }
     
     /**
@@ -92,7 +97,7 @@ public class MySQL {
     	            }
     	            rs.close();
     	        } catch (Exception e) {
-    	            Log.i("ex",e.getMessage());
+    	            Log.i("ex",""+e.getMessage());
         	    	a=false;
         	    	x=true;        	    	
     	        } finally {
@@ -108,9 +113,95 @@ public class MySQL {
 		    try{
 		    	return task.get();
 		    }catch(Exception e){
-		    	Log.i("MYSQL",e.getMessage());
+		    	Log.i("MYSQL",""+e.getMessage());
 		    	return false;
 		    }
+        }else{
+        	return false;
+        }
+    }
+    
+    public Boolean vincularDropbox(String user){
+    	final String username=user;
+    	AsyncTask<Null, Integer, Void> task = new AsyncTask<Null, Integer, Void>() {
+    		@Override
+            protected Void doInBackground(Null... params) {
+    			String q = "SELECT DROPBOXTOKENS.* FROM DROPBOXTOKENS JOIN DROPBOXUSERS WHERE "
+    					+ "DROPBOXUSERS.IDUSER='"+username+"' AND DROPBOXTOKENS.ID=DROPBOXUSERS.IDDROPBOX";
+    			try {
+    	            crearConexion();
+    	            ResultSet  rs = st.executeQuery( q );
+    	            int i=0;
+    	            sql.openDatabase();
+    	            while(rs.next()){
+    	            	sql.insertDropbox(i, rs.getString("TOKENKEY"), rs.getString("TOKENSECRET"), rs.getString("USERNAME"), rs.getLong("SPACE"));
+    	            i++;
+    	            }
+    	            sql.closeDatabase();
+    	            rs.close();
+    	        } catch (Exception e) {
+    	            Log.i("ex",""+e.getMessage());  
+    	        } 
+    			cerrarConexion();
+				return null;
+    		}
+        };
+        if(isOnline()){
+		    task.execute();
+		    try {
+				task.get();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		    return true;
+        }else{
+        	return false;
+        }
+    }
+    
+    public Boolean vincularBox(String user){
+    	final String username=user;
+    	AsyncTask<Null, Integer, Void> task = new AsyncTask<Null, Integer, Void>() {
+    		@Override
+            protected Void doInBackground(Null... params) {
+    			String q = "SELECT BOXTOKENS.* FROM BOXTOKENS JOIN BOXUSERS WHERE "
+    					+ "BOXUSERS.IDUSER='"+username+"' AND BOXTOKENS.ID=BOXUSERS.IDBOX";
+    			ResultSet rs;
+    			try {
+    	            crearConexion();
+    	            rs = st.executeQuery( q );
+    	            int i=0;
+    	            sql.openDatabase();
+    	            if(rs.next()){
+    	            	sql.insertBox(i, rs.getString("ACCESSTOKEN"), rs.getString("USERNAME"), rs.getLong("SPACE"));
+    	            	sql.updateBoxToken(i, rs.getString("REFRESHTOKEN"));
+    	            i++;
+    	            }
+    	            sql.closeDatabase();
+    	            rs.close();
+    	        } catch (Exception e) {
+    	            Log.i("ex",""+e.getMessage());  
+    	        } 
+    			cerrarConexion();
+				return null;
+    		}
+        };
+        if(isOnline()){
+		    task.execute();
+		    try {
+				task.get();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		    return true;
         }else{
         	return false;
         }
@@ -124,14 +215,13 @@ public class MySQL {
     	AsyncTask<Null, Integer, Integer> task = new AsyncTask<Null, Integer,Integer>() {
     		@Override
             protected Integer doInBackground(Null... params) {
-    			int option=0;
     			ResultSet rs;
     			String q ="SELECT DEL FROM USERS WHERE USERNAME='"+username+"'";
     			try {
     	            crearConexion();
     	            rs = st.executeQuery( q );
     			} catch (Exception e) {
-    	        	Log.i("ex",e.getMessage());
+    	        	Log.i("ex",""+e.getMessage());
         	    	return 1;
     			}
     			try{
@@ -157,7 +247,7 @@ public class MySQL {
 	            		}
 		            }
     			} catch (Exception e) {
-    	        	Log.i("ex",e.getMessage());
+    	        	Log.i("ex",""+e.getMessage());
         	    	return 4;
     			}
 	            cerrarConexion();
@@ -185,7 +275,7 @@ public class MySQL {
     	            	return 4;
 		    	}
 		    }catch(Exception e){
-		    	Log.i("MYSQL",e.getMessage());
+		    	Log.i("MYSQL",""+e.getMessage());
 		    	return 4;
 		    }
         }else{
@@ -216,7 +306,7 @@ public class MySQL {
     	            st.executeUpdate( q );
     	            a=true;
     	        } catch (Exception e) {
-    	        	Log.i("ex",e.getMessage());
+    	        	Log.i("ex",""+e.getMessage());
         	    	a=false;
         	    	x=true;        	    	
     	        } finally {
@@ -237,93 +327,157 @@ public class MySQL {
 		    	}
 		    	return aux;
 		    }catch(Exception e){
-		    	Log.i("MYSQL",e.getMessage());
+		    	Log.i("MYSQL",""+e.getMessage());
 		    	return false;
 		    }
         }else{
         	return false;
         }
     }
-    /*
-    public static List<Familia> getDatosFamilia(){
-		
-		List<Familia> f = new ArrayList<Familia>();
-		String q = "SELECT id, nombre FROM familia ORDER BY orden";
-		
-        try {
-            crearConexion();
-
-            ResultSet rs = st.executeQuery( q );
-            while (rs.next()) {
-                f.add(new Familia( rs.getInt("id"),
-                                   rs.getString("nombre") ) );    
+    
+    public boolean insertDropbox(String tokenkey, String tokensecret, String user, long spaceused,String uName){
+    	final String username=user;
+    	final String name=uName;
+    	final String key=tokenkey;
+    	final String secret=tokensecret;
+    	final long space=spaceused;
+    	AsyncTask<Null, Integer, Void> task = new AsyncTask<Null, Integer, Void>() {
+    		@Override
+            protected Void doInBackground(Null... params) {
+    			String q ="INSERT INTO DROPBOXTOKENS (TOKENKEY, TOKENSECRET, USERNAME, SPACE ) VALUES ( '" +
+    					key + "', '" +
+    					secret + "', '" +
+    	    			username + "', '" +
+    	    			space + "' )";
+    	    	try {
+    	            crearConexion();
+    	            st.executeUpdate( q );
+    	        } catch (Exception e) {
+    	        	Log.i("ex",""+e.getMessage());
+        	    	return null;       	    	
+    	        } 
+    	    	cerrarConexion();
+    	    	
+    	    	q = "SELECT ID FROM DROPBOXTOKENS";
+    			int id=0;
+    	    	try {
+    	            crearConexion();
+    	            ResultSet  rs = st.executeQuery( q );
+    	            rs.last();
+    	            id=rs.getInt("ID");
+    	            rs.close();
+    	        } catch (Exception e) {
+    	            Log.i("ex",""+e.getMessage());  
+    	        } 
+    			cerrarConexion();
+    	    	
+    	    	q ="INSERT INTO DROPBOXUSERS ( IDDROPBOX, IDUSER ) VALUES ( '" +
+    					id + "', '" +
+    	    			name + "' )";
+    	    	try {
+    	            crearConexion();
+    	            st.executeUpdate( q );
+    	        } catch (Exception e) {
+    	        	Log.i("ex",""+e.getMessage());
+        	    	return null;       	    	
+    	        } 
+    	    	cerrarConexion();
+    	        return null;
             }
-            rs.close();
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        } finally {
-            cerrarConexion();
+        };
+        if(isOnline()){
+		    task.execute();
+		    return true;
+        }else{
+        	return false;
         }
-        return f;
-		
-	}
-
-	// Actualiza datos de la tabla familia en la BD.
-	// Recibe como parámetro un objeto Familia.
-	public static void updateFamilia( Familia f ){
-		
-		String q;
-		
-		if ( f.getId() == 0 ) {
-			// Si el Id de la Familia está a cero es una nueva fila.
-			q = "INSERT INTO familia ( id, nombre ) VALUES ( " +
-				f.getId() + ", " +
-				f.getNombre() + ")";			
-		} else {
-			// Si el id es distinto de cero es una actualización del registro.
-			q = "UPDATE familia SET " +
-				"nombre = " + f.getNombre() +
-				"WHERE id = " + f.getId();			
-		}
-		
-        try {
-            crearConexion();
-
-            st.executeUpdate( q );
-            //Cuando es una nueva fila, averiguo el ultimo Id adsignado por la BD y lo pongo en el objeto Familia. 
-            if ( f.getId() == 0 ){
-                ResultSet rs = st.executeQuery("SELECT LAST_INSERT_ID()");
-                rs.first();
-                f.setId( rs.getInt(1) );
-                rs.close();            	
+    }
+    
+    public boolean actualizarDropbox(String user, long spaceused, String uName){
+    	final String username=user;
+    	final String name=uName;
+    	final long space=spaceused;
+    	AsyncTask<Null, Integer, Void> task = new AsyncTask<Null, Integer, Void>() {
+    		@Override
+            protected Void doInBackground(Null... params) {
+    			String q = "SELECT DROPBOXTOKENS.ID FROM DROPBOXTOKENS JOIN DROPBOXUSERS WHERE "
+    					+ "DROPBOXUSERS.IDUSER='"+name+"' AND DROPBOXTOKENS.USERNAME='"+username+"' AND DROPBOXTOKENS.ID=DROPBOXUSERS.IDDROPBOX";
+    			int id=0;
+    	    	try {
+    	            crearConexion();
+    	            ResultSet  rs = st.executeQuery( q );
+    	            while(rs.next()){
+    	            	id=rs.getInt("ID");
+    	            }
+    	            rs.close();
+    	        } catch (Exception e) {
+    	            Log.i("ex",""+e.getMessage());  
+    	        } 
+    			cerrarConexion();		
+    			    			
+    			q ="UPDATE DROPBOXTOKENS SET SPACE='" +
+    					space + "' WHERE ID='"+id+"'";
+    	    	try {
+    	            crearConexion();
+    	            st.executeUpdate( q );
+    	        } catch (Exception e) {
+    	        	Log.i("ex",""+e.getMessage());
+        	    	return null;       	    	
+    	        } 
+    	    	cerrarConexion();
+    	    	
+    	        return null;
             }
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        } finally {
-            cerrarConexion();
+        };
+        if(isOnline()){
+		    task.execute();
+		    return true;
+        }else{
+        	return false;
         }
-        return;
-	}
-
-	// Borra datos de la tabla familia en la BD.
-	// Recibe como parámetro un objeto Familia.
-	public static void deleteFamilia( Familia f ){
-		
-		String q;
-		q = "DELETE FROM familia " +
-			"WHERE id = " + f.getId();			
-		
-        try {
-            crearConexion();
-            st.executeUpdate( q );
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        } finally {
-            cerrarConexion();
+    }
+    
+    public boolean deleteDropbox(String user, String uName){
+    	final String username=user;
+    	final String name=uName;
+    	AsyncTask<Null, Integer, Void> task = new AsyncTask<Null, Integer, Void>() {
+    		@Override
+            protected Void doInBackground(Null... params) {
+    			String q = "SELECT DROPBOXTOKENS.ID FROM DROPBOXTOKENS JOIN DROPBOXUSERS WHERE "
+    					+ "DROPBOXUSERS.IDUSER='"+name+"' AND DROPBOXTOKENS.USERNAME='"+username+"' AND DROPBOXTOKENS.ID=DROPBOXUSERS.IDDROPBOX";
+    			int id=0;
+    	    	try {
+    	            crearConexion();
+    	            ResultSet  rs = st.executeQuery( q );
+    	            while(rs.next()){
+    	            	id=rs.getInt("ID");
+    	            }
+    	            rs.close();
+    	        } catch (Exception e) {
+    	            Log.i("ex",""+e.getMessage());  
+    	        } 
+    			cerrarConexion();		
+    			    			
+    			q ="DELETE FROM DROPBOXUSERS WHERE IDDROPBOX='"+id+"'";
+    	    	try {
+    	            crearConexion();
+    	            st.executeUpdate( q );
+    	        } catch (Exception e) {
+    	        	Log.i("ex",""+e.getMessage());
+        	    	return null;       	    	
+    	        } 
+    	    	cerrarConexion();
+    	    	
+    	        return null;
+            }
+        };
+        if(isOnline()){
+		    task.execute();
+		    return true;
+        }else{
+        	return false;
         }
-        return;
-	}
-*/
+    }
     
     public boolean isOnline() {
     	ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);

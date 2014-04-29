@@ -140,10 +140,10 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         boolArchives=false;
 		
 		mySql=new MySQL(this);
-		
+		aLayer=new AbstractionLayer(this);
 		mPrefs = this.getSharedPreferences("LOGIN",0);
         if (mPrefs.getBoolean("logueado",false)) {
-        	 aLayer=new AbstractionLayer(this);
+        	 
      		
      		listDirectory=new ArrayList<Item>();     		
      		aLayer.startAutentication();
@@ -294,8 +294,12 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         case 0:
             listDirectory.clear(); 
             aLayer.restartWidget();   
-            aLayer.initFiles(this); 
-            showDialog("Sincronizando...");
+            aLayer.initFiles(this);
+            if(aLayer.zero()){
+            	showToast("Aun no has sincronizado ninguna cuenta");
+            }else{
+                showDialog("Sincronizando...");
+            }
     		boolArchives=true;
     		args.putInt(FragmentArchives.ARG_ARCHIVE_NUMBER, position);
             fragment.setArguments(args);
@@ -499,7 +503,9 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
 				        ed.commit();
 				        ed.putString("userName",lgnUser.getText().toString());
 				        ed.commit();
-			        
+				        
+				        aLayer.sincToBD();
+				        
 				        Intent intent = new Intent(this,GetBoxActivity.class);
 						startActivity(intent);
 				        this.finish();

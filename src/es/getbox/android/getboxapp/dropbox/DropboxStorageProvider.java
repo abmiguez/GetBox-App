@@ -19,6 +19,7 @@ import com.dropbox.client2.session.AppKeyPair;
 import com.dropbox.client2.session.Session.AccessType;
 
 import es.getbox.android.getboxapp.interfaces.AsyncTaskCompleteListener;
+import es.getbox.android.getboxapp.mysql.MySQL;
 import es.getbox.android.getboxapp.utils.Item;
 import es.getbox.android.getboxapp.utils.SQL;
 
@@ -39,6 +40,7 @@ public class DropboxStorageProvider {
 	private int dropboxAccount;
 	private boolean isLoc;
 	private SQL sql;
+	private MySQL mySql;
 	
 	public DropboxAPI<AndroidAuthSession> getApi(){
 		return this.mDBApi;
@@ -48,7 +50,8 @@ public class DropboxStorageProvider {
 		this.mContext=context;
 		this.dropboxAccount=dropboxAccount;
 		this.isLoc=true;
-		sql=new SQL(context);		
+		sql=new SQL(context);
+		mySql=new MySQL(context);
 	}
 	
 	public boolean startAuthentication() {
@@ -135,9 +138,11 @@ public class DropboxStorageProvider {
 	}
 	
 	private void storeKeys(String key, String secret) {	
+		SharedPreferences mPrefs = mContext.getSharedPreferences("LOGIN",0);
 		this.sql.openDatabase();
 		sql.insertDropbox(dropboxAccount, key, secret,getUser(),getSpace());
 		this.sql.closeDatabase();
+		mySql.insertDropbox(key, secret, getUserName(), getSpaceUsed(), mPrefs.getString("userName",""));
 	}
 
 	private void clearKeys() {

@@ -6,16 +6,18 @@ import java.util.Collections;
 import java.util.Comparator;
 
 import com.box.boxandroidlibv2.activities.OAuthActivity;
+import java.sql.ResultSet;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.util.Log;
 import android.widget.Toast;
-
 import es.getbox.android.getboxapp.GetBoxActivity;
 import es.getbox.android.getboxapp.box.BoxStorageProvider;
 import es.getbox.android.getboxapp.dropbox.DropboxStorageProvider;
 import es.getbox.android.getboxapp.interfaces.AsyncTaskCompleteListener;
+import es.getbox.android.getboxapp.mysql.MySQL;
 import es.getbox.android.getboxapp.utils.Item;
 import es.getbox.android.getboxapp.utils.SQL;
 
@@ -48,12 +50,14 @@ public class AbstractionLayer{
 	
 	//SQL
 	private SQL sql;
+	private MySQL mySql;
 	
 	//Contexto
 	private Context context;
 	
 	public AbstractionLayer(Context context){
 		this.context=context;
+		mySql=new MySQL(context);
 		
 		sql=new SQL(this.context);
 		sql.openDatabase();	
@@ -74,6 +78,14 @@ public class AbstractionLayer{
 		directoriosDropbox.add("/");
 		posicionActual=0;
 		sql.closeDatabase();	
+	}
+	
+	public boolean zero(){
+		if(newBoxAccount==0 && newDropboxAccount==0){
+			return true;
+		}else{
+			return false;
+		}
 	}
 	
 	public Item uploadFile(String file_name){
@@ -172,6 +184,8 @@ public class AbstractionLayer{
 	
 	public void delete(Item item){
 		String rutaDropbox="";
+		SharedPreferences mPrefs = context.getSharedPreferences("LOGIN",0);
+		
 		for(int i=0;i<directoriosDropbox.size();i++){
         	rutaDropbox=rutaDropbox+directoriosDropbox.get(i);
         }
@@ -179,6 +193,7 @@ public class AbstractionLayer{
 			if(item.getLocation()=="dropbox"){
 				dsp.get(item.getAccount()).deleteFile(item.getName(),rutaDropbox+item.getName());
 				dsp.get(item.getAccount()).setSpaceUsed(dsp.get(item.getAccount()).getSpace());
+				mySql.actualizarDropbox(dsp.get(item.getAccount()).getUserName(), dsp.get(item.getAccount()).getSpaceUsed(),mPrefs.getString("userName",""));
 			}else{
 				if(item.getLocation()=="box"){
 					bsp.get(item.getAccount()).deleteFile(item.getName(),item.getId());
@@ -279,7 +294,9 @@ public class AbstractionLayer{
 	
 	public void deleteAccount(String id,int position){
 		this.sql.openDatabase();
+		SharedPreferences mPrefs = context.getSharedPreferences("LOGIN",0);
 		if(id=="dropbox"){
+			mySql.deleteDropbox((dsp.get(position)).getUserName(),mPrefs.getString("userName",""));
 			dsp.remove(position);
 			dbAccounts.remove(position);
 			this.sql.deleteDropbox(position);
@@ -410,6 +427,15 @@ public class AbstractionLayer{
         restartRoutes();
 	}
 	
+	public void sincToBD(){
+		SharedPreferences mPrefs = context.getSharedPreferences("LOGIN",0);
+		sql.openDatabase();
+		sql.deleteAll();
+		sql.closeDatabase();
+		
+		mySql.vincularDropbox(mPrefs.getString("userName",""));
+		mySql.vincularBox(mPrefs.getString("userName",""));
+	}
 
 	public int getNewBoxAccount() {
 		return newBoxAccount;

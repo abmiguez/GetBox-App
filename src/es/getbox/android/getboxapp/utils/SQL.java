@@ -234,6 +234,33 @@ public class SQL{
     	return c1.getInt(index);
     }
     
+    public void deleteAll(){
+    	db.beginTransaction();
+    	try {
+    		db.execSQL( "delete from boxTokens;" );
+    		db.setTransactionSuccessful();
+    	}
+    	catch (SQLiteException e2) {
+    		//report problem 
+    		Toast.makeText(context, e2.getMessage(), Toast.LENGTH_LONG).show();
+    	}
+    	finally {
+    		db.endTransaction();
+    	}
+    	db.beginTransaction();
+    	try {
+    		db.execSQL( "delete from dropboxTokens;" );
+    		db.setTransactionSuccessful();
+    	}
+    	catch (SQLiteException e2) {
+    		//report problem 
+    		Toast.makeText(context, e2.getMessage(), Toast.LENGTH_LONG).show();
+    	}
+    	finally {
+    		db.endTransaction();
+    	}
+    }
+    
     public ArrayList<String> getDropboxTokens(int dropboxAccount) {
     	ArrayList<String> tokens= new ArrayList<String>();
     	try {
