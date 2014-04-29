@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:paddingLeft="6dp"
     android:orientation="horizontal" >
 
     <ImageView
@@ -9,14 +10,15 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:paddingLeft="2dp"
-        android:paddingRight="2dp"
+        android:paddingRight="6dp"
         android:paddingTop="2dp"
         android:src="@drawable/foldericon" />
 
     <TextView
         android:id="@+id/label"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="wrap_content"        
+        android:paddingTop="6dp"
         android:textSize="20sp" />
 
 </LinearLayout>

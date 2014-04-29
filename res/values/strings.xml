@@ -19,7 +19,6 @@
     <string-array name="options_array">
         <item>Archivos</item>
         <item>Cuentas</item>
-        <item>Nueva Cuenta</item>
         <item>Configuración</item>
         <item>Cerrar sesión</item>
     </string-array>
@@ -41,5 +40,9 @@
     <string name="buttonLogin">Entrar</string>
     <string name="buttonRegister">Registarse</string>    
     <string name="buttonBack">Atras</string>
+    <string name="action_plus">Anhadir</string>
+    <string name="sinc_accounts">Cuentas vinculadas a </string>
+     <string name="drpbx">Dropbox:</string> 
+    <string name="bx">Box:</string>   
     
 </resources>

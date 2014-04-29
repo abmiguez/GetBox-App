@@ -8,30 +8,30 @@ package com.box.boxandroidlibv2;
 
 public final class R {
 	public static final class drawable {
-		public static final int boxandroidlibv2_box_background_header = 0x7f020003;
-		public static final int boxandroidlibv2_btn_bar_press = 0x7f020004;
-		public static final int boxandroidlibv2_btn_bar_selector = 0x7f020005;
-		public static final int boxandroidlibv2_btn_bar_white = 0x7f020006;
-		public static final int boxandroidlibv2_btn_cta_blue = 0x7f020007;
-		public static final int boxandroidlibv2_btn_cta_blue_press = 0x7f020008;
-		public static final int boxandroidlibv2_btn_cta_states = 0x7f020009;
-		public static final int boxandroidlibv2_btn_round_blue = 0x7f02000a;
-		public static final int boxandroidlibv2_btn_round_blue_press = 0x7f02000b;
-		public static final int boxandroidlibv2_btn_toggle_round_blue_states = 0x7f02000c;
-		public static final int boxandroidlibv2_generic = 0x7f02000d;
-		public static final int boxandroidlibv2_ic_breadcrumb_arrow = 0x7f02000e;
-		public static final int boxandroidlibv2_ic_newfolder = 0x7f02000f;
-		public static final int boxandroidlibv2_ic_progress_spinner = 0x7f020010;
-		public static final int boxandroidlibv2_icon_folder_personal = 0x7f020011;
-		public static final int boxandroidlibv2_line_divider = 0x7f020012;
-		public static final int boxandroidlibv2_list_item_divider = 0x7f020013;
-		public static final int boxandroidlibv2_list_item_selector = 0x7f020014;
-		public static final int boxandroidlibv2_list_selected_state = 0x7f020015;
-		public static final int boxandroidlibv2_modal_divider = 0x7f020016;
-		public static final int boxandroidlibv2_navigation_selector = 0x7f020017;
-		public static final int boxandroidlibv2_progress_spinner = 0x7f020018;
-		public static final int boxandroidlibv2_rectangle_light_blue = 0x7f020019;
-		public static final int boxandroidlibv2_rectangle_light_grey = 0x7f02001a;
+		public static final int boxandroidlibv2_box_background_header = 0x7f020004;
+		public static final int boxandroidlibv2_btn_bar_press = 0x7f020005;
+		public static final int boxandroidlibv2_btn_bar_selector = 0x7f020006;
+		public static final int boxandroidlibv2_btn_bar_white = 0x7f020007;
+		public static final int boxandroidlibv2_btn_cta_blue = 0x7f020008;
+		public static final int boxandroidlibv2_btn_cta_blue_press = 0x7f020009;
+		public static final int boxandroidlibv2_btn_cta_states = 0x7f02000a;
+		public static final int boxandroidlibv2_btn_round_blue = 0x7f02000b;
+		public static final int boxandroidlibv2_btn_round_blue_press = 0x7f02000c;
+		public static final int boxandroidlibv2_btn_toggle_round_blue_states = 0x7f02000d;
+		public static final int boxandroidlibv2_generic = 0x7f02000e;
+		public static final int boxandroidlibv2_ic_breadcrumb_arrow = 0x7f02000f;
+		public static final int boxandroidlibv2_ic_newfolder = 0x7f020010;
+		public static final int boxandroidlibv2_ic_progress_spinner = 0x7f020011;
+		public static final int boxandroidlibv2_icon_folder_personal = 0x7f020012;
+		public static final int boxandroidlibv2_line_divider = 0x7f020013;
+		public static final int boxandroidlibv2_list_item_divider = 0x7f020014;
+		public static final int boxandroidlibv2_list_item_selector = 0x7f020015;
+		public static final int boxandroidlibv2_list_selected_state = 0x7f020016;
+		public static final int boxandroidlibv2_modal_divider = 0x7f020017;
+		public static final int boxandroidlibv2_navigation_selector = 0x7f020018;
+		public static final int boxandroidlibv2_progress_spinner = 0x7f020019;
+		public static final int boxandroidlibv2_rectangle_light_blue = 0x7f02001a;
+		public static final int boxandroidlibv2_rectangle_light_grey = 0x7f02001b;
 	}
 	public static final class id {
 		public static final int PickerListView = 0x7f0a0010;

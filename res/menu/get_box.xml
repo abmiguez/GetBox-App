@@ -1,4 +1,28 @@
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    >
+    
+     <item
+        android:id="@+id/anhadir"
+        
+        android:icon="@drawable/action_plus"
+        android:orderInCategory="99"
+        android:showAsAction="ifRoom"
+        android:title="@string/action_plus">
+    
+        <menu>
+        	<item
+       		android:id="@+id/anhadir_dropbox"
+        	android:orderInCategory="102"
+        	android:showAsAction="never"
+        	android:title="Dropbox"/>
+        	<item
+       		android:id="@+id/anhadir_box"
+        	android:orderInCategory="103"
+        	android:showAsAction="never"
+        	android:title="Box"/>
+    	</menu>    
+    </item>
+    
     <item
         android:id="@+id/actualizar"
         android:orderInCategory="100"

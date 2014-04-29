@@ -23,17 +23,17 @@ public class SplashScreenActivity extends Activity {
 
         mPrefs = getSharedPreferences("Splash",0);
         boolean logueado = mPrefs.getBoolean("splash",false);
-        if(!logueado){
+        if(false){//!logueado){
         // Set portrait orientation
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        // Hide title bar
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); 
+        // Hide title bar   
         requestWindowFeature(Window.FEATURE_NO_TITLE);
- 
+    
         setContentView(R.layout.splash_screen);
  
         TimerTask task = new TimerTask() {
             @Override
-            public void run() {
+            public void run() { 
  
                 // Start the next activity
                 Intent mainIntent = new Intent().setClass(

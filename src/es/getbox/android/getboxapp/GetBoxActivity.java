@@ -3,6 +3,7 @@ package es.getbox.android.getboxapp;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
@@ -19,12 +20,14 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowManager.LayoutParams;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
+
 import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -36,11 +39,15 @@ import java.util.Set;
 import java.util.Collections;
 
 
+
+
+
+
+
 import es.getbox.android.getboxapp.abstractionlayer.AbstractionLayer;
 import es.getbox.android.getboxapp.fragments.FragmentArchives;
 import es.getbox.android.getboxapp.fragments.FragmentClose;
 import es.getbox.android.getboxapp.fragments.FragmentAccounts;
-import es.getbox.android.getboxapp.fragments.FragmentNewAccount;
 import es.getbox.android.getboxapp.fragments.FragmentOptions;
 import es.getbox.android.getboxapp.interfaces.AsyncTaskCompleteListener;
 import es.getbox.android.getboxapp.mysql.MySQL;
@@ -50,11 +57,14 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View.OnClickListener;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 import android.widget.EditText;
@@ -83,6 +93,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
 	private Button buttonRgstrRegister;
 	private Button buttonRgstrBack;
 	private short button;
+	private ProgressDialog dialog;
 	
 	//Drawer
 	private DrawerLayout mDrawerLayout;
@@ -126,16 +137,17 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
             mCameraFileName = savedInstanceState.getString("mCameraFileName");   
         }  
         
-        aLayer=new AbstractionLayer(this);
-		boolArchives=false;
-		listDirectory=new ArrayList<Item>();		
+        boolArchives=false;
 		
-		aLayer.startAutentication();
-		
-		mySql=new MySQL();
+		mySql=new MySQL(this);
 		
 		mPrefs = this.getSharedPreferences("LOGIN",0);
         if (mPrefs.getBoolean("logueado",false)) {
+        	 aLayer=new AbstractionLayer(this);
+     		
+     		listDirectory=new ArrayList<Item>();     		
+     		aLayer.startAutentication();
+     		dialog=new ProgressDialog(this);
         	showMain();
         	button=2;
         } else {
@@ -147,8 +159,10 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
     
     protected void onResume() {
         super.onResume();
-        aLayer.finishAutentication();        
-        aLayer.newDBAccountFinish();
+        if(mPrefs.getBoolean("logueado",false)){
+	        aLayer.finishAutentication();        
+	        aLayer.newDBAccountFinish();
+        }
     }
     
     protected void onPause(){
@@ -178,7 +192,6 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
     public boolean onPrepareOptionsMenu(Menu menu) {
         // If the nav drawer is open, hide action items related to the content view
     	
-    	if (true){
     	boolean visible=true;
     	if(actualDrawer>0) visible=false;    		
     	boolean drawerOpen = mDrawerLayout.isDrawerOpen(mDrawerList);
@@ -186,16 +199,16 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
 		menu.findItem(R.id.nueva_carpeta).setVisible(!drawerOpen);
 		menu.findItem(R.id.subir).setVisible(!drawerOpen);
 		menu.findItem(R.id.salir).setVisible(!drawerOpen);
+		menu.findItem(R.id.anhadir).setVisible(!drawerOpen);
     	
+		if(actualDrawer!=1 || drawerOpen){
+			menu.findItem(R.id.anhadir).setVisible(false);
+		}else{
+			menu.findItem(R.id.anhadir).setVisible(true);
+		}/*
     	menu.findItem(R.id.actualizar).setVisible(visible);
         menu.findItem(R.id.nueva_carpeta).setVisible(visible);
-        menu.findItem(R.id.subir).setVisible(visible);
-    	}else{
-    		menu.findItem(R.id.actualizar).setVisible(false);
-    		menu.findItem(R.id.nueva_carpeta).setVisible(false);
-    		menu.findItem(R.id.subir).setVisible(false);
-    		menu.findItem(R.id.salir).setVisible(false);
-    	}
+        menu.findItem(R.id.subir).setVisible(visible);*/
     	
         return super.onPrepareOptionsMenu(menu);
     }
@@ -238,6 +251,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         case R.id.actualizar:
         	listDirectory.clear();
         	aLayer.actualize(this);
+        	showDialog("Actualizando...");
         	return true;
         
         case R.id.nueva_carpeta:
@@ -250,16 +264,17 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         	Intent file_explorer = new Intent(GetBoxActivity.this,FileExplorerActivity.class);
             startActivityForResult(file_explorer, 555);// <-- ¿?
             return true;
+            
+        case R.id.anhadir_dropbox:
+        	aLayer.newDBAccount();
+            return true;
+            
+        case R.id.anhadir_box:
+        	aLayer.newBAccount(this);
+            return true;
         default:
             return super.onOptionsItemSelected(item);
         }
-    }
-    
-    public void initNewAccount(){
-    	buttonDropbox=(Button) findViewById(R.id.buttonNewDropbox);
-        buttonDropbox.setOnClickListener(this);
-    	buttonBox=(Button) findViewById(R.id.buttonNewBox);
-    	buttonBox.setOnClickListener(this);
     }
 
     /* The click listner for ListView in the navigation drawer */
@@ -280,6 +295,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
             listDirectory.clear(); 
             aLayer.restartWidget();   
             aLayer.initFiles(this); 
+            showDialog("Sincronizando...");
     		boolArchives=true;
     		args.putInt(FragmentArchives.ARG_ARCHIVE_NUMBER, position);
             fragment.setArguments(args);
@@ -294,18 +310,12 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         	boolArchives=false;
         break;
         case 2:
-        	fragment = new FragmentNewAccount();
-    		args.putInt(FragmentNewAccount.ARG_NEWACCOUNT_NUMBER, position);
-            fragment.setArguments(args);
-            boolArchives=false;
-        break;
-        case 3:
         	fragment = new FragmentOptions();
     		args.putInt(FragmentOptions.ARG_OPTION_NUMBER, position);
             fragment.setArguments(args);
             boolArchives=false;
         break;
-        case 4:
+        case 3:
         	fragment = new FragmentClose();
         	boolArchives=false;
         	mPrefs = getSharedPreferences("Splash",0);
@@ -320,11 +330,10 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         	startActivity(intento);
 			this.finish();
         break;
-    	}
+    	} 
         FragmentManager fragmentManager = getFragmentManager();
         fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).commit();
         
-       // if(position==0) actualizar("/",true);
         actualDrawer=(short)position;
         // update selected item and title, then close the drawer
         mDrawerList.setItemChecked(position, true);
@@ -350,13 +359,13 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
      * When using the ActionBarDrawerToggle, you must call it during
      * onPostCreate() and onConfigurationChanged()...
      */
-
+ 
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         // Sync the toggle state after onRestoreInstanceState has occurred.
         if(mPrefs.getBoolean("logueado",false)){
-        	mDrawerToggle.syncState();
+        	mDrawerToggle.syncState(); 
         }
         
     }
@@ -434,6 +443,17 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
 		buttonRgstrBack.setOnClickListener(this);
     }
     
+    private void showDialog(String message){
+    	dialog.setMessage(message); 
+		dialog.show();    	
+    }
+    
+    private void hideDialog(){
+    	if (dialog.isShowing()) { 
+        	dialog.dismiss(); 
+        } 
+    }
+    
     private AlertDialog crearCarpetaDialog(){ 
     	AlertDialog.Builder builder = new AlertDialog.Builder(this);
     	final EditText nCarpeta = new EditText(this);
@@ -441,19 +461,21 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
     	builder.setView(nCarpeta); 
     	builder.setTitle("Nueva Carpeta"); 
    	 	builder.setMessage("Escribe el nombre de la carpeta"); 
-   	 	builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() { 
+   	 	builder.setPositiveButton("Crear", new DialogInterface.OnClickListener() { 
    	 		public void onClick(DialogInterface dialog, int whichButton) { 	
             	String nC=nCarpeta.getText().toString();
             	listDirectory.add(aLayer.uploadFolder(nC));
             	orderDirectory();
    	 		} 
    	 	});
-   	 	builder.setNeutralButton("Cancel", new DialogInterface.OnClickListener() { 
+   	 	builder.setNeutralButton("Cancelar", new DialogInterface.OnClickListener() { 
    	 		public void onClick(DialogInterface dialog, int whichButton) { 
    	 			
    		 	}//OnClick 
    	 	});
    	 	AlertDialog dialog = builder.create();
+   	 	nCarpeta.requestFocus();
+
     	return dialog;
      } 
     
@@ -463,7 +485,10 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
     			if(v.getId()==buttonLgnLogin.getId()){
     				EditText lgnUser=(EditText) findViewById(R.id.edtTxtLgnUser);
     				EditText lgnPass=(EditText) findViewById(R.id.edtTxtLgnPass);
-    				if(true){//mySql.login(lgnUser.getText().toString(),lgnPass.getText().toString())){
+    				InputMethodManager inputMethodManager = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+    		        inputMethodManager.hideSoftInputFromWindow(lgnUser.getWindowToken(), 0);
+    		        inputMethodManager.hideSoftInputFromWindow(lgnPass.getWindowToken(), 0);
+    				if(mySql.login(lgnUser.getText().toString(),lgnPass.getText().toString())){
     					mPrefs = getSharedPreferences("Splash",0);
     					SharedPreferences.Editor ed = mPrefs.edit();
 				        ed.putBoolean("splash",true);
@@ -479,7 +504,11 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
 						startActivity(intent);
 				        this.finish();
     				}else{
-    					showToast("Nombre de usuario o contraseña incorrectos");
+    					if(!isOnline()){
+    						showToast("Error al conectar con la base de datos");
+    					}else{
+    						showToast("Nombre de usuario o contraseña incorrectos");
+    					}
     					lgnUser.setText("");
         				lgnPass.setText("");
         				
@@ -497,21 +526,46 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
 					button=0;
 				}
 				if(v.getId()==buttonRgstrRegister.getId()){
-					showLogIn();
-					button=0;
+    				EditText regUser=(EditText) findViewById(R.id.edtTxtRgstrUser);
+    				EditText regPass=(EditText) findViewById(R.id.edtTxtRgstrPass);
+    				EditText regEmail=(EditText) findViewById(R.id.edtTxtRgstrMail);
+    				EditText regName=(EditText) findViewById(R.id.edtTxtRgstrName);
+    				InputMethodManager inputMethodManager = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+    		        inputMethodManager.hideSoftInputFromWindow(regUser.getWindowToken(), 0);
+    		        inputMethodManager.hideSoftInputFromWindow(regPass.getWindowToken(), 0);
+    		        inputMethodManager.hideSoftInputFromWindow(regEmail.getWindowToken(), 0);
+    		        inputMethodManager.hideSoftInputFromWindow(regName.getWindowToken(), 0);
+    				if(regUser.getText().toString().equals("") || regPass.getText().toString().equals("")
+    						|| regEmail.getText().toString().equals("") || regName.getText().toString().equals("")){
+    					showToast("Hay campos incompletos");
+    				}else{
+    					int aux=mySql.comprobarDuplicidad(regUser.getText().toString(),
+    							regPass.getText().toString(),
+    							regEmail.getText().toString(),regName.getText().toString());
+    					switch (aux){
+	    					case 0:
+	    						mySql.registrar(regUser.getText().toString(),
+	        							regPass.getText().toString(),
+	        							regEmail.getText().toString(),regName.getText().toString());
+	    						showLogIn();
+	    						button=0;
+	    					break;
+	    					case 1:
+	    						regUser.setText("");
+	    					break;
+	    					case 2:
+	    						regEmail.setText("");
+	    					break;
+	    					case 3:
+	    						showLogIn();
+	    						button=0;
+	    					break;
+	    					case 4:
+	    						showToast("Error al conectar con la base de datos"); 
+	    					break;
+    					}
+    				}
 				}
-    		break;
-    		
-    		case 2:
-    			buttonDropbox=(Button) findViewById(R.id.buttonNewDropbox);
-	        	buttonBox=(Button) findViewById(R.id.buttonNewBox);
-	
-	        	if (v.getId()==buttonDropbox.getId() ){
-	    			aLayer.newDBAccount();
-	    		}
-	    		if (v.getId()==buttonBox.getId() ){
-	    			aLayer.newBAccount(this);
-	    		}
     		break;
     	}
 	}//onClick
@@ -543,6 +597,9 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
 
             boolean auxBool=aLayer.enableWidget();
 	        archivos.setEnabled(auxBool);
+	        if(auxBool){
+	        	hideDialog();
+	        }
     	}catch(Exception e){}
     }
     
@@ -560,6 +617,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         		listDirectory.clear();
         		mTitle = aux;
                 getActionBar().setTitle(aLayer.getRoute());
+                showDialog("Cargando...");
         	}
         }
 
@@ -607,9 +665,12 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
                 (AdapterView.AdapterContextMenuInfo)menuInfo;
      
             menu.setHeaderTitle(
-                archivos.getAdapter().getItem(info.position).toString());
-     
+            		listDirectory.get(info.position).getName());
+            
             inflater.inflate(R.menu.context_menu_archivos, menu);
+            if((listDirectory.get(info.position).getName()).indexOf(".")<0){
+                menu.findItem(R.id.descargar).setVisible(false);
+        	}
         }
         
         if(v.getId() == R.id.DBAccounts)
@@ -630,7 +691,6 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
             ListView accounts = (ListView) findViewById (R.id.BAccounts);
             menu.setHeaderTitle(
                 accounts.getAdapter().getItem(info.position).toString());
-     
             inflater.inflate(R.menu.context_menu_baccounts, menu);
         }
     }
@@ -764,6 +824,18 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         error.show();
     }
     
+    public boolean isOnline() {
+    	ConnectivityManager cm = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+    	NetworkInfo netInfo = cm.getActiveNetworkInfo();
+
+    	if (netInfo != null && netInfo.isConnectedOrConnecting()) {
+    	return true;
+    	}
+
+    	return false;
+    }
+    
     public void onBackPressed(){
     	if(boolArchives==false){
     		this.finish();
@@ -774,10 +846,12 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
 	    			if(aLayer.getPosicionActual()>0){
 	    				mTitle = aLayer.getRoute();
 	                    getActionBar().setTitle(mTitle);
+	                    showDialog("Cargando...");
 	    			}
 	    			else{
 	    				mTitle = mOptionTitles[0];
 	                    getActionBar().setTitle(mTitle);
+	                    showDialog("Cargando...");
 	    			}
 	    		}else{
 	    			this.finish();
