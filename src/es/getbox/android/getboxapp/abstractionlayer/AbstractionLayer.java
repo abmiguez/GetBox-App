@@ -89,7 +89,8 @@ public class AbstractionLayer{
 	}
 	
 	public Item uploadFile(String file_name){
-        int[] cuenta=spp.storagePolicy(newDropboxAccount, newBoxAccount, dsp, bsp);
+		SharedPreferences mPrefs = context.getSharedPreferences("LOGIN",0);
+		int[] cuenta=spp.storagePolicy(newDropboxAccount, newBoxAccount, dsp, bsp);
         Item item;
         File aux=new File(file_name);        
         if(cuenta[0]==0){
@@ -103,7 +104,7 @@ public class AbstractionLayer{
         }else{
         	bsp.get(cuenta[1]).uploadFile(file_name,
         			bsp.get(cuenta[1]).getDirectory(posicionActual));
-        	//bsp.get(cuenta[1]).setSpaceUsed(bsp.get(cuenta[1]).getSpace());
+        	bsp.get(cuenta[1]).setSpaceUsed(bsp.get(cuenta[1]).getSpace());
         	item=new Item(aux.getName(),bsp.get(cuenta[1]).getDirectory(posicionActual)+file_name,"box",cuenta[1]);
         }
 		return item;
@@ -198,6 +199,7 @@ public class AbstractionLayer{
 				if(item.getLocation()=="box"){
 					bsp.get(item.getAccount()).deleteFile(item.getName(),item.getId());
 					bsp.get(item.getAccount()).setSpaceUsed(bsp.get(item.getAccount()).getSpace());
+					mySql.actualizarBoxSpace(bsp.get(item.getAccount()).getUserName(), bsp.get(item.getAccount()).getSpaceUsed(),mPrefs.getString("userName",""));
 				}
 			}
 		}else{ 
@@ -308,6 +310,7 @@ public class AbstractionLayer{
 			newDropboxAccount--;
 		}
 		if(id=="box"){
+			mySql.deleteBox((bsp.get(position)).getUserName(),mPrefs.getString("userName",""));
 			bsp.remove(position);
 			bAccounts.remove(position);
 			this.sql.deleteBox(position);

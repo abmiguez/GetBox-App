@@ -10,6 +10,7 @@ import org.apache.commons.lang.ObjectUtils.Null;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
@@ -27,6 +28,7 @@ import com.box.boxjavalibv2.requests.requestobjects.BoxFileUploadRequestObject;
 import com.box.boxjavalibv2.requests.requestobjects.BoxFolderRequestObject;
 
 import es.getbox.android.getboxapp.interfaces.AsyncTaskCompleteListener;
+import es.getbox.android.getboxapp.mysql.MySQL;
 import es.getbox.android.getboxapp.utils.Item;
 import es.getbox.android.getboxapp.utils.SQL;
 
@@ -43,6 +45,9 @@ public class BoxStorageProvider {
     private ArrayList<Item> currentDirectory;
     private ArrayList<String> directories;
     private long space;
+	private MySQL mySql;
+	private SharedPreferences mPrefs;
+	
 	
     public BoxStorageProvider(Context context, int newBoxAccount){
     	this.context=context;
@@ -51,6 +56,8 @@ public class BoxStorageProvider {
     	this.currentDirectory=new ArrayList<Item>();
     	this.directories=new ArrayList<String>();
     	this.directories.add("0");
+    	this.mySql=new MySQL(context);
+    	this.mPrefs= context.getSharedPreferences("LOGIN",0);
     }
         
     public BoxAndroidClient getClient(){
@@ -83,6 +90,7 @@ public class BoxStorageProvider {
 						sql.openDatabase();
 			           	sql.updateBoxToken(boxAccount, refreshtoken);
 			            sql.closeDatabase();
+			            mySql.actualizarBoxToken(getUserName(), refreshtoken, mPrefs.getString("userName",""));
 			            oauthObject.setRefreshToken(refreshtoken);
 			            mClient.authenticate(oauthObject);
 			            
@@ -97,6 +105,7 @@ public class BoxStorageProvider {
            
            	this.sql.openDatabase();
            	sql.insertBox(boxAccount, accesstoken,getUser(),getSpace());
+           	mySql.insertBox(accesstoken, getUserName(), getSpaceUsed(), mPrefs.getString("userName",""));
             Toast.makeText(context, "authenticated", Toast.LENGTH_LONG).show();
             refresh();
             this.sql.closeDatabase();
@@ -132,6 +141,7 @@ public class BoxStorageProvider {
 					sql.openDatabase();
 		           	sql.updateBoxToken(boxAccount, refreshtoken);
 		            sql.closeDatabase();
+		            mySql.actualizarBoxToken(getUserName(), refreshtoken, mPrefs.getString("userName",""));
 		            oauthObject.setRefreshToken(refreshtoken);
 		            mClient.authenticate(oauthObject);
             	 }catch(Exception e){}

@@ -126,8 +126,8 @@ public class MySQL {
     	AsyncTask<Null, Integer, Void> task = new AsyncTask<Null, Integer, Void>() {
     		@Override
             protected Void doInBackground(Null... params) {
-    			String q = "SELECT DROPBOXTOKENS.* FROM DROPBOXTOKENS JOIN DROPBOXUSERS WHERE "
-    					+ "DROPBOXUSERS.IDUSER='"+username+"' AND DROPBOXTOKENS.ID=DROPBOXUSERS.IDDROPBOX";
+    			String q = "SELECT * FROM DROPBOXTOKENS  WHERE "
+    					+ "USERID='"+username+"'";
     			try {
     	            crearConexion();
     	            ResultSet  rs = st.executeQuery( q );
@@ -168,8 +168,8 @@ public class MySQL {
     	AsyncTask<Null, Integer, Void> task = new AsyncTask<Null, Integer, Void>() {
     		@Override
             protected Void doInBackground(Null... params) {
-    			String q = "SELECT BOXTOKENS.* FROM BOXTOKENS JOIN BOXUSERS WHERE "
-    					+ "BOXUSERS.IDUSER='"+username+"' AND BOXTOKENS.ID=BOXUSERS.IDBOX";
+    			String q = "SELECT * FROM BOXTOKENS WHERE "
+    					+ "USERID='"+username+"'";
     			ResultSet rs;
     			try {
     	            crearConexion();
@@ -344,35 +344,11 @@ public class MySQL {
     	AsyncTask<Null, Integer, Void> task = new AsyncTask<Null, Integer, Void>() {
     		@Override
             protected Void doInBackground(Null... params) {
-    			String q ="INSERT INTO DROPBOXTOKENS (TOKENKEY, TOKENSECRET, USERNAME, SPACE ) VALUES ( '" +
+    			String q ="INSERT INTO DROPBOXTOKENS (TOKENKEY, TOKENSECRET, USERNAME, SPACE, USERID ) VALUES ( '" +
     					key + "', '" +
     					secret + "', '" +
     	    			username + "', '" +
-    	    			space + "' )";
-    	    	try {
-    	            crearConexion();
-    	            st.executeUpdate( q );
-    	        } catch (Exception e) {
-    	        	Log.i("ex",""+e.getMessage());
-        	    	return null;       	    	
-    	        } 
-    	    	cerrarConexion();
-    	    	
-    	    	q = "SELECT ID FROM DROPBOXTOKENS";
-    			int id=0;
-    	    	try {
-    	            crearConexion();
-    	            ResultSet  rs = st.executeQuery( q );
-    	            rs.last();
-    	            id=rs.getInt("ID");
-    	            rs.close();
-    	        } catch (Exception e) {
-    	            Log.i("ex",""+e.getMessage());  
-    	        } 
-    			cerrarConexion();
-    	    	
-    	    	q ="INSERT INTO DROPBOXUSERS ( IDDROPBOX, IDUSER ) VALUES ( '" +
-    					id + "', '" +
+    	    			space + "', '"  +
     	    			name + "' )";
     	    	try {
     	            crearConexion();
@@ -393,6 +369,98 @@ public class MySQL {
         }
     }
     
+    public boolean insertBox(String accesstoken, String user, long spaceused,String uName){
+    	final String username=user;
+    	final String name=uName;
+    	final String access=accesstoken;
+    	final long space=spaceused;
+    	AsyncTask<Null, Integer, Void> task = new AsyncTask<Null, Integer, Void>() {
+    		@Override
+            protected Void doInBackground(Null... params) {
+    			String q ="INSERT INTO BOXTOKENS (ACCESSTOKEN, USERNAME, SPACE, USERID ) VALUES ( '" +
+    					access + "', '" +
+    	    			username + "', '" +
+    	    			space + "', '"  +
+    	    			name + "' )";
+    	    	try {
+    	            crearConexion();
+    	            st.executeUpdate( q );
+    	        } catch (Exception e) {
+    	        	Log.i("ex",""+e.getMessage());
+        	    	return null;       	    	
+    	        } 
+    	    	cerrarConexion();
+    	        return null;
+            }
+        };
+        if(isOnline()){
+		    task.execute();
+		    return true;
+        }else{
+        	return false;
+        }
+    }
+    
+    public boolean actualizarBoxSpace(String user, long spaceused, String uName){
+    	final String username=user;
+    	final String name=uName;
+    	final long space=spaceused;
+    	AsyncTask<Null, Integer, Void> task = new AsyncTask<Null, Integer, Void>() {
+    		@Override
+            protected Void doInBackground(Null... params) {
+    			String q ="UPDATE BOXTOKENS SET SPACE='" +
+    					space + "' WHERE "
+    					+ "USERID='"+name+"' AND USERNAME='"+username+"'";
+    	    	try {
+    	            crearConexion();
+    	            st.executeUpdate( q );
+    	        } catch (Exception e) {
+    	        	Log.i("ex",""+e.getMessage());
+        	    	return null;       	    	
+    	        } 
+    	    	cerrarConexion();
+    	    	
+    	        return null;
+            }
+        };
+        if(isOnline()){
+		    task.execute();
+		    return true;
+        }else{
+        	return false;
+        }
+    }
+    
+    public boolean actualizarBoxToken(String user, String refreshtoken, String uName){
+    	final String username=user;
+    	final String name=uName;
+    	final String refresh=refreshtoken;
+    	AsyncTask<Null, Integer, Void> task = new AsyncTask<Null, Integer, Void>() {
+    		@Override
+            protected Void doInBackground(Null... params) {
+    			String q ="UPDATE BOXTOKENS SET REFRESHTOKEN='" +
+    					refresh + "' WHERE "
+    					+ "USERID='"+name+"' AND USERNAME='"+username+"'";
+    	    	try {
+    	            crearConexion();
+    	            st.executeUpdate( q );
+    	        } catch (Exception e) {
+    	        	Log.i("ex",""+e.getMessage());
+        	    	return null;       	    	
+    	        } 
+    	    	cerrarConexion();
+    	    	
+    	        return null;
+            }
+        };
+        if(isOnline()){
+		    task.execute();
+		    return true;
+        }else{
+        	return false;
+        }
+    }
+    
     public boolean actualizarDropbox(String user, long spaceused, String uName){
     	final String username=user;
     	final String name=uName;
@@ -400,23 +468,9 @@ public class MySQL {
     	AsyncTask<Null, Integer, Void> task = new AsyncTask<Null, Integer, Void>() {
     		@Override
             protected Void doInBackground(Null... params) {
-    			String q = "SELECT DROPBOXTOKENS.ID FROM DROPBOXTOKENS JOIN DROPBOXUSERS WHERE "
-    					+ "DROPBOXUSERS.IDUSER='"+name+"' AND DROPBOXTOKENS.USERNAME='"+username+"' AND DROPBOXTOKENS.ID=DROPBOXUSERS.IDDROPBOX";
-    			int id=0;
-    	    	try {
-    	            crearConexion();
-    	            ResultSet  rs = st.executeQuery( q );
-    	            while(rs.next()){
-    	            	id=rs.getInt("ID");
-    	            }
-    	            rs.close();
-    	        } catch (Exception e) {
-    	            Log.i("ex",""+e.getMessage());  
-    	        } 
-    			cerrarConexion();		
-    			    			
-    			q ="UPDATE DROPBOXTOKENS SET SPACE='" +
-    					space + "' WHERE ID='"+id+"'";
+    			String q ="UPDATE DROPBOXTOKENS SET SPACE='" +
+    					space + "' WHERE "
+    					+ "USERID='"+name+"' AND USERNAME='"+username+"'";
     	    	try {
     	            crearConexion();
     	            st.executeUpdate( q );
@@ -443,22 +497,36 @@ public class MySQL {
     	AsyncTask<Null, Integer, Void> task = new AsyncTask<Null, Integer, Void>() {
     		@Override
             protected Void doInBackground(Null... params) {
-    			String q = "SELECT DROPBOXTOKENS.ID FROM DROPBOXTOKENS JOIN DROPBOXUSERS WHERE "
-    					+ "DROPBOXUSERS.IDUSER='"+name+"' AND DROPBOXTOKENS.USERNAME='"+username+"' AND DROPBOXTOKENS.ID=DROPBOXUSERS.IDDROPBOX";
-    			int id=0;
+    			String q ="DELETE FROM DROPBOXTOKENS WHERE "
+    					+ "USERID='"+name+"' AND USERNAME='"+username+"'";
     	    	try {
     	            crearConexion();
-    	            ResultSet  rs = st.executeQuery( q );
-    	            while(rs.next()){
-    	            	id=rs.getInt("ID");
-    	            }
-    	            rs.close();
+    	            st.executeUpdate( q );
     	        } catch (Exception e) {
-    	            Log.i("ex",""+e.getMessage());  
+    	        	Log.i("ex",""+e.getMessage());
+        	    	return null;       	    	
     	        } 
-    			cerrarConexion();		
-    			    			
-    			q ="DELETE FROM DROPBOXUSERS WHERE IDDROPBOX='"+id+"'";
+    	    	cerrarConexion();
+    	    	
+    	        return null;
+            }
+        };
+        if(isOnline()){
+		    task.execute();
+		    return true;
+        }else{
+        	return false;
+        }
+    }
+    
+    public boolean deleteBox(String user, String uName){
+    	final String username=user;
+    	final String name=uName;
+    	AsyncTask<Null, Integer, Void> task = new AsyncTask<Null, Integer, Void>() {
+    		@Override
+            protected Void doInBackground(Null... params) {
+    			String q ="DELETE FROM BOXTOKENS WHERE "
+    					+ "USERID='"+name+"' AND USERNAME='"+username+"'";
     	    	try {
     	            crearConexion();
     	            st.executeUpdate( q );
