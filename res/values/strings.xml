@@ -43,6 +43,15 @@
     <string name="action_plus">Anhadir</string>
     <string name="sinc_accounts">Cuentas vinculadas a </string>
      <string name="drpbx">Dropbox:</string> 
-    <string name="bx">Box:</string>   
+    <string name="bx">Box:</string> 
+    <string name="config">Configuración de la cuenta </string>
+    <string name="config_pass">Cambiar la contraseña</string>
+    <string name="config_delete">Eliminar la cuenta</string>  
+    <string name="pass_old">Contraseña actual:</string>    
+    <string name="pass">Nueva contraseña:</string>
+    <string name="pass_repeat">Repite la nueva contraseña:</string>  
+    <string name="change">Cambiar</string>  
+    <string name="del_account">Eliminar</string>     
+    <string name="repassword">Repetir contraseña</string>  
     
 </resources>

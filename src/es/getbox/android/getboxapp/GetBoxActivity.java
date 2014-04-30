@@ -44,6 +44,7 @@ import java.util.Collections;
 
 
 
+
 import es.getbox.android.getboxapp.abstractionlayer.AbstractionLayer;
 import es.getbox.android.getboxapp.fragments.FragmentArchives;
 import es.getbox.android.getboxapp.fragments.FragmentClose;
@@ -86,8 +87,6 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
 	
 	//Interfaz    
 	private ListView archivos;
-	private Button buttonDropbox;
-	private Button buttonBox;
 	private Button buttonLgnLogin;
 	private Button buttonLgnRegister;
 	private Button buttonRgstrRegister;
@@ -142,6 +141,12 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
 		mySql=new MySQL(this);
 		aLayer=new AbstractionLayer(this);
 		mPrefs = this.getSharedPreferences("LOGIN",0);
+		if (mPrefs.getBoolean("deleteAccount",false)) {
+			showToast("Cuenta eliminada");
+			SharedPreferences.Editor ed = mPrefs.edit();
+	        ed.putBoolean("deleteAccount",false);
+	        ed.commit();
+		}
         if (mPrefs.getBoolean("logueado",false)) {
         	 
      		
@@ -161,7 +166,11 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         super.onResume();
         if(mPrefs.getBoolean("logueado",false)){
 	        aLayer.finishAutentication();        
-	        aLayer.newDBAccountFinish();
+	       if( aLayer.newDBAccountFinish()){
+	    	   restartAccountsFragment();
+	    	   Toast.makeText(this, "Autenticado con exito", Toast.LENGTH_LONG).show();
+	            
+	       }
         }
     }
     
@@ -316,6 +325,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         case 2:
         	fragment = new FragmentOptions();
     		args.putInt(FragmentOptions.ARG_OPTION_NUMBER, position);
+    		args.putString("userName", mPrefs.getString("userName",""));
             fragment.setArguments(args);
             boolArchives=false;
         break;
@@ -447,6 +457,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
 		buttonRgstrBack.setOnClickListener(this);
     }
     
+    
     private void showDialog(String message){
     	dialog.setMessage(message); 
 		dialog.show();    	
@@ -515,7 +526,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
     					}else{
     						showToast("Nombre de usuario o contraseña incorrectos");
     					}
-    					lgnUser.setText("");
+    					//lgnUser.setText("");
         				lgnPass.setText("");
         				
     				}
@@ -534,43 +545,49 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
 				if(v.getId()==buttonRgstrRegister.getId()){
     				EditText regUser=(EditText) findViewById(R.id.edtTxtRgstrUser);
     				EditText regPass=(EditText) findViewById(R.id.edtTxtRgstrPass);
+    				EditText regRePass=(EditText) findViewById(R.id.edtTxtRgstrRePass);
     				EditText regEmail=(EditText) findViewById(R.id.edtTxtRgstrMail);
     				EditText regName=(EditText) findViewById(R.id.edtTxtRgstrName);
     				InputMethodManager inputMethodManager = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
     		        inputMethodManager.hideSoftInputFromWindow(regUser.getWindowToken(), 0);
+    		        inputMethodManager.hideSoftInputFromWindow(regRePass.getWindowToken(), 0);
     		        inputMethodManager.hideSoftInputFromWindow(regPass.getWindowToken(), 0);
     		        inputMethodManager.hideSoftInputFromWindow(regEmail.getWindowToken(), 0);
     		        inputMethodManager.hideSoftInputFromWindow(regName.getWindowToken(), 0);
-    				if(regUser.getText().toString().equals("") || regPass.getText().toString().equals("")
+	    			if(regUser.getText().toString().equals("") || regPass.getText().toString().equals("") || regRePass.getText().toString().equals("")
     						|| regEmail.getText().toString().equals("") || regName.getText().toString().equals("")){
-    					showToast("Hay campos incompletos");
-    				}else{
-    					int aux=mySql.comprobarDuplicidad(regUser.getText().toString(),
-    							regPass.getText().toString(),
-    							regEmail.getText().toString(),regName.getText().toString());
-    					switch (aux){
-	    					case 0:
-	    						mySql.registrar(regUser.getText().toString(),
-	        							regPass.getText().toString(),
-	        							regEmail.getText().toString(),regName.getText().toString());
-	    						showLogIn();
-	    						button=0;
-	    					break;
-	    					case 1:
-	    						regUser.setText("");
-	    					break;
-	    					case 2:
-	    						regEmail.setText("");
-	    					break;
-	    					case 3:
-	    						showLogIn();
-	    						button=0;
-	    					break;
-	    					case 4:
-	    						showToast("Error al conectar con la base de datos"); 
-	    					break;
-    					}
-    				}
+	    				showToast("Hay campos incompletos");
+	    			}else{
+    		        	if(!regRePass.getText().toString().equals(regPass.getText().toString())){
+    		        		showToast("Las contraseñas no coiciden");
+	    				}else{
+	    					int aux=mySql.comprobarDuplicidad(regUser.getText().toString(),
+	    							regPass.getText().toString(),
+	    							regEmail.getText().toString(),regName.getText().toString());
+	    					switch (aux){
+		    					case 0:
+		    						mySql.registrar(regUser.getText().toString(),
+		        							regPass.getText().toString(),
+		        							regEmail.getText().toString(),regName.getText().toString());
+		    						showLogIn();
+		    						button=0;
+		    					break;
+		    					case 1:
+		    						regUser.setText("");
+		    					break;
+		    					case 2:
+		    						regEmail.setText("");
+		    					break;
+		    					case 3:
+		    						showLogIn();
+		    						button=0;
+		    					break;
+		    					case 4:
+		    						showToast("Error al conectar con la base de datos"); 
+		    					break;
+	    					}
+	    				}
+					}
 				}
     		break;
     	}
@@ -720,8 +737,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
                     		listDirectory.remove(index);
                     		ListView archivos=(ListView) findViewById(R.id.archivos); 
                     		archivos.setAdapter(new CustomIconLabelAdapter(GetBoxActivity.this));
-                    		showToast("Borrado con exito");
-                			break;
+                    		break;
 
             	        case DialogInterface.BUTTON_NEGATIVE:
             	        	showToast("Borrado cancelado");
@@ -754,6 +770,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
     	args.putInt(FragmentAccounts.ARG_ACCOUNTS_NUMBER, 1);
     	args.putStringArrayList("arrayDB", aLayer.getDbAccounts());
     	args.putStringArrayList("arrayB", aLayer.getbAccounts());
+    	args.putString("userName", mPrefs.getString("userName",""));
     	fragment.setArguments(args);
     	boolArchives=false;
         FragmentManager fragmentManager = getFragmentManager();
@@ -797,6 +814,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         }
         if (requestCode == aLayer.AUTH_BOX_REQUEST && aLayer.isNewBAccount()) {
         	aLayer.newBAccountFinish(resultCode, data);
+        	restartAccountsFragment();
         } 
         
     }

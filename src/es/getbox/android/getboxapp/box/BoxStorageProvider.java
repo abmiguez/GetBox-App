@@ -1,7 +1,6 @@
 package es.getbox.android.getboxapp.box;
 
 import java.io.File;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
@@ -44,7 +43,6 @@ public class BoxStorageProvider {
     private SQL sql;
     private ArrayList<Item> currentDirectory;
     private ArrayList<String> directories;
-    private long space;
 	private MySQL mySql;
 	private SharedPreferences mPrefs;
 	
@@ -67,14 +65,14 @@ public class BoxStorageProvider {
     public void onAuthenticated(int resultCode, Intent data) {
 		
     	if (Activity.RESULT_OK != resultCode) {
-   		Toast.makeText(context, "fail", Toast.LENGTH_LONG).show();
+   		Toast.makeText(context, "Fallo al autenticar", Toast.LENGTH_LONG).show();
        }
        else {
     	   BoxAndroidOAuthData oauth = data.getParcelableExtra(OAuthActivity.BOX_CLIENT_OAUTH);
            BoxAndroidClient client = new BoxAndroidClient(this.CLIENT_ID, this.CLIENT_SECRET, null, null);
            client.authenticate(oauth);
            if (client == null) {
-               Toast.makeText(context, "fail", Toast.LENGTH_LONG).show();
+               Toast.makeText(context, "Fallo al autenticar", Toast.LENGTH_LONG).show();
            }
            else {
            	this.mClient=client;
@@ -106,7 +104,7 @@ public class BoxStorageProvider {
            	this.sql.openDatabase();
            	sql.insertBox(boxAccount, accesstoken,getUser(),getSpace());
            	mySql.insertBox(accesstoken, getUserName(), getSpaceUsed(), mPrefs.getString("userName",""));
-            Toast.makeText(context, "authenticated", Toast.LENGTH_LONG).show();
+            Toast.makeText(context, "Autenticado con exito", Toast.LENGTH_LONG).show();
             refresh();
             this.sql.closeDatabase();
            }
@@ -125,7 +123,7 @@ public class BoxStorageProvider {
     	BoxAndroidClient client = new BoxAndroidClient(this.CLIENT_ID, this.CLIENT_SECRET, null, null);
 		client.authenticate(oauthObject);
 		if (client == null) {
-			Toast.makeText(context, "fail", Toast.LENGTH_LONG).show();
+			Toast.makeText(context, "Fallo al autenticar", Toast.LENGTH_LONG).show();
 		}
 		else {
         	this.mClient=client;
@@ -224,31 +222,38 @@ public class BoxStorageProvider {
     public void downloadFile(String file_name, String file_id) {
         final String fPath= file_id;
         final String fName=  file_name;
-        AsyncTask<Null, Integer, Null> task = new AsyncTask<Null, Integer, Null>() {
+        AsyncTask<Null, Integer, Boolean> task = new AsyncTask<Null, Integer, Boolean>() {
 
             @Override
-            protected void onPostExecute(Null result) {
-                Toast.makeText(context, "done downloading", Toast.LENGTH_LONG).show();
-                super.onPostExecute(result);
+            protected void onPostExecute(Boolean result) {
+            	if(result){
+            		Toast.makeText(context, fName+" descargado con éxito", Toast.LENGTH_LONG).show();
+            	}else{
+            		Toast.makeText(context, "Ha ocurrido un error mientras se subía el archivo", Toast.LENGTH_LONG).show();
+            		
+            	}
+            	super.onPostExecute(result);
             }
 
             @Override
             protected void onPreExecute() {
-                Toast.makeText(context, "start downloading", Toast.LENGTH_LONG).show();
-                super.onPreExecute();
+            	Toast.makeText(context, "Descargando archivo...", Toast.LENGTH_LONG).show();
+            	super.onPreExecute();
             }
 
             @Override
-            protected Null doInBackground(Null... params) {
+            protected Boolean doInBackground(Null... params) {
                 BoxAndroidClient client = mClient;
                 try {
                     File f = new File(Environment.getExternalStorageDirectory().getPath()+"/GetBox/", fName);
                     System.out.println(f.getAbsolutePath());
                     client.getFilesManager().downloadFile(fPath, f, null, null);
+                    
                 }
                 catch (Exception e) {
+                	return false;
                 }
-                return null;
+                return true;
             }
         };
         task.execute();
@@ -257,22 +262,26 @@ public class BoxStorageProvider {
     public void uploadFile(String file_name, String file_id) {
         final String fPath=file_id;
         final String fName=file_name;
-        AsyncTask<Null, Integer, Null> task = new AsyncTask<Null, Integer, Null>() {
+        AsyncTask<Null, Integer, Boolean> task = new AsyncTask<Null, Integer, Boolean>() {
 
             @Override
-            protected void onPostExecute(Null result) {
-                Toast.makeText(context, "done uploading", Toast.LENGTH_LONG).show();
-                super.onPostExecute(result);
+            protected void onPostExecute(Boolean result) {
+            	if(result){
+            		Toast.makeText(context, fName+" subido con éxito", Toast.LENGTH_LONG).show();
+            	}else{
+            		Toast.makeText(context, "Ha ocurrido un error mientras se subía el archivo", Toast.LENGTH_LONG).show();
+            	}
+            	super.onPostExecute(result);
             }
 
             @Override
             protected void onPreExecute() {
-                Toast.makeText(context, "start uploading", Toast.LENGTH_LONG).show();
-                super.onPreExecute();
+            	Toast.makeText(context, "Subiendo archivo...", Toast.LENGTH_LONG).show();
+            	super.onPreExecute();
             }
 
             @Override
-            protected Null doInBackground(Null... params) {
+            protected Boolean doInBackground(Null... params) {
                 BoxAndroidClient client = mClient;
                 try {
                     File file = new File(fName);                    
@@ -281,8 +290,9 @@ public class BoxStorageProvider {
                 }
                 catch (Exception e) {
                 	Log.i("BoxSP",e.getMessage()+", "+fName);
+                	return false;
                 }
-                return null;
+                return true;
             }
         };
         task.execute();
@@ -292,22 +302,20 @@ public class BoxStorageProvider {
     public void deleteFile(String file_name, String file_id) {
         final String fPath=file_id;
         final String fName=file_name;
-        AsyncTask<Null, Integer, Null> task = new AsyncTask<Null, Integer, Null>() {
+        AsyncTask<Null, Integer, Boolean> task = new AsyncTask<Null, Integer, Boolean>() {
 
             @Override
-            protected void onPostExecute(Null result) {
-                Toast.makeText(context, "done deleting", Toast.LENGTH_LONG).show();
-                super.onPostExecute(result);
+            protected void onPostExecute(Boolean result) {
+            	if(result){
+            		Toast.makeText(context, fName+" eliminado con éxito", Toast.LENGTH_LONG).show();
+            	}else{
+            		Toast.makeText(context, "Ha ocurrido un error mientras se eliminaba el archivo", Toast.LENGTH_LONG).show();
+            	}
+            	super.onPostExecute(result);
             }
 
             @Override
-            protected void onPreExecute() {
-                Toast.makeText(context, "start deleting", Toast.LENGTH_LONG).show();
-                super.onPreExecute();
-            }
-
-            @Override
-            protected Null doInBackground(Null... params) {
+            protected Boolean doInBackground(Null... params) {
                 BoxAndroidClient client = mClient;
                 try {
                 	BoxFileRequestObject requestObj =
@@ -315,8 +323,9 @@ public class BoxStorageProvider {
                 		client.getFilesManager().deleteFile(fPath, requestObj);
                 }
                 catch (Exception e) {
+                	return false;
                 }
-                return null;
+                return true;
             }
         };
         task.execute();
@@ -325,22 +334,20 @@ public class BoxStorageProvider {
     public void deleteFolder(String file_name, String file_id) {
         final String fPath=file_id;
         final String fName=file_name;
-        AsyncTask<Null, Integer, Null> task = new AsyncTask<Null, Integer, Null>() {
+        AsyncTask<Null, Integer, Boolean> task = new AsyncTask<Null, Integer, Boolean>() {
 
             @Override
-            protected void onPostExecute(Null result) {
-                Toast.makeText(context, "done deleting", Toast.LENGTH_LONG).show();
-                super.onPostExecute(result);
+            protected void onPostExecute(Boolean result) {
+            	if(result){
+            		Toast.makeText(context, fName+" eliminado con éxito", Toast.LENGTH_LONG).show();
+            	}else{
+            		Toast.makeText(context, "Ha ocurrido un error mientras se eliminaba el archivo", Toast.LENGTH_LONG).show();
+            	}
+            	super.onPostExecute(result);
             }
 
             @Override
-            protected void onPreExecute() {
-                Toast.makeText(context, "start deleting", Toast.LENGTH_LONG).show();
-                super.onPreExecute();
-            }
-
-            @Override
-            protected Null doInBackground(Null... params) {
+            protected Boolean doInBackground(Null... params) {
                 BoxAndroidClient client = mClient;
                 try {
                 	BoxFolderRequestObject requestObj =
@@ -348,8 +355,9 @@ public class BoxStorageProvider {
                 		client.getFoldersManager().deleteFolder(fPath, requestObj);
                 }
                 catch (Exception e) {
+                	return false;
                 }
-                return null;
+                return true;
             }
         };
         task.execute();
@@ -358,30 +366,29 @@ public class BoxStorageProvider {
     public void uploadFolder(String file_name, String file_id) {
         final String fPath=file_id;
         final String fName=file_name;
-        AsyncTask<Null, Integer, Null> task = new AsyncTask<Null, Integer, Null>() {
+        AsyncTask<Null, Integer, Boolean> task = new AsyncTask<Null, Integer, Boolean>() {
 
             @Override
-            protected void onPostExecute(Null result) {
-                Toast.makeText(context, "done uploading", Toast.LENGTH_LONG).show();
-                super.onPostExecute(result);
+            protected void onPostExecute(Boolean result) {
+            	if (result){
+            		Toast.makeText(context, fName+" creada con éxito", Toast.LENGTH_LONG).show();
+            	}else{
+            		Toast.makeText(context, "Ha ocurrido un error mientras se creaba la carpeta", Toast.LENGTH_LONG).show();
+            	}
+            	super.onPostExecute(result);
             }
 
             @Override
-            protected void onPreExecute() {
-                Toast.makeText(context, "start uploading", Toast.LENGTH_LONG).show();
-                super.onPreExecute();
-            }
-
-            @Override
-            protected Null doInBackground(Null... params) {
+            protected Boolean doInBackground(Null... params) {
                 BoxAndroidClient client = mClient;
                 try {
                     client.getFoldersManager().createFolder(
                         BoxFolderRequestObject.createFolderRequestObject(fName,fPath));
                 }
                 catch (Exception e) {
+                	return false;
                 }
-                return null;
+                return true;
             }
         };
         task.execute();

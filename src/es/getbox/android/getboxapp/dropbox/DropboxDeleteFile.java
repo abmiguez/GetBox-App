@@ -17,7 +17,6 @@ public class DropboxDeleteFile extends AsyncTask<Void, Void, Boolean> {
     private Context mContext;
     private DropboxAPI<AndroidAuthSession> mApi;
     private String mFilename;
-    private String mErrorMsg;
 
     
     public DropboxDeleteFile(Context context, DropboxAPI<AndroidAuthSession> api,
@@ -30,20 +29,20 @@ public class DropboxDeleteFile extends AsyncTask<Void, Void, Boolean> {
     @Override
     protected Boolean doInBackground(Void... params) {
     	try {
-
-			// get delete file
 			mApi.delete(mFilename);
-			return true;
 		} catch (DropboxException e) {
-			mErrorMsg="Something went wrong while getting metadata.";
+			return false;
 		}
-    	return false;
+    	return true;
     }
 	
 	@Override
     protected void onPostExecute(Boolean result) {
-        if (!result) {
-           showToast(mErrorMsg);
+		String[] resul = mFilename.split("/");
+		if (!result) {
+           showToast("Ha ocurrido un error mientras se eliminaba el archivo");
+        }else{
+        	showToast(resul[resul.length-1]+" eliminado con éxito");
         }
     }
 	

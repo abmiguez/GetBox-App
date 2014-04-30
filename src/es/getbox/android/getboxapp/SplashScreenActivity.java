@@ -23,7 +23,7 @@ public class SplashScreenActivity extends Activity {
 
         mPrefs = getSharedPreferences("Splash",0);
         boolean logueado = mPrefs.getBoolean("splash",false);
-        if(false){//!logueado){
+        if(!logueado){
         // Set portrait orientation
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); 
         // Hide title bar   

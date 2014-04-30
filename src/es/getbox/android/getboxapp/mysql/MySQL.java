@@ -1,6 +1,5 @@
 package es.getbox.android.getboxapp.mysql;
 
-import java.io.File;
 import java.sql.*;
 import java.util.concurrent.ExecutionException;
 
@@ -11,11 +10,9 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
-import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.box.boxandroidlibv2.BoxAndroidClient;
 
 import es.getbox.android.getboxapp.utils.SQL;
 
@@ -30,7 +27,7 @@ public class MySQL {
     public static Connection con;
     public static Statement st;
     
-    private static Context context;
+    private Context context;
 
 	private SQL sql;
     
@@ -74,6 +71,102 @@ public class MySQL {
         }
     }
     
+    public boolean deleteUser(String user){
+    	final String username=user;
+    	AsyncTask<Null, Integer, Boolean> task = new AsyncTask<Null, Integer, Boolean>() {
+    		@Override
+            protected Boolean doInBackground(Null... params) {
+    			String q ="DELETE FROM BOXTOKENS WHERE "
+    					+ "USERID='"+username+"'";
+    	    	try {
+    	            crearConexion();
+    	            st.executeUpdate( q );
+    	        } catch (Exception e) {
+    	        	Log.i("ex",""+e.getMessage());
+        	    	return false;       	    	
+    	        } 
+    	    	cerrarConexion();
+    	    	
+    	    	q ="DELETE FROM DROPBOXTOKENS WHERE "
+    					+ "USERID='"+username+"'";
+    	    	try {
+    	            crearConexion();
+    	            st.executeUpdate( q );
+    	        } catch (Exception e) {
+    	        	Log.i("ex",""+e.getMessage());
+        	    	return false;       	    	
+    	        } 
+    	    	cerrarConexion();
+    	    	
+    	    	q ="UPDATE USERS SET DEL=1 WHERE "
+    					+ "USERNAME='"+username+"'";
+    	    	try {
+    	            crearConexion();
+    	            st.executeUpdate( q );
+    	        } catch (Exception e) {
+    	        	Log.i("ex",""+e.getMessage());
+        	    	return false;       	    	
+    	        } 
+    	    	cerrarConexion();
+    	    	
+    	        return true;
+            }
+        };
+        if(isOnline()){
+        	task.execute();
+		    /*
+		    try {
+				return task.get();
+			} catch (InterruptedException e) {
+				return false;
+			} catch (ExecutionException e) {
+				return false;
+			}*/return true;
+        }else{
+        	return false;
+        }
+    }
+    
+    public boolean refreshUser(String user, String password){
+    	final String username=user;
+    	final String pass=password;
+    	
+    	AsyncTask<Null, Integer, Boolean> task = new AsyncTask<Null, Integer, Boolean>() {
+    		@Override
+            protected Boolean doInBackground(Null... params) {
+    			StrongPasswordEncryptor passwordEncryptor = new StrongPasswordEncryptor();
+    			
+    			String encryptedPassword = passwordEncryptor.encryptPassword(pass);
+    			
+    			String q ="UPDATE USERS SET PASSWORD='"+encryptedPassword+"' WHERE "
+    					+ "USERNAME='"+username+"'";
+    	    	try {
+    	            crearConexion();
+    	            st.executeUpdate( q );
+    	        } catch (Exception e) {
+    	        	Log.i("ex",""+e.getMessage());
+        	    	return false;       	    	
+    	        } 
+    	    	cerrarConexion();
+    	    	
+    	        return true;
+            }
+        };
+        if(isOnline()){
+        	task.execute();
+		    /*
+		    try {
+				return task.get();
+			} catch (InterruptedException e) {
+				return false;
+			} catch (ExecutionException e) {
+				return false;
+			}*/return true;
+        }else{
+        	return false;
+        }
+    }
+    
     public boolean login(String user, String pass){
     	final String username=user;
     	final String passwrd=pass;
@@ -83,6 +176,53 @@ public class MySQL {
     			StrongPasswordEncryptor passwordEncryptor = new StrongPasswordEncryptor();
     			String q = "SELECT PASSWORD FROM USERS WHERE USERNAME='"+
             username+"' AND DEL=0";
+    			boolean a=false;
+    			boolean x=false;
+    	    	try {
+    	            crearConexion();
+    	            ResultSet rs = st.executeQuery( q );
+    	            if (rs.next()) {   
+    	            	if (passwordEncryptor.checkPassword(passwrd, rs.getString("PASSWORD"))) {
+    	            		  a=true;
+    	            	} else {
+    	            	  	  a=false;
+    	            	}
+    	            }
+    	            rs.close();
+    	        } catch (Exception e) {
+    	            Log.i("ex",""+e.getMessage());
+        	    	a=false;
+        	    	x=true;        	    	
+    	        } finally {
+    	        	if(x!=true){
+						cerrarConexion();
+					}
+    	        }
+	            return a; 
+            }
+        };
+        if(isOnline()){
+		    task.execute();
+		    try{
+		    	return task.get();
+		    }catch(Exception e){
+		    	Log.i("MYSQL",""+e.getMessage());
+		    	return false;
+		    }
+        }else{
+        	return false;
+        }
+    }
+
+    public boolean comprobarContrasena(String user, String pass){
+    	final String username=user;
+    	final String passwrd=pass;
+    	AsyncTask<Null, Integer, Boolean> task = new AsyncTask<Null, Integer, Boolean>() {
+    		@Override
+            protected Boolean doInBackground(Null... params) {
+    			StrongPasswordEncryptor passwordEncryptor = new StrongPasswordEncryptor();
+    			String q = "SELECT PASSWORD FROM USERS WHERE USERNAME='"+
+            username+"'";
     			boolean a=false;
     			boolean x=false;
     	    	try {

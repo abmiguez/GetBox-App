@@ -96,6 +96,29 @@
 	   android:background="@drawable/rounded_edittext"
        android:textColor="@drawable/text_color" />
    
+   <TextView 
+	    android:id="@+id/txtRgstrRePass" 
+	    android:layout_width="fill_parent" 
+	    android:layout_height="wrap_content" 
+	    android:text= "@string/repassword"
+		android:layout_below="@+id/edtTxtRgstrPass"		
+        android:layout_marginTop="18dp"	  
+	    android:textSize="18sp"
+	    android:paddingLeft="8dp"
+	    android:paddingRight="8dp"
+       android:textColor="#748ac0"/>
+
+   <EditText
+       android:id="@+id/edtTxtRgstrRePass"
+       android:inputType="textPassword"
+       android:layout_width="fill_parent"
+       android:layout_height="wrap_content"
+       android:layout_below="@+id/txtRgstrRePass"
+       android:layout_marginTop="5dp"   
+	   android:textSize="18sp"
+	   android:background="@drawable/rounded_edittext"
+       android:textColor="@drawable/text_color" />
+   
    <Button
        android:id="@+id/buttonRgstrRegister"
        android:layout_width="wrap_content"
@@ -112,7 +135,7 @@
        android:id="@+id/buttonRgstrBack"
        android:layout_width="wrap_content"
        android:layout_alignParentLeft="true"
-       android:layout_below="@+id/edtTxtRgstrPass"
+       android:layout_below="@+id/edtTxtRgstrRePass"
        android:layout_height="wrap_content"
        android:layout_marginTop="20dp"
        android:background="@drawable/button_background"
