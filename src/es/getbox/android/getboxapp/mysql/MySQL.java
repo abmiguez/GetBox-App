@@ -18,7 +18,7 @@ import es.getbox.android.getboxapp.utils.SQL;
 
 public class MySQL {
 
-	static String host      = "192.168.1.135"; 
+	static String host      = "193.147.87.47"; 
 	static String baseDatos = "getboxapp";
     static String usuario   = "getboxuser";
     static String password  = "getboxpass";
