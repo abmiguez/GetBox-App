@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" 
+	    android:paddingLeft="8dp"
+	    android:paddingRight="8dp"
+	    android:background="#dce1e6">
+
+    <ImageView
+       android:id="@+id/imageViewLogin" 
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:layout_centerHorizontal="true"
+       android:layout_marginTop="20dp"
+       android:src="@drawable/getbox_logo_hdpi" />
+    
+   <TextView 
+	    android:id="@+id/txtLgnUser" 
+	    android:layout_width="fill_parent" 
+	    android:layout_height="wrap_content"	    
+       android:layout_below="@+id/imageViewLogin" 
+	    android:text= "@string/username"	    	
+        android:layout_marginTop="30dp"		  
+	    android:textSize="18sp"
+	    android:paddingLeft="8dp"
+	    android:paddingRight="8dp"
+       android:textColor="#748ac0"/> 
+	
+   <EditText
+       android:id="@+id/edtTxtLgnUser"
+       android:inputType="text"
+       android:layout_width="fill_parent"
+       android:layout_height="wrap_content"
+       android:layout_below="@+id/txtLgnUser"
+       android:layout_marginTop="5dp"  
+	   android:textSize="18sp"
+	   android:background="@drawable/rounded_edittext"
+       android:textColor="@drawable/text_color" />
+   
+   <TextView 
+	    android:id="@+id/txtLgnPass" 
+	    android:layout_width="fill_parent" 
+	    android:layout_height="wrap_content" 
+	    android:text= "@string/password"
+		android:layout_below="@+id/edtTxtLgnUser"		
+        android:layout_marginTop="18dp"	  
+	    android:textSize="18sp"
+	    android:paddingLeft="8dp"
+	    android:paddingRight="8dp"
+       android:textColor="#748ac0"/>
+
+   <EditText
+       android:id="@+id/edtTxtLgnPass"
+       android:inputType="textPassword"
+       android:layout_width="fill_parent"
+       android:layout_height="wrap_content"
+       android:layout_below="@+id/txtLgnPass"
+       android:layout_marginTop="5dp" 
+       android:textSize="18sp" 
+	   android:background="@drawable/rounded_edittext" 
+       android:textColor="@drawable/text_color"/>
+
+   <Button
+       android:id="@+id/buttonLgnLogin"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:layout_alignBaseline="@+id/buttonLgnRegister"
+       android:layout_alignBottom="@+id/buttonLgnRegister"
+       android:layout_alignParentRight="true"
+       android:background="@drawable/button_background"
+       android:text="@string/buttonLogin"
+       android:textColor="@drawable/text_color"/>
+
+   <Button
+       android:id="@+id/buttonLgnRegister"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:layout_alignLeft="@+id/edtTxtLgnPass"
+       android:layout_below="@+id/edtTxtLgnPass"
+       android:layout_marginTop="20dp"
+       android:background="@drawable/button_background"
+       android:text="@string/buttonRegister"
+       android:textColor="@drawable/text_color"/>
+
+</RelativeLayout>

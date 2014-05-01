@@ -74,12 +74,12 @@ import android.widget.TextView;
 public class GetBoxActivity extends Activity implements OnClickListener, AsyncTaskCompleteListener<ArrayList<Item>>{
 	//Tag y SharedPreferences
 	private static final String TAG = "GetBox";
-	private SharedPreferences mPrefs;
+	private SharedPreferences mPrefs; 
 	
 	//Rutas
 	private String rutaGetbox;
 	private String rutaBD;
-	private String rutaCamera;
+	private String rutaCamera; 
 	
 	//Listar los directorios
 	private ArrayList<Item> listDirectory;
@@ -101,19 +101,19 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
     private CharSequence mDrawerTitle;
     private CharSequence mTitle;
     private String[] mOptionTitles;	
-	private short actualDrawer;
-    
+	private short actualDrawer; 
+     
     //Subidas de la camara
 	private final static int NEW_PICTURE = 1;
     private String mCameraFileName;
-    private boolean goFromUpload;  
+    private boolean goFromUpload; 
    
 	//Capa de abstraccion
-	private AbstractionLayer aLayer;
+	private AbstractionLayer aLayer;  
 	
 	//Consultas mySQL
 	private MySQL mySql;
-        
+	 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -520,14 +520,14 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
 				        Intent intent = new Intent(this,GetBoxActivity.class);
 						startActivity(intent);
 				        this.finish();
-    				}else{
+    				}else{  
     					if(!isOnline()){
     						showToast("Error al conectar con la base de datos");
     					}else{
     						showToast("Nombre de usuario o contraseña incorrectos");
     					}
     					//lgnUser.setText("");
-        				lgnPass.setText("");
+        				lgnPass.setText("");   
         				
     				}
 				}

@@ -64,13 +64,16 @@ public final class R {
         public static final int dropboxicon=0x7f02001f;
         public static final int foldericon=0x7f020020;
         public static final int getbox_logo=0x7f020021;
-        public static final int ic_action_settings=0x7f020022;
-        public static final int ic_drawer=0x7f020023;
-        public static final int ic_launcher=0x7f020024;
-        public static final int my_action_button_overflow=0x7f020025;
-        public static final int rounded_edittext=0x7f020026;
-        public static final int splash_screen=0x7f020027;
-        public static final int text_color=0x7f020028;
+        public static final int getbox_logo_hdpi=0x7f020022;
+        public static final int getbox_logo_j=0x7f020023;
+        public static final int getbox_logo_large=0x7f020024;
+        public static final int ic_action_settings=0x7f020025;
+        public static final int ic_drawer=0x7f020026;
+        public static final int ic_launcher=0x7f020027;
+        public static final int my_action_button_overflow=0x7f020028;
+        public static final int rounded_edittext=0x7f020029;
+        public static final int splash_screen=0x7f02002a;
+        public static final int text_color=0x7f02002b;
     }
     public static final class id {
         public static final int BAccounts=0x7f0a001f;

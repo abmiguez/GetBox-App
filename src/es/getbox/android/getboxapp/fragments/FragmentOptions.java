@@ -61,13 +61,21 @@ public class FragmentOptions extends Fragment {
 		        	Toast.makeText(getActivity(), "Hay campos incompletos", Toast.LENGTH_LONG).show();
     			}else{
     				if(!mysql.comprobarContrasena(mPrefs.getString("userName",""), confPassOld.getText().toString())){
+    					confPassDel.setText("");
+    					confPassOld.setText("");
     					Toast.makeText(getActivity(), "La contraseña actual no es correcta", Toast.LENGTH_LONG).show();	
 	        		}else{
 			        	if(!confRePass.getText().toString().equals(confPass.getText().toString())){
+			        		confPassDel.setText("");
+			        		confRePass.setText("");
+							confPass.setText("");
 			        		Toast.makeText(getActivity(), "Las contraseñas no coinciden", Toast.LENGTH_LONG).show();
 						}else{
 							if(mysql.refreshUser(mPrefs.getString("userName",""), confPass.getText().toString())){
-								
+								confPassDel.setText("");
+								confPassOld.setText("");
+								confPass.setText("");
+								confRePass.setText("");
 								Toast.makeText(getActivity(), "Contraseña cambiada con éxito", Toast.LENGTH_LONG).show();	
 		        			}else{
 								Toast.makeText(getActivity(), "Ha ocurrido un error al conectar con la Base de Datos", Toast.LENGTH_LONG).show();	
@@ -97,7 +105,11 @@ public class FragmentOptions extends Fragment {
             	    	switch (which){
             	        case DialogInterface.BUTTON_POSITIVE:
             	        	if(!mysql.comprobarContrasena(mPrefs.getString("userName",""), confPassDel.getText().toString())){
-            					Toast.makeText(getActivity(), "La contraseña es incorrecta", Toast.LENGTH_LONG).show();	
+								confPassDel.setText("");
+								confPassOld.setText("");
+								confPass.setText("");
+								confRePass.setText("");
+            	        		Toast.makeText(getActivity(), "La contraseña es incorrecta", Toast.LENGTH_LONG).show();	
         	        		}else{
 	            	        	if(mysql.deleteUser(mPrefs.getString("userName",""))){
 	            					SharedPreferences.Editor ed = mPrefs.edit();
