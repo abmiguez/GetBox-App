@@ -9,6 +9,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -50,39 +52,43 @@ public class FragmentOptions extends Fragment {
 		refresh.setOnClickListener(new OnClickListener(){
             @Override
             public void onClick(View v)
-            {          
-            	MySQL mysql=new MySQL(getActivity());
-            	InputMethodManager inputMethodManager = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-		        inputMethodManager.hideSoftInputFromWindow(confPass.getWindowToken(), 0);
-		        inputMethodManager.hideSoftInputFromWindow(confRePass.getWindowToken(), 0);
-		        inputMethodManager.hideSoftInputFromWindow(confPassOld.getWindowToken(), 0);
-		        inputMethodManager.hideSoftInputFromWindow(confPassDel.getWindowToken(), 0);
-				if(confPassOld.getText().toString().equals("") || confPass.getText().toString().equals("") || confRePass.getText().toString().equals("") ){
-		        	Toast.makeText(getActivity(), "Hay campos incompletos", Toast.LENGTH_LONG).show();
-    			}else{
-    				if(!mysql.comprobarContrasena(mPrefs.getString("userName",""), confPassOld.getText().toString())){
-    					confPassDel.setText("");
-    					confPassOld.setText("");
-    					Toast.makeText(getActivity(), "La contraseña actual no es correcta", Toast.LENGTH_LONG).show();	
-	        		}else{
-			        	if(!confRePass.getText().toString().equals(confPass.getText().toString())){
-			        		confPassDel.setText("");
-			        		confRePass.setText("");
-							confPass.setText("");
-			        		Toast.makeText(getActivity(), "Las contraseñas no coinciden", Toast.LENGTH_LONG).show();
-						}else{
-							if(mysql.refreshUser(mPrefs.getString("userName",""), confPass.getText().toString())){
-								confPassDel.setText("");
-								confPassOld.setText("");
+            {       
+            	if(!isOnline()){
+					Toast.makeText(getActivity(), "Error al conectar con la base de datos", Toast.LENGTH_LONG).show();		
+				}else{
+	            	MySQL mysql=new MySQL(getActivity());
+	            	InputMethodManager inputMethodManager = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+			        inputMethodManager.hideSoftInputFromWindow(confPass.getWindowToken(), 0);
+			        inputMethodManager.hideSoftInputFromWindow(confRePass.getWindowToken(), 0);
+			        inputMethodManager.hideSoftInputFromWindow(confPassOld.getWindowToken(), 0);
+			        inputMethodManager.hideSoftInputFromWindow(confPassDel.getWindowToken(), 0);
+					if(confPassOld.getText().toString().equals("") || confPass.getText().toString().equals("") || confRePass.getText().toString().equals("") ){
+			        	Toast.makeText(getActivity(), "Hay campos incompletos", Toast.LENGTH_LONG).show();
+	    			}else{
+	    				if(!mysql.comprobarContrasena(mPrefs.getString("userName",""), confPassOld.getText().toString())){
+	    					confPassDel.setText("");
+	    					confPassOld.setText("");
+	    					Toast.makeText(getActivity(), "La contraseña actual no es correcta", Toast.LENGTH_LONG).show();	
+		        		}else{
+				        	if(!confRePass.getText().toString().equals(confPass.getText().toString())){
+				        		confPassDel.setText("");
+				        		confRePass.setText("");
 								confPass.setText("");
-								confRePass.setText("");
-								Toast.makeText(getActivity(), "Contraseña cambiada con éxito", Toast.LENGTH_LONG).show();	
-		        			}else{
-								Toast.makeText(getActivity(), "Ha ocurrido un error al conectar con la Base de Datos", Toast.LENGTH_LONG).show();	
-		        			}
-		    			}
-    				}
-    			}
+				        		Toast.makeText(getActivity(), "Las contraseñas no coinciden", Toast.LENGTH_LONG).show();
+							}else{
+								if(mysql.refreshUser(mPrefs.getString("userName",""), confPass.getText().toString())){
+									confPassDel.setText("");
+									confPassOld.setText("");
+									confPass.setText("");
+									confRePass.setText("");
+									Toast.makeText(getActivity(), "Contraseña cambiada con éxito", Toast.LENGTH_LONG).show();	
+			        			}else{
+									Toast.makeText(getActivity(), "Ha ocurrido un error al conectar con la Base de Datos", Toast.LENGTH_LONG).show();	
+			        			}
+			    			}
+	    				}
+	    			}
+				}
             } 
 		});
 		delete = (Button) rootView.findViewById(R.id.buttonCnfgDelete);
@@ -91,55 +97,71 @@ public class FragmentOptions extends Fragment {
             @Override
             public void onClick(View v)
             {
-            	InputMethodManager inputMethodManager = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-		        inputMethodManager.hideSoftInputFromWindow(confPass.getWindowToken(), 0);
-		        inputMethodManager.hideSoftInputFromWindow(confRePass.getWindowToken(), 0);
-		        inputMethodManager.hideSoftInputFromWindow(confPassOld.getWindowToken(), 0);
-		        inputMethodManager.hideSoftInputFromWindow(confPassDel.getWindowToken(), 0);
-				
-            	DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
-            	    @Override
-            	    public void onClick(DialogInterface dialog, int which) {
-            	    	MySQL mysql=new MySQL(getActivity());
-                    	
-            	    	switch (which){
-            	        case DialogInterface.BUTTON_POSITIVE:
-            	        	if(!mysql.comprobarContrasena(mPrefs.getString("userName",""), confPassDel.getText().toString())){
-								confPassDel.setText("");
-								confPassOld.setText("");
-								confPass.setText("");
-								confRePass.setText("");
-            	        		Toast.makeText(getActivity(), "La contraseña es incorrecta", Toast.LENGTH_LONG).show();	
-        	        		}else{
-	            	        	if(mysql.deleteUser(mPrefs.getString("userName",""))){
-	            					SharedPreferences.Editor ed = mPrefs.edit();
-	            			        ed.putBoolean("logueado",false);
-	            			        ed.commit();
-	            			        ed = mPrefs.edit();
-	            			        ed.putBoolean("deleteAccount",true);
-	            			        ed.commit();
-	            		        	Intent intento = new Intent(getActivity(),GetBoxActivity.class);
-	            		        	startActivity(intento);
-	            		        	getActivity().finish();
-	            				}else{
-	            					Toast.makeText(getActivity(), "Ha ocurrido un error al conectar con la Base de Datos", Toast.LENGTH_LONG).show();	
-	            				}
-        	        		}
-            	        break;
-
-            	        case DialogInterface.BUTTON_NEGATIVE:
-            	        	break;
-            	        }
-            	    }
-            	};
-            	AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            	builder.setMessage("¿Seguro que deseas eliminar la cuenta?").setPositiveButton("Si", dialogClickListener)
-            	    .setNegativeButton("No", dialogClickListener).show();
-            	
-            } 
+            	if(!isOnline()){
+					Toast.makeText(getActivity(), "Error al conectar con la base de datos", Toast.LENGTH_LONG).show();		
+				}else{
+	            	InputMethodManager inputMethodManager = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+			        inputMethodManager.hideSoftInputFromWindow(confPass.getWindowToken(), 0);
+			        inputMethodManager.hideSoftInputFromWindow(confRePass.getWindowToken(), 0);
+			        inputMethodManager.hideSoftInputFromWindow(confPassOld.getWindowToken(), 0);
+			        inputMethodManager.hideSoftInputFromWindow(confPassDel.getWindowToken(), 0);
+					
+	            	DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+	            	    @Override
+	            	    public void onClick(DialogInterface dialog, int which) {
+	            	    	MySQL mysql=new MySQL(getActivity());
+	                    	
+	            	    	switch (which){
+	            	        case DialogInterface.BUTTON_POSITIVE:
+	            	        	if(!mysql.comprobarContrasena(mPrefs.getString("userName",""), confPassDel.getText().toString())){
+									confPassDel.setText("");
+									confPassOld.setText("");
+									confPass.setText("");
+									confRePass.setText("");
+	            	        		Toast.makeText(getActivity(), "La contraseña es incorrecta", Toast.LENGTH_LONG).show();	
+	        	        		}else{
+		            	        	if(mysql.deleteUser(mPrefs.getString("userName",""))){
+		            					SharedPreferences.Editor ed = mPrefs.edit();
+		            			        ed.putBoolean("logueado",false);
+		            			        ed.commit();
+		            			        ed = mPrefs.edit();
+		            			        ed.putBoolean("deleteAccount",true);
+		            			        ed.commit();
+		            		        	Intent intento = new Intent(getActivity(),GetBoxActivity.class);
+		            		        	startActivity(intento);
+		            		        	getActivity().finish();
+		            				}else{
+		            					Toast.makeText(getActivity(), "Ha ocurrido un error al conectar con la Base de Datos", Toast.LENGTH_LONG).show();	
+		            				}
+	        	        		}
+	            	        break;
+	
+	            	        case DialogInterface.BUTTON_NEGATIVE:
+	            	        	break;
+	            	        }
+	            	    }
+	            	};
+	            	AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+	            	builder.setMessage("¿Seguro que deseas eliminar la cuenta?").setPositiveButton("Si", dialogClickListener)
+	            	    .setNegativeButton("No", dialogClickListener).show();
+	            	
+	            } 
+            }
   }); 
 
         
         return rootView;
+    }
+    
+    public boolean isOnline() {
+    	ConnectivityManager cm = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+
+    	NetworkInfo netInfo = cm.getActiveNetworkInfo();
+
+    	if (netInfo != null && netInfo.isConnectedOrConnecting()) {
+    	return true;
+    	}
+
+    	return false;
     }
 }

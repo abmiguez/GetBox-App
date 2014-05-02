@@ -61,7 +61,7 @@ public class BoxStorageProvider {
     public BoxAndroidClient getClient(){
     	return this.mClient;
     }
-    
+        
     public void onAuthenticated(int resultCode, Intent data) {
 		
     	if (Activity.RESULT_OK != resultCode) {
@@ -93,8 +93,7 @@ public class BoxStorageProvider {
 			            mClient.authenticate(oauthObject);
 			            
 					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						
 					}                	
                 }
 
@@ -114,14 +113,24 @@ public class BoxStorageProvider {
     
     public void autenticate(){ 
 		this.sql.openDatabase();
-    	BoxOAuthToken oauthObject=new BoxOAuthToken();
+		BoxOAuthToken oauthObject=new BoxOAuthToken();
     	oauthObject.setAccessToken(sql.getBoxAccessTokens(boxAccount));
+    	String reftoken=mySql.getRefresh(mPrefs.getString("userName",""), getUserName());
+    	this.sql.closeDatabase();
+    	this.sql.openDatabase();
+    	if(!sql.getBoxRefreshTokens(boxAccount).equals(reftoken)){
+			sql.updateBoxToken(boxAccount, reftoken);
+		}
+    	this.sql.closeDatabase();
+    	this.sql.openDatabase();
     	if(!sql.getBoxRefreshTokens(boxAccount).equals("")){
     		Log.i(TAG,"hay refresh token");
     		oauthObject.setRefreshToken(sql.getBoxRefreshTokens(boxAccount));
     	}
     	BoxAndroidClient client = new BoxAndroidClient(this.CLIENT_ID, this.CLIENT_SECRET, null, null);
-		client.authenticate(oauthObject);
+
+		this.sql.closeDatabase();
+    	client.authenticate(oauthObject);
 		if (client == null) {
 			Toast.makeText(context, "Fallo al autenticar", Toast.LENGTH_LONG).show();
 		}
@@ -142,13 +151,14 @@ public class BoxStorageProvider {
 		            mySql.actualizarBoxToken(getUserName(), refreshtoken, mPrefs.getString("userName",""));
 		            oauthObject.setRefreshToken(refreshtoken);
 		            mClient.authenticate(oauthObject);
-            	 }catch(Exception e){}
+            	 }catch(Exception e){
+            		 
+            	 }
              }
  
          });
         refresh();
         }
-		this.sql.closeDatabase();
     }
     
     public void refresh(){
@@ -215,7 +225,24 @@ public class BoxStorageProvider {
     }
     
     public void getFiles(String directory_path,AsyncTaskCompleteListener<ArrayList<Item>> cb,boolean dialog){
-    	BoxListDirectory task = new BoxListDirectory(directory_path,cb, this.getClient(),boxAccount);
+    	/*String reftoken=mySql.getRefresh(mPrefs.getString("userName",""), getUserName());
+    	this.sql.closeDatabase();
+    	this.sql.openDatabase();
+    	if(!sql.getBoxRefreshTokens(boxAccount).equals(reftoken)){
+			sql.updateBoxToken(boxAccount, reftoken);
+			try{
+	    		BoxOAuthToken oauthObject=mClient.getAuthData();
+	            oauthObject.setRefreshToken(reftoken);
+	            Log.i("a","a");
+	            mClient.authenticate(oauthObject);
+			}catch(Exception ex){
+	       		ex.printStackTrace();
+			}
+		}
+    	this.sql.closeDatabase();*/
+    	
+    	
+    	BoxListDirectory task = new BoxListDirectory(directory_path,context,getUserName(),cb, this.getClient(),boxAccount);
         task.execute();
     }
     

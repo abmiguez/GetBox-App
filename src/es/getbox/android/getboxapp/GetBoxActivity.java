@@ -258,9 +258,13 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         	this.finish();
 			return true;	
         case R.id.actualizar:
-        	listDirectory.clear();
-        	aLayer.actualize(this);
-        	showDialog("Actualizando...");
+        	if(!isOnline()){
+				showToast("Error de red. Compruebe su conexión a Internet.");
+			}else{
+	        	listDirectory.clear();
+	        	aLayer.actualize(this);
+	        	showDialog("Actualizando...");
+			}
         	return true;
         
         case R.id.nueva_carpeta:
@@ -302,13 +306,17 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         switch(position) {        
         case 0:
             listDirectory.clear(); 
-            aLayer.restartWidget();   
-            aLayer.initFiles(this);
-            if(aLayer.zero()){
-            	showToast("Aun no has sincronizado ninguna cuenta");
-            }else{
-                showDialog("Sincronizando...");
-            }
+            aLayer.restartWidget(); 
+            if(!isOnline()){
+				showToast("Error de red. Compruebe su conexión a Internet.");
+			}else{
+	            aLayer.initFiles(this);
+	            if(aLayer.zero()){
+	            	showToast("Aun no has sincronizado ninguna cuenta");
+	            }else{
+	                showDialog("Sincronizando...");
+	            }
+			}
     		boolArchives=true;
     		args.putInt(FragmentArchives.ARG_ARCHIVE_NUMBER, position);
             fragment.setArguments(args);
@@ -478,9 +486,13 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
    	 	builder.setMessage("Escribe el nombre de la carpeta"); 
    	 	builder.setPositiveButton("Crear", new DialogInterface.OnClickListener() { 
    	 		public void onClick(DialogInterface dialog, int whichButton) { 	
-            	String nC=nCarpeta.getText().toString();
-            	listDirectory.add(aLayer.uploadFolder(nC));
-            	orderDirectory();
+	   	 		if(!isOnline()){
+					showToast("Error de red. Compruebe su conexión a Internet.");
+				}else{
+	   	 			String nC=nCarpeta.getText().toString();
+	            	listDirectory.add(aLayer.uploadFolder(nC));
+	            	orderDirectory();
+				}
    	 		} 
    	 	});
    	 	builder.setNeutralButton("Cancelar", new DialogInterface.OnClickListener() { 
@@ -503,32 +515,32 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
     				InputMethodManager inputMethodManager = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
     		        inputMethodManager.hideSoftInputFromWindow(lgnUser.getWindowToken(), 0);
     		        inputMethodManager.hideSoftInputFromWindow(lgnPass.getWindowToken(), 0);
-    				if(mySql.login(lgnUser.getText().toString(),lgnPass.getText().toString())){
-    					mPrefs = getSharedPreferences("Splash",0);
-    					SharedPreferences.Editor ed = mPrefs.edit();
-				        ed.putBoolean("splash",true);
-				        ed.commit(); 
-	    			    mPrefs = getSharedPreferences("LOGIN",0);
-	    				ed = mPrefs.edit();
-				        ed.putBoolean("logueado",true);
-				        ed.commit();
-				        ed.putString("userName",lgnUser.getText().toString());
-				        ed.commit();
-				        
-				        aLayer.sincToBD();
-				        
-				        Intent intent = new Intent(this,GetBoxActivity.class);
-						startActivity(intent);
-				        this.finish();
-    				}else{  
-    					if(!isOnline()){
-    						showToast("Error al conectar con la base de datos");
-    					}else{
-    						showToast("Nombre de usuario o contraseña incorrectos");
-    					}
-    					//lgnUser.setText("");
-        				lgnPass.setText("");   
-        				
+    		        if(!isOnline()){
+						showToast("Error al conectar con la base de datos");
+					}else{
+	    		        if(mySql.login(lgnUser.getText().toString(),lgnPass.getText().toString())){
+	    					mPrefs = getSharedPreferences("Splash",0);
+	    					SharedPreferences.Editor ed = mPrefs.edit();
+					        ed.putBoolean("splash",true);
+					        ed.commit(); 
+		    			    mPrefs = getSharedPreferences("LOGIN",0);
+		    				ed = mPrefs.edit();
+					        ed.putBoolean("logueado",true);
+					        ed.commit();
+					        ed.putString("userName",lgnUser.getText().toString());
+					        ed.commit();
+					        
+					        aLayer.sincToBD();
+					        
+					        Intent intent = new Intent(this,GetBoxActivity.class);
+							startActivity(intent);
+					        this.finish();
+	    				}else{  
+	    					showToast("Nombre de usuario o contraseña incorrectos");
+	    					//lgnUser.setText("");
+	        				lgnPass.setText("");   
+	        				
+	    				}
     				}
 				}
 				if(v.getId()==buttonLgnRegister.getId()){
@@ -603,10 +615,15 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
 	    		if(result.get(0).getName().equals("")){
 	    			aLayer.saveDirectory(result,result.get(0).getLocation(),result.get(0).getAccount());
 	    		}else{
-		    		aLayer.saveDirectory(result,result.get(0).getLocation(),result.get(0).getAccount());
-			    	for(int i=0;i<result.size();i++){
-			    		listDirectory.add(result.get(i));
-			    	}
+	    			if(result.get(0).getName().equals("fail") && result.get(0).getId().equals("refresh")){
+	    				showToast("Ha ocurrido un error al listar los directorios, vuelva a actualizar");
+		    			aLayer.boxRefresh(result.get(0).getAccount());
+	    			}else{
+			    		aLayer.saveDirectory(result,result.get(0).getLocation(),result.get(0).getAccount());
+				    	for(int i=0;i<result.size();i++){
+				    		listDirectory.add(result.get(i));
+				    	}
+		    		}
 	    		}
 	    	}
 	    	Set<Item> hs = new LinkedHashSet<Item>();
@@ -632,15 +649,19 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long arg3) {
         	if( (listDirectory.get(position).getName()).indexOf(".")<0 ) {
-        		
-        		archivos = (ListView) findViewById (R.id.archivos);
-        		archivos.setEnabled(false);
-        		String aux=listDirectory.get(position).getName();
-        		aLayer.navigateTo(listDirectory.get(position).getName(),GetBoxActivity.this);
-        		listDirectory.clear();
-        		mTitle = aux;
-                getActionBar().setTitle(aLayer.getRoute());
-                showDialog("Cargando...");
+        		if(!isOnline()){
+					showToast("Error de red. Compruebe su conexión a Internet.");
+				}else{	
+	        		archivos = (ListView) findViewById (R.id.archivos);
+	        		archivos.setEnabled(false);
+	        		String aux=listDirectory.get(position).getName();
+	        		
+	        		aLayer.navigateTo(listDirectory.get(position).getName(),GetBoxActivity.this);
+	        		listDirectory.clear();
+	        		mTitle = aux;
+	                getActionBar().setTitle(aLayer.getRoute());
+	                showDialog("Cargando...");
+				}
         	}
         }
 
@@ -751,12 +772,20 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
             	    .setNegativeButton("No", dialogClickListener).show();
                 return true;
             case R.id.deleteDBAccount:
-            	aLayer.deleteAccount("dropbox",info.position);
-            	restartAccountsFragment();
+            	if(!isOnline()){
+					Toast.makeText(this, "Error al conectar con la base de datos", Toast.LENGTH_LONG).show();		
+				}else{
+	            	aLayer.deleteAccount("dropbox",info.position);
+	            	restartAccountsFragment();
+				}
     			return true;
             case R.id.deleteBAccount:
-            	aLayer.deleteAccount("box",info.position);
-                restartAccountsFragment();
+            	if(!isOnline()){
+					Toast.makeText(this, "Error al conectar con la base de datos", Toast.LENGTH_LONG).show();		
+				}else{
+	            	aLayer.deleteAccount("box",info.position);
+	                restartAccountsFragment();
+				}
             	return true;
             default:
             	return super.onContextItemSelected(item);
@@ -783,34 +812,42 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == NEW_PICTURE) {
-            // return from file upload
-            if (resultCode == Activity.RESULT_OK) {
-                Uri uri = null;
-                if (data != null) {
-                    uri = data.getData();
-                }
-                if (uri == null && mCameraFileName != null) {
-                    uri = Uri.fromFile(new File(mCameraFileName));
-                }
-                Log.i(TAG,mCameraFileName);
-                if (uri != null) {
-                	listDirectory.add(aLayer.uploadFile(mCameraFileName));
-                	orderDirectory();
-                }
-            }else {
-                Log.w(TAG, "Unknown Activity Result from mediaImport: "
-                        + resultCode);
-            }
+        	if(!isOnline()){
+				showToast("Error de red. Compruebe su conexión a Internet.");
+			}else{
+        	// return from file upload
+	            if (resultCode == Activity.RESULT_OK) {
+	                Uri uri = null;
+	                if (data != null) {
+	                    uri = data.getData();
+	                }
+	                if (uri == null && mCameraFileName != null) {
+	                    uri = Uri.fromFile(new File(mCameraFileName));
+	                }
+	                Log.i(TAG,mCameraFileName);
+	                if (uri != null) {
+	                	listDirectory.add(aLayer.uploadFile(mCameraFileName));
+	                	orderDirectory();
+	                }
+	            }else {
+	                Log.w(TAG, "Unknown Activity Result from mediaImport: "
+	                        + resultCode);
+	            }
+			}
         }
         if (resultCode == RESULT_OK && requestCode == 555) {
-            try{
-            	if (data.hasExtra("archivo_seleccionado")) {
-                listDirectory.add(aLayer.uploadFile(data.getExtras().getString("archivo_seleccionado")));
-                orderDirectory();
-            }
-            }catch(NullPointerException e){
-            	Log.i(TAG,"Se ha saido del gestor sin seleccionar archivo");
-            }
+        	if(!isOnline()){
+				showToast("Error de red. Compruebe su conexión a Internet.");
+			}else{
+	        	try{
+	            	if (data.hasExtra("archivo_seleccionado")) {
+	                listDirectory.add(aLayer.uploadFile(data.getExtras().getString("archivo_seleccionado")));
+	                orderDirectory();
+	            }
+	            }catch(NullPointerException e){
+	            	Log.i(TAG,"Se ha saido del gestor sin seleccionar archivo");
+	            }
+			}	
         }
         if (requestCode == aLayer.AUTH_BOX_REQUEST && aLayer.isNewBAccount()) {
         	aLayer.newBAccountFinish(resultCode, data);

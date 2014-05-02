@@ -169,6 +169,10 @@ public class AbstractionLayer{
 		return route.substring(0, route.length()-1);
 	}
 	
+	public void boxRefresh(int account){
+		bsp.get(account).autenticate();
+	}
+	
 	public void download(Item item){
 		if(item.getName().indexOf(".")>0){
 			if(item.getLocation()=="dropbox"){
@@ -231,6 +235,8 @@ public class AbstractionLayer{
 	}
 
 	public void startAutentication(){
+		//Sincronizacion creacion eliminacion cuentas
+		//sincToBD();
 		this.sql.openDatabase();
 		for(int i=0;i<newDropboxAccount;i++){
 			dsp.add(new DropboxStorageProvider(context,i));

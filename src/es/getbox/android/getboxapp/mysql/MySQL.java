@@ -213,6 +213,43 @@ public class MySQL {
         	return false;
         }
     }
+    
+    public String getRefresh(String userid, String user){
+    	final String username=user;
+    	final String id=userid;
+    	AsyncTask<Null, Integer, String> task = new AsyncTask<Null, Integer, String>() {
+    		@Override
+            protected String doInBackground(Null... params) {
+    			String q ="SELECT REFRESHTOKEN FROM BOXTOKENS WHERE "
+    					+ "USERID='"+id+"' AND USERNAME='"+username+"'";
+    	    	String result="";
+    			try {
+    	            crearConexion();
+    	            ResultSet rs = st.executeQuery( q );
+    	            if (rs.next()) {
+    	            	result=rs.getString("REFRESHTOKEN");
+    	            }
+    	            rs.close();
+    	        } catch (Exception e) {
+    	            Log.i("ex",""+e.getMessage());
+    	            return "";
+    	        }
+    	        cerrarConexion();
+				return result; 
+            }
+        };
+        if(isOnline()){
+		    task.execute();
+		    try{
+		    	return task.get();
+		    }catch(Exception e){
+		    	Log.i("MYSQL",""+e.getMessage());
+		    	return "";
+		    }
+        }else{
+        	return "";
+        }
+    }
 
     public boolean comprobarContrasena(String user, String pass){
     	final String username=user;
