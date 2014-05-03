@@ -38,13 +38,6 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.Collections;
 
-
-
-
-
-
-
-
 import es.getbox.android.getboxapp.abstractionlayer.AbstractionLayer;
 import es.getbox.android.getboxapp.fragments.FragmentArchives;
 import es.getbox.android.getboxapp.fragments.FragmentClose;
@@ -71,7 +64,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-public class GetBoxActivity extends Activity implements OnClickListener, AsyncTaskCompleteListener<ArrayList<Item>>{
+public class GetBoxActivity extends Activity implements OnClickListener{
 	//Tag y SharedPreferences
 	private static final String TAG = "GetBox";
 	private SharedPreferences mPrefs; 
@@ -93,6 +86,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
 	private Button buttonRgstrBack;
 	private short button;
 	private ProgressDialog dialog;
+	private boolean errorToast;
 	
 	//Drawer
 	private DrawerLayout mDrawerLayout;
@@ -113,6 +107,11 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
 	
 	//Consultas mySQL
 	private MySQL mySql;
+	
+	//Callback Listeners
+	public ItemCallback itemCallback;
+	public BooleanCallback boolCallback;
+	public IntCallback intCallback;
 	 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,8 +120,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         rutaGetbox=Environment.getExternalStorageDirectory().getPath()+"/GetBox/";
     	rutaBD=Environment.getExternalStorageDirectory().getPath()+"/GetBox/DB";
     	rutaCamera=Environment.getExternalStorageDirectory().getPath()+"/GetBox/Photos";
-    	
-        File file=new File(rutaGetbox);
+    	File file=new File(rutaGetbox);
         if(!file.exists())
         	file.mkdirs();
         file=new File(rutaBD);
@@ -137,9 +135,11 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         }  
         
         boolArchives=false;
-		
+        errorToast=true;
+    	itemCallback=new ItemCallback();
+ 		dialog=new ProgressDialog(this);
 		mySql=new MySQL(this);
-		aLayer=new AbstractionLayer(this);
+		aLayer=new AbstractionLayer(this,this,itemCallback);
 		mPrefs = this.getSharedPreferences("LOGIN",0);
 		if (mPrefs.getBoolean("deleteAccount",false)) {
 			showToast("Cuenta eliminada");
@@ -148,15 +148,14 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
 	        ed.commit();
 		}
         if (mPrefs.getBoolean("logueado",false)) {
-        	 
-     		
-     		listDirectory=new ArrayList<Item>();     		
-     		aLayer.startAutentication();
-     		dialog=new ProgressDialog(this);
+        	listDirectory=new ArrayList<Item>();
+        	aLayer.startAutentication();
         	showMain();
         	button=2;
         } else {
         	noTitle();
+        	boolCallback=new BooleanCallback();
+        	intCallback=new IntCallback();
         	showLogIn();
         	button=0;
         }
@@ -165,7 +164,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
     protected void onResume() {
         super.onResume();
         if(mPrefs.getBoolean("logueado",false)){
-	        aLayer.finishAutentication();        
+	       //aLayer.finishAutentication();        
 	       if( aLayer.newDBAccountFinish()){
 	    	   restartAccountsFragment();
 	    	   Toast.makeText(this, "Autenticado con exito", Toast.LENGTH_LONG).show();
@@ -201,24 +200,32 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
     public boolean onPrepareOptionsMenu(Menu menu) {
         // If the nav drawer is open, hide action items related to the content view
     	
-    	boolean visible=true;
-    	if(actualDrawer>0) visible=false;    		
     	boolean drawerOpen = mDrawerLayout.isDrawerOpen(mDrawerList);
 		menu.findItem(R.id.actualizar).setVisible(!drawerOpen);
 		menu.findItem(R.id.nueva_carpeta).setVisible(!drawerOpen);
 		menu.findItem(R.id.subir).setVisible(!drawerOpen);
 		menu.findItem(R.id.salir).setVisible(!drawerOpen);
 		menu.findItem(R.id.anhadir).setVisible(!drawerOpen);
-    	
-		if(actualDrawer!=1 || drawerOpen){
+		menu.findItem(R.id.sincronizar).setVisible(!drawerOpen);
+    	if(!drawerOpen){
+	    	menu.findItem(R.id.sincronizar).setVisible(false);
+	    	menu.findItem(R.id.actualizar).setVisible(false);
+			menu.findItem(R.id.nueva_carpeta).setVisible(false);
+			menu.findItem(R.id.subir).setVisible(false);
+			menu.findItem(R.id.salir).setVisible(true);
 			menu.findItem(R.id.anhadir).setVisible(false);
-		}else{
-			menu.findItem(R.id.anhadir).setVisible(true);
-		}/*
-    	menu.findItem(R.id.actualizar).setVisible(visible);
-        menu.findItem(R.id.nueva_carpeta).setVisible(visible);
-        menu.findItem(R.id.subir).setVisible(visible);*/
-    	
+	    	switch(actualDrawer){
+			case 0:
+				menu.findItem(R.id.actualizar).setVisible(true);
+				menu.findItem(R.id.nueva_carpeta).setVisible(true);
+				menu.findItem(R.id.subir).setVisible(true);
+				break;
+			case 1:
+				menu.findItem(R.id.sincronizar).setVisible(true);
+				menu.findItem(R.id.anhadir).setVisible(true);			
+				break;
+			}
+    	}    	
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -261,8 +268,8 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         	if(!isOnline()){
 				showToast("Error de red. Compruebe su conexión a Internet.");
 			}else{
-	        	listDirectory.clear();
-	        	aLayer.actualize(this);
+				listDirectory.clear();
+	        	aLayer.actualize(itemCallback);
 	        	showDialog("Actualizando...");
 			}
         	return true;
@@ -270,6 +277,11 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         case R.id.nueva_carpeta:
         	AlertDialog dialog = crearCarpetaDialog();
         	dialog.show();
+        	return true;
+        	
+        case R.id.sincronizar:
+        	showDialog("Sincronizando cuentas...");
+        	aLayer.accountsSincToBD();
         	return true;
         
         case R.id.subir_archivo:
@@ -308,13 +320,14 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
             listDirectory.clear(); 
             aLayer.restartWidget(); 
             if(!isOnline()){
-				showToast("Error de red. Compruebe su conexión a Internet.");
+            	showToast("Error de red. Compruebe su conexión a Internet.");
 			}else{
-	            aLayer.initFiles(this);
+	        	showDialog("Sincronizando...");  	
 	            if(aLayer.zero()){
+	            	hideDialog();
 	            	showToast("Aun no has sincronizado ninguna cuenta");
 	            }else{
-	                showDialog("Sincronizando...");
+	            	aLayer.initFiles(itemCallback);
 	            }
 			}
     		boolArchives=true;
@@ -417,7 +430,6 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         // enable ActionBar app icon to behave as action to toggle nav drawer
         getActionBar().setDisplayHomeAsUpEnabled(true);
         getActionBar().setHomeButtonEnabled(true);
-
         // ActionBarDrawerToggle ties together the the proper interactions
         // between the sliding drawer and the action bar app icon
         mDrawerToggle = new ActionBarDrawerToggle(
@@ -471,7 +483,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
 		dialog.show();    	
     }
     
-    private void hideDialog(){
+    public void hideDialog(){
     	if (dialog.isShowing()) { 
         	dialog.dismiss(); 
         } 
@@ -518,30 +530,9 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
     		        if(!isOnline()){
 						showToast("Error al conectar con la base de datos");
 					}else{
-	    		        if(mySql.login(lgnUser.getText().toString(),lgnPass.getText().toString())){
-	    					mPrefs = getSharedPreferences("Splash",0);
-	    					SharedPreferences.Editor ed = mPrefs.edit();
-					        ed.putBoolean("splash",true);
-					        ed.commit(); 
-		    			    mPrefs = getSharedPreferences("LOGIN",0);
-		    				ed = mPrefs.edit();
-					        ed.putBoolean("logueado",true);
-					        ed.commit();
-					        ed.putString("userName",lgnUser.getText().toString());
-					        ed.commit();
-					        
-					        aLayer.sincToBD();
-					        
-					        Intent intent = new Intent(this,GetBoxActivity.class);
-							startActivity(intent);
-					        this.finish();
-	    				}else{  
-	    					showToast("Nombre de usuario o contraseña incorrectos");
-	    					//lgnUser.setText("");
-	        				lgnPass.setText("");   
-	        				
-	    				}
-    				}
+						showDialog("Logueandose, espere...");
+						mySql.login(lgnUser.getText().toString(),lgnPass.getText().toString(),boolCallback);
+					}
 				}
 				if(v.getId()==buttonLgnRegister.getId()){
 					showRegister();
@@ -573,30 +564,13 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
     		        	if(!regRePass.getText().toString().equals(regPass.getText().toString())){
     		        		showToast("Las contraseñas no coiciden");
 	    				}else{
-	    					int aux=mySql.comprobarDuplicidad(regUser.getText().toString(),
+	    					if(!isOnline()){
+	    						showToast("Error al conectar con la base de datos");
+	    					}else{
+	    						mySql.comprobarDuplicidad(regUser.getText().toString(),
 	    							regPass.getText().toString(),
-	    							regEmail.getText().toString(),regName.getText().toString());
-	    					switch (aux){
-		    					case 0:
-		    						mySql.registrar(regUser.getText().toString(),
-		        							regPass.getText().toString(),
-		        							regEmail.getText().toString(),regName.getText().toString());
-		    						showLogIn();
-		    						button=0;
-		    					break;
-		    					case 1:
-		    						regUser.setText("");
-		    					break;
-		    					case 2:
-		    						regEmail.setText("");
-		    					break;
-		    					case 3:
-		    						showLogIn();
-		    						button=0;
-		    					break;
-		    					case 4:
-		    						showToast("Error al conectar con la base de datos"); 
-		    					break;
+	    							regEmail.getText().toString(),regName.getText().toString(),intCallback);
+	    						showDialog("Registrando la cuenta...");
 	    					}
 	    				}
 					}
@@ -604,9 +578,12 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
     		break;
     	}
 	}//onClick
+        
+    public void setErrorToast(boolean e){
+    	errorToast=e;
+    }
     
-    
-    public void onTaskComplete(ArrayList<Item> result) {
+    public void onListingComplete(ArrayList<Item> result) {
     	try{
     		archivos = (ListView) findViewById (R.id.archivos);
     		archivos.setEnabled(false);
@@ -616,8 +593,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
 	    			aLayer.saveDirectory(result,result.get(0).getLocation(),result.get(0).getAccount());
 	    		}else{
 	    			if(result.get(0).getName().equals("fail") && result.get(0).getId().equals("refresh")){
-	    				showToast("Ha ocurrido un error al listar los directorios, vuelva a actualizar");
-		    			aLayer.boxRefresh(result.get(0).getAccount());
+	    				errorToast=false;	    				    				
 	    			}else{
 			    		aLayer.saveDirectory(result,result.get(0).getLocation(),result.get(0).getAccount());
 				    	for(int i=0;i<result.size();i++){
@@ -639,6 +615,12 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
 	        archivos.setEnabled(auxBool);
 	        if(auxBool){
 	        	hideDialog();
+	        	if(!errorToast){
+					hideDialog();
+	    			showDialog("Sincronizando cuentas...");
+    				aLayer.failSincToBD();
+					errorToast=true;
+				}	
 	        }
     	}catch(Exception e){}
     }
@@ -656,7 +638,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
 	        		archivos.setEnabled(false);
 	        		String aux=listDirectory.get(position).getName();
 	        		
-	        		aLayer.navigateTo(listDirectory.get(position).getName(),GetBoxActivity.this);
+	        		aLayer.navigateTo(listDirectory.get(position).getName(),itemCallback);
 	        		listDirectory.clear();
 	        		mTitle = aux;
 	                getActionBar().setTitle(aLayer.getRoute());
@@ -792,7 +774,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         }
     }
     
-    private void restartAccountsFragment(){
+    public void restartAccountsFragment(){
     	Fragment fragment;
         Bundle args = new Bundle();
     	fragment = new FragmentAccounts();
@@ -885,6 +867,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
         error.show();
     }
     
+    
     public boolean isOnline() {
     	ConnectivityManager cm = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
 
@@ -902,7 +885,7 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
     		this.finish();
     	}else{
     		if(aLayer.enableBack()){
-	    		if(aLayer.goBack(this)){
+	    		if(aLayer.goBack(itemCallback)){
 	    			listDirectory.clear();
 	    			if(aLayer.getPosicionActual()>0){
 	    				mTitle = aLayer.getRoute();
@@ -921,4 +904,102 @@ public class GetBoxActivity extends Activity implements OnClickListener, AsyncTa
     	}
     	
     }   
+    
+    public void finishLogin(){
+        hideDialog();
+        Intent intent = new Intent(this,GetBoxActivity.class);
+		startActivity(intent);
+        this.finish();
+    }
+    
+    public void actualize(int boxAccount){
+    	if(!isOnline()){
+			showToast("Error de red. Compruebe su conexión a Internet.");
+		}else{
+			//listDirectory.clear();
+        	aLayer.actualizeBox(itemCallback,boxAccount);
+        	showDialog("Sincronizando...");
+		}	
+    }
+    
+    public void login(boolean result){
+		EditText lgnUser=(EditText) findViewById(R.id.edtTxtLgnUser);
+		EditText lgnPass=(EditText) findViewById(R.id.edtTxtLgnPass);
+    	if(result){
+			mPrefs = getSharedPreferences("Splash",0);
+			SharedPreferences.Editor ed = mPrefs.edit();
+	        ed.putBoolean("splash",true);
+	        ed.commit(); 
+		    mPrefs = getSharedPreferences("LOGIN",0);
+			ed = mPrefs.edit();
+	        ed.putBoolean("logueado",true);
+	        ed.commit();
+	        ed.putString("userName",lgnUser.getText().toString());
+	        ed.commit();
+	        
+	       	aLayer.sincToBD();
+		}else{  
+			hideDialog();
+			showToast("Nombre de usuario o contraseña incorrectos");
+			//lgnUser.setText("");
+			lgnPass.setText("");   
+			
+		}
+    }
+    
+    public void comprobarDuplicidad(int result){
+    	EditText regUser=(EditText) findViewById(R.id.edtTxtRgstrUser);
+		EditText regPass=(EditText) findViewById(R.id.edtTxtRgstrPass);
+		EditText regEmail=(EditText) findViewById(R.id.edtTxtRgstrMail);
+		EditText regName=(EditText) findViewById(R.id.edtTxtRgstrName);
+    	switch (result){
+		case 0:
+			mySql.registrar(regUser.getText().toString(),
+					regPass.getText().toString(),
+					regEmail.getText().toString(),regName.getText().toString());
+			hideDialog();
+			showLogIn();
+			button=0;
+		break;
+		case 2:
+			hideDialog();
+			Toast.makeText(this, "El nombre de usuario no está disponible", Toast.LENGTH_LONG).show();	
+			regUser.setText("");
+		break;
+		case 3:
+			hideDialog();
+			Toast.makeText(this, "El email introducido ya está siendo utilizado en otra cuenta", Toast.LENGTH_LONG).show();
+			regEmail.setText("");
+		break;
+		case 5:
+			hideDialog();
+			Toast.makeText(this, "El usuario ha sido registrado correctamente",
+    				Toast.LENGTH_LONG).show();
+			showLogIn();
+			button=0;
+		break;
+		case 4:
+			hideDialog();
+			showToast("Error al conectar con la base de datos"); 
+		break;
+	}
+    }
+    
+    public class ItemCallback implements AsyncTaskCompleteListener<ArrayList<Item>>{
+    	public void onTaskComplete( ArrayList<Item> result){
+    		onListingComplete(result);
+    	}
+    }
+    
+    public class BooleanCallback implements AsyncTaskCompleteListener<Boolean>{
+    	public void onTaskComplete( Boolean result){
+    		login(result);
+    	}
+    }
+    
+    public class IntCallback implements AsyncTaskCompleteListener<Integer>{
+    	public void onTaskComplete( Integer result){
+    		comprobarDuplicidad(result);
+    	}
+    }
 }

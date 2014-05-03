@@ -6,11 +6,14 @@ import java.util.Collections;
 import java.util.Comparator;
 
 import com.box.boxandroidlibv2.activities.OAuthActivity;
+
 import java.sql.ResultSet;
 
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.util.Log;
 import android.widget.Toast;
 import es.getbox.android.getboxapp.GetBoxActivity;
@@ -54,15 +57,22 @@ public class AbstractionLayer{
 	
 	//Contexto
 	private Context context;
+	private GetBoxActivity gba;
 	
-	public AbstractionLayer(Context context){
+	//Callback listeners
+	private AsyncTaskCompleteListener<ArrayList<Item>> itemCallback;
+	private int sync;
+	
+	public AbstractionLayer(Context context, GetBoxActivity gba, AsyncTaskCompleteListener<ArrayList<Item>> c){
 		this.context=context;
 		mySql=new MySQL(context);
 		
+		this.gba=gba;
 		sql=new SQL(this.context);
 		sql.openDatabase();	
 		sql.createTables();
-		
+		itemCallback=c;
+		sync=0;
 		newDropboxAccount=sql.countAll("dropboxTokens");
 		newBoxAccount=sql.countAll("boxTokens");
 		dbAccounts=new ArrayList<String>();
@@ -235,16 +245,17 @@ public class AbstractionLayer{
 	}
 
 	public void startAutentication(){
-		//Sincronizacion creacion eliminacion cuentas
-		//sincToBD();
 		this.sql.openDatabase();
 		for(int i=0;i<newDropboxAccount;i++){
 			dsp.add(new DropboxStorageProvider(context,i));
 			dsp.get(i).startAuthentication();
     	}
+		this.sql.closeDatabase();
+		finishAutentication();
+		this.sql.openDatabase();
 		bAccounts.clear();
 		for(int i=0;i<newBoxAccount;i++){
-			bsp.add(new BoxStorageProvider(context,i));
+			bsp.add(new BoxStorageProvider(context,i,gba));
     	   	bsp.get(i).autenticate();
     	   	bAccounts.add(sql.getBoxUserName(i));
         }
@@ -293,7 +304,7 @@ public class AbstractionLayer{
 	}
 	
 	public void newBAccount(GetBoxActivity gbActivity){
-		bsp_aux=new BoxStorageProvider(context,newBoxAccount);
+		bsp_aux=new BoxStorageProvider(context,newBoxAccount,gba);
 		Intent intent = OAuthActivity.createOAuthActivityIntent(context, bsp_aux.CLIENT_ID, bsp_aux.CLIENT_SECRET, false,
                 bsp_aux.REDIRECT_URL);
         gbActivity.startActivityForResult(intent, AUTH_BOX_REQUEST);		
@@ -334,6 +345,13 @@ public class AbstractionLayer{
 		if(location=="box"){
     		bsp.get(account).saveDirectory(result);
 		}
+	}
+	
+	public void actualizeBox(AsyncTaskCompleteListener<ArrayList<Item>> cb, int boxAccount){
+		if(!bsp.get(boxAccount).getDirectory(posicionActual).equals("")){
+    		bsp.get(boxAccount).getFiles(bsp.get(boxAccount).getDirectory(posicionActual),cb,false);
+        	accountsUsed++;
+        }
 	}
 	
 	public void actualize(AsyncTaskCompleteListener<ArrayList<Item>> cb){
@@ -441,10 +459,179 @@ public class AbstractionLayer{
 		sql.openDatabase();
 		sql.deleteAll();
 		sql.closeDatabase();
+		DropboxCallback dbc=new DropboxCallback();
+		BoxCallback bbc=new BoxCallback();
+		mySql.vincularDropbox(mPrefs.getString("userName",""),dbc);
+		mySql.vincularBox(mPrefs.getString("userName",""),bbc);
 		
-		mySql.vincularDropbox(mPrefs.getString("userName",""));
-		mySql.vincularBox(mPrefs.getString("userName",""));
 	}
+	
+	public class BoxCallback implements AsyncTaskCompleteListener<Boolean>{
+    	public void onTaskComplete( Boolean result){
+    		if(sync==0){
+    			sync++;
+    		}else{
+    			if(isOnline()){
+    				gba.finishLogin();
+    			}
+    			sync=0;
+    		}  
+    	}
+    }
+	
+	public class DropboxCallback implements AsyncTaskCompleteListener<Boolean>{
+    	public void onTaskComplete( Boolean result){
+    		if(sync==0){
+    			sync++;
+    		}else{
+    			if(isOnline()){
+    				gba.finishLogin();
+    			}
+    			sync=0;
+    		}    		
+    	}
+    }
+	
+	public void failSincToBD(){
+		SharedPreferences mPrefs = context.getSharedPreferences("LOGIN",0);
+		sql.openDatabase();
+		sql.deleteBox();
+		sql.closeDatabase();
+		BoxCallbackFail bbc=new BoxCallbackFail();
+		mySql.vincularBox(mPrefs.getString("userName",""),bbc);
+		
+	}
+	
+	public class BoxCallbackFail implements AsyncTaskCompleteListener<Boolean>{
+    	public void onTaskComplete( Boolean result){
+    		if(isOnline()){
+				gba.hideDialog();
+				bsp.clear();
+				dsp.clear();
+				sql.openDatabase();
+				sync=0;
+				newDropboxAccount=sql.countAll("dropboxTokens");
+				newBoxAccount=sql.countAll("boxTokens");
+				sql.closeDatabase();
+				dbAccounts.clear();
+				bAccounts.clear();
+				accountsCounter=0;
+				accountsUsed=0;
+				sync=0;
+				directoriosDropbox.clear();
+				directoriosDropbox.add("/");
+				posicionActual=0;
+				startSincAutentication();
+				gba.setErrorToast(true);
+				Toast.makeText(context, "Cuentas sincronizadas", Toast.LENGTH_LONG).show();
+			} 
+    	}
+    }
+	
+	
+	public void accountsSincToBD(){
+		SharedPreferences mPrefs = context.getSharedPreferences("LOGIN",0);
+		sql.openDatabase();
+		sql.deleteAll();
+		sql.closeDatabase();
+		DropboxCallbackSinc dbc=new DropboxCallbackSinc();
+		BoxCallbackSinc bbc=new BoxCallbackSinc();
+		mySql.vincularDropbox(mPrefs.getString("userName",""),dbc);
+		mySql.vincularBox(mPrefs.getString("userName",""),bbc);
+		
+	}
+	
+	public class BoxCallbackSinc implements AsyncTaskCompleteListener<Boolean>{
+    	public void onTaskComplete( Boolean result){
+    		if(sync==0){
+    			sync++;
+    		}else{
+    			if(isOnline()){
+    				gba.hideDialog();
+    				bsp.clear();
+    				dsp.clear();
+    				sql.openDatabase();
+    				sync=0;
+    				newDropboxAccount=sql.countAll("dropboxTokens");
+    				newBoxAccount=sql.countAll("boxTokens");
+    				sql.closeDatabase();
+    				dbAccounts.clear();
+    				bAccounts.clear();
+    				accountsCounter=0;
+    				accountsUsed=0;
+    				sync=0;
+    				directoriosDropbox.clear();
+    				directoriosDropbox.add("/");
+    				posicionActual=0;
+    				startSincAutentication();
+    				gba.restartAccountsFragment();
+    				Toast.makeText(context, "Cuentas sincronizadas", Toast.LENGTH_LONG).show();
+    			}
+    			sync=0;
+    		}  
+    	}
+    }
+	
+	public class DropboxCallbackSinc implements AsyncTaskCompleteListener<Boolean>{
+    	public void onTaskComplete( Boolean result){
+    		if(sync==0){
+    			sync++;
+    		}else{
+    			if(isOnline()){
+    				gba.hideDialog();
+    				bsp.clear();
+    				dsp.clear();
+    				sql.openDatabase();
+    				sync=0;
+    				newDropboxAccount=sql.countAll("dropboxTokens");
+    				newBoxAccount=sql.countAll("boxTokens");
+    				sql.closeDatabase();
+    				dbAccounts.clear();
+    				bAccounts.clear();
+    				accountsCounter=0;
+    				accountsUsed=0;
+    				sync=0;
+    				directoriosDropbox.clear();
+    				directoriosDropbox.add("/");
+    				posicionActual=0;
+    				startSincAutentication();
+    				gba.restartAccountsFragment();
+    				Toast.makeText(context, "Cuentas sincronizadas", Toast.LENGTH_LONG).show();	
+    			}
+    			sync=0;
+    		}    		
+    	}
+    }
+	
+	public void startSincAutentication(){
+		this.sql.openDatabase();
+		for(int i=0;i<newDropboxAccount;i++){
+			dsp.add(new DropboxStorageProvider(context,i));
+			dsp.get(i).startAuthentication();
+    	}
+		this.sql.closeDatabase();
+		finishAutentication();
+		this.sql.openDatabase();
+		bAccounts.clear();
+		for(int i=0;i<newBoxAccount;i++){
+			bsp.add(new BoxStorageProvider(context,i,gba));
+    	   	bsp.get(i).sincAutenticate();
+    	   	bAccounts.add(sql.getBoxUserName(i));
+        }
+		this.sql.closeDatabase();
+	}
+	
+	public boolean isOnline() {
+    	ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+    	NetworkInfo netInfo = cm.getActiveNetworkInfo();
+
+    	if (netInfo != null && netInfo.isConnectedOrConnecting()) {
+    	return true;
+    	}
+
+    	return false;
+    }
 
 	public int getNewBoxAccount() {
 		return newBoxAccount;

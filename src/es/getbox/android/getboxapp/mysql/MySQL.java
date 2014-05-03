@@ -1,6 +1,7 @@
 package es.getbox.android.getboxapp.mysql;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang.ObjectUtils.Null;
@@ -14,6 +15,8 @@ import android.util.Log;
 import android.widget.Toast;
 
 
+import es.getbox.android.getboxapp.interfaces.AsyncTaskCompleteListener;
+import es.getbox.android.getboxapp.utils.Item;
 import es.getbox.android.getboxapp.utils.SQL;
 
 public class MySQL {
@@ -114,14 +117,7 @@ public class MySQL {
         };
         if(isOnline()){
         	task.execute();
-		    /*
-		    try {
-				return task.get();
-			} catch (InterruptedException e) {
-				return false;
-			} catch (ExecutionException e) {
-				return false;
-			}*/return true;
+		    return true;
         }else{
         	return false;
         }
@@ -154,22 +150,16 @@ public class MySQL {
         };
         if(isOnline()){
         	task.execute();
-		    /*
-		    try {
-				return task.get();
-			} catch (InterruptedException e) {
-				return false;
-			} catch (ExecutionException e) {
-				return false;
-			}*/return true;
+		    return true;
         }else{
         	return false;
         }
     }
     
-    public boolean login(String user, String pass){
+    public void login(String user, String pass,AsyncTaskCompleteListener<Boolean> c){
     	final String username=user;
     	final String passwrd=pass;
+    	final AsyncTaskCompleteListener<Boolean> callback=c;
     	AsyncTask<Null, Integer, Boolean> task = new AsyncTask<Null, Integer, Boolean>() {
     		@Override
             protected Boolean doInBackground(Null... params) {
@@ -200,23 +190,18 @@ public class MySQL {
     	        }
 	            return a; 
             }
+    		@Override
+    	    protected void onPostExecute(Boolean result) { 
+    	        callback.onTaskComplete(result);
+    	    }
         };
-        if(isOnline()){
-		    task.execute();
-		    try{
-		    	return task.get();
-		    }catch(Exception e){
-		    	Log.i("MYSQL",""+e.getMessage());
-		    	return false;
-		    }
-        }else{
-        	return false;
-        }
+        task.execute();
     }
     
-    public String getRefresh(String userid, String user){
+    public void getRefresh(String userid, String user, AsyncTaskCompleteListener<String> c){
     	final String username=user;
     	final String id=userid;
+    	final AsyncTaskCompleteListener<String> callback= c;
     	AsyncTask<Null, Integer, String> task = new AsyncTask<Null, Integer, String>() {
     		@Override
             protected String doInBackground(Null... params) {
@@ -237,18 +222,15 @@ public class MySQL {
     	        cerrarConexion();
 				return result; 
             }
+    		
+
+    		@Override
+    	    protected void onPostExecute(String result) { 
+    	        callback.onTaskComplete(result);
+    	    }
         };
-        if(isOnline()){
-		    task.execute();
-		    try{
-		    	return task.get();
-		    }catch(Exception e){
-		    	Log.i("MYSQL",""+e.getMessage());
-		    	return "";
-		    }
-        }else{
-        	return "";
-        }
+        task.execute();
+		
     }
 
     public boolean comprobarContrasena(String user, String pass){
@@ -298,11 +280,13 @@ public class MySQL {
         }
     }
     
-    public Boolean vincularDropbox(String user){
+    public void vincularDropbox(String user,AsyncTaskCompleteListener<Boolean> c){
     	final String username=user;
-    	AsyncTask<Null, Integer, Void> task = new AsyncTask<Null, Integer, Void>() {
+
+    	final AsyncTaskCompleteListener<Boolean> callback=c;
+    	AsyncTask<Null, Integer, Boolean> task = new AsyncTask<Null, Integer, Boolean>() {
     		@Override
-            protected Void doInBackground(Null... params) {
+            protected Boolean doInBackground(Null... params) {
     			String q = "SELECT * FROM DROPBOXTOKENS  WHERE "
     					+ "USERID='"+username+"'";
     			try {
@@ -317,34 +301,27 @@ public class MySQL {
     	            sql.closeDatabase();
     	            rs.close();
     	        } catch (Exception e) {
-    	            Log.i("ex",""+e.getMessage());  
+    	            Log.i("ex",""+e.getMessage()); 
+    	            return false;
     	        } 
     			cerrarConexion();
-				return null;
+				return true;
     		}
+
+    		@Override
+    	    protected void onPostExecute(Boolean result) { 
+    	        callback.onTaskComplete(result);
+    	    }
         };
-        if(isOnline()){
-		    task.execute();
-		    try {
-				task.get();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		    return true;
-        }else{
-        	return false;
-        }
+        task.execute();
     }
     
-    public Boolean vincularBox(String user){
+    public void vincularBox(String user, AsyncTaskCompleteListener<Boolean> c){
     	final String username=user;
-    	AsyncTask<Null, Integer, Void> task = new AsyncTask<Null, Integer, Void>() {
+    	final AsyncTaskCompleteListener<Boolean> callback=c;
+    	AsyncTask<Null, Integer, Boolean> task = new AsyncTask<Null, Integer, Boolean>() {
     		@Override
-            protected Void doInBackground(Null... params) {
+            protected Boolean doInBackground(Null... params) {
     			String q = "SELECT * FROM BOXTOKENS WHERE "
     					+ "USERID='"+username+"'";
     			ResultSet rs;
@@ -353,7 +330,7 @@ public class MySQL {
     	            rs = st.executeQuery( q );
     	            int i=0;
     	            sql.openDatabase();
-    	            if(rs.next()){
+    	            while(rs.next()){
     	            	sql.insertBox(i, rs.getString("ACCESSTOKEN"), rs.getString("USERNAME"), rs.getLong("SPACE"));
     	            	sql.updateBoxToken(i, rs.getString("REFRESHTOKEN"));
     	            i++;
@@ -362,33 +339,28 @@ public class MySQL {
     	            rs.close();
     	        } catch (Exception e) {
     	            Log.i("ex",""+e.getMessage());  
+    	            return false;
     	        } 
     			cerrarConexion();
-				return null;
+				return true;
     		}
+    		
+
+    		@Override
+    	    protected void onPostExecute(Boolean result) { 
+    	        callback.onTaskComplete(result);
+    	    }
         };
-        if(isOnline()){
-		    task.execute();
-		    try {
-				task.get();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		    return true;
-        }else{
-        	return false;
-        }
+	    task.execute();
     }
     
-    public int comprobarDuplicidad(String user, String pass, String email, String name){
+    public void comprobarDuplicidad(String user, String pass, String email, String name, AsyncTaskCompleteListener<Integer>a){
     	final String username=user;
     	final String passwrd=pass;
     	final String mail=email;
     	final String nameuser=name;
+    	final AsyncTaskCompleteListener<Integer>callback=a;
+    	
     	AsyncTask<Null, Integer, Integer> task = new AsyncTask<Null, Integer,Integer>() {
     		@Override
             protected Integer doInBackground(Null... params) {
@@ -430,34 +402,13 @@ public class MySQL {
 	            cerrarConexion();
 	            return 0;
             }
+
+    		@Override
+    	    protected void onPostExecute(Integer result) { 
+    	        callback.onTaskComplete(result);
+    	    }
         };
-        if(isOnline()){
-		    task.execute();
-		    try{
-		    	int aux=task.get();
-		    	switch (aux){
-			    	case 0:
-			    		return 0;
-			    	case 2:
-			    		Toast.makeText(context, "El nombre de usuario no está disponible", Toast.LENGTH_LONG).show();
-	            		return 1;
-			    	case 3:
-			    		Toast.makeText(context, "El email introducido ya está siendo utilizado en otra cuenta", Toast.LENGTH_LONG).show();
-    	            	return 2;
-			    	case 5:
-			    		Toast.makeText(context, "El usuario ha sido registrado correctamente",
-			    				Toast.LENGTH_LONG).show();
-			    		return 3;
-    	            default:    	            	
-    	            	return 4;
-		    	}
-		    }catch(Exception e){
-		    	Log.i("MYSQL",""+e.getMessage());
-		    	return 4;
-		    }
-        }else{
-        	return 4;
-        }
+        task.execute();
     }
     
     public boolean registrar(String user, String pass, String email, String name){

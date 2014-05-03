@@ -234,6 +234,22 @@ public class SQL{
     	return c1.getInt(index);
     }
     
+    public void deleteBox(){
+    	db.beginTransaction();
+    	try {
+    		db.execSQL( "delete from boxTokens;" );
+    		db.setTransactionSuccessful();
+    	}
+    	catch (SQLiteException e2) {
+    		//report problem 
+    		Toast.makeText(context, e2.getMessage(), Toast.LENGTH_LONG).show();
+    	}
+    	finally {
+    		db.endTransaction();
+    	}
+    	
+    }
+    
     public void deleteAll(){
     	db.beginTransaction();
     	try {
