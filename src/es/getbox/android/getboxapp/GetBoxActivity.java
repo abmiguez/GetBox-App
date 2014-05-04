@@ -602,6 +602,7 @@ public class GetBoxActivity extends Activity implements OnClickListener{
 		    		}
 	    		}
 	    	}
+
 	    	Set<Item> hs = new LinkedHashSet<Item>();
 	        hs.addAll(listDirectory);
 	        listDirectory.clear();
@@ -668,10 +669,91 @@ public class GetBoxActivity extends Activity implements OnClickListener{
  			
  			label.setText(listDirectory.get(position).getName());
  		
- 			if( (listDirectory.get(position).getName()).indexOf(".")<0 ) 
+ 			String name=listDirectory.get(position).getName();
+ 			if( name.indexOf(".")<0 ) {
  				icon.setImageResource(R.drawable.foldericon);
- 			else
- 				icon.setImageResource(R.drawable.archiveicon);
+ 			}else{
+ 				if(name.indexOf(".jpg")>=0 || name.indexOf(".JPG")>=0 ||
+							name.indexOf(".jpeg")>=0 || name.indexOf(".JPEG")>=0){
+ 					icon.setImageResource(R.drawable.jpgicon);
+ 				}else{
+ 					if(name.indexOf(".txt")>=0 || name.indexOf(".TXT")>=0 ){
+ 	 					icon.setImageResource(R.drawable.txticon);
+ 	 				}else{
+	 	 				if(name.indexOf(".gif")>=0 || name.indexOf(".GIF")>=0 ){
+	 	 					icon.setImageResource(R.drawable.gificon);
+	 	 				}else{
+		 	 				if(name.indexOf(".png")>=0 || name.indexOf(".PNG")>=0 ){
+		 	 					icon.setImageResource(R.drawable.pngicon);
+		 	 				}else{
+			 	 				if(name.indexOf(".pdf")>=0 || name.indexOf(".PDF")>=0 ){
+			 	 					icon.setImageResource(R.drawable.pdficon);
+			 	 				}else{
+			 	 					if(name.indexOf(".doc")>=0 || name.indexOf(".DOC")>=0 ||
+			 	 							name.indexOf(".docx")>=0 || name.indexOf(".DOCX")>=0 ||
+			 	 							name.indexOf(".odt")>=0 || name.indexOf(".ODT")>=0){
+			 	 						icon.setImageResource(R.drawable.docicon);
+			 	 					}else{
+			 	 						if(name.indexOf(".ppt")>=0 || name.indexOf(".PPT")>=0 ||
+				 	 							name.indexOf(".pptx")>=0 || name.indexOf(".PPTX")>=0 ||
+				 	 							name.indexOf(".odp")>=0 || name.indexOf(".ODP")>=0){
+			 	 							icon.setImageResource(R.drawable.ppticon);		 	 							
+			 	 						}else{
+			 	 							if(name.indexOf(".xls")>=0 || name.indexOf(".XLS")>=0 ||
+					 	 							name.indexOf(".xlsx")>=0 || name.indexOf(".XLSX")>=0 ||
+					 	 							name.indexOf(".ods")>=0 || name.indexOf(".ODS")>=0){
+				 	 							icon.setImageResource(R.drawable.xlsicon);
+			 	 							}else{
+			 	 								if(name.indexOf(".zip")>=0 || name.indexOf(".ZIP")>=0 ){
+			 				 	 					icon.setImageResource(R.drawable.zipicon);
+			 	 								}else{
+			 	 									if(name.indexOf(".rar")>=0 || name.indexOf(".RAR")>=0 ){
+			 	 				 	 					icon.setImageResource(R.drawable.raricon);
+			 	 									}else{
+			 	 										if(name.indexOf(".apk")>=0 || name.indexOf(".APK")>=0 ){
+				 	 				 	 					icon.setImageResource(R.drawable.apkicon);
+				 	 									}else{
+				 	 										if(name.indexOf(".epub")>=0 || name.indexOf(".EPUB")>=0 ){
+					 	 				 	 					icon.setImageResource(R.drawable.epubicon);
+					 	 									}else{
+					 	 										if(name.indexOf(".exe")>=0 || name.indexOf(".EXE")>=0 ){
+						 	 				 	 					icon.setImageResource(R.drawable.exeicon);
+						 	 									}else{
+						 	 										if(name.indexOf(".mp3")>=0 || name.indexOf(".MP3")>=0 ){
+							 	 				 	 					icon.setImageResource(R.drawable.mp3icon);
+							 	 									}else{
+							 	 										if(name.indexOf(".wav")>=0 || name.indexOf(".WAV")>=0 ){
+								 	 				 	 					icon.setImageResource(R.drawable.wavicon);
+								 	 									}else{
+								 	 										if(name.indexOf(".mp4")>=0 || name.indexOf(".MP4")>=0 ){
+									 	 				 	 					icon.setImageResource(R.drawable.mp4icon);
+									 	 									}else{
+									 	 										if(name.indexOf(".avi")>=0 || name.indexOf(".AVI")>=0 ){
+										 	 				 	 					icon.setImageResource(R.drawable.aviicon);
+										 	 									}else{
+										 	 										if(name.indexOf(".mpeg")>=0 || name.indexOf(".MPEG")>=0 ){
+											 	 				 	 					icon.setImageResource(R.drawable.mpegicon);
+											 	 									}else{
+											 	 										icon.setImageResource(R.drawable.archivoicon); 
+											 	 									}
+										 	 									}
+									 	 									}
+								 	 									}
+							 	 									}
+						 	 									}
+					 	 									}
+				 	 									}
+			 	 									}
+			 	 								}
+			 	 							}
+			 	 						}
+			 	 					}
+			 	 				}
+		 	 				}
+	 	 				}
+ 	 				}
+ 				}
+ 			}
  			return (row);
  		}// getView
  	}// CustomIconLabelAdapter
@@ -839,8 +921,16 @@ public class GetBoxActivity extends Activity implements OnClickListener{
     }
     
     private void orderDirectory(){
-    	Collections.sort(listDirectory, new Comparator<Item>(){
-	        	 
+    	
+		ArrayList<Item> aux=new ArrayList<Item> ();
+        for(int i=0; i<listDirectory.size();i++){
+        	if(listDirectory.get(i).getName().indexOf(".")>=0){
+        		aux.add(listDirectory.get(i));
+        	}
+        }
+        
+        Collections.sort(aux, new Comparator<Item>(){
+       	 
 			@Override
 			public int compare(Item o1, Item o2) {
 				return (o1.getName().toLowerCase()).compareTo(o2.getName().toLowerCase());
@@ -848,16 +938,33 @@ public class GetBoxActivity extends Activity implements OnClickListener{
 			
 			
 		});
-		ArrayList<Item> aux=new ArrayList<Item> ();
+        ArrayList<Item> auxx=new ArrayList<Item> ();
         for(int i=0; i<listDirectory.size();i++){
-        	if(listDirectory.get(i).getName().indexOf(".")>0){
-        		aux.add(listDirectory.get(i));
-        		listDirectory.remove(i);
+        	if(listDirectory.get(i).getName().indexOf(".")<0){
+        		auxx.add(listDirectory.get(i));
         	}
         }
+        
+        Collections.sort(auxx, new Comparator<Item>(){
+       	 
+			@Override
+			public int compare(Item o1, Item o2) {
+				return (o1.getName().toLowerCase()).compareTo(o2.getName().toLowerCase());
+			}
+						
+		});
+        
+        listDirectory.clear();
+
+        for(int i=0; i<auxx.size();i++){
+        	listDirectory.add(auxx.get(i));
+        }
+
         for(int i=0; i<aux.size();i++){
         	listDirectory.add(aux.get(i));
         }
+        
+        
         archivos=(ListView) findViewById(R.id.archivos); 
 		archivos.setAdapter(new CustomIconLabelAdapter(GetBoxActivity.this));
     }
