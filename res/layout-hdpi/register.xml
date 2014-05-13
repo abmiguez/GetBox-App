@@ -5,141 +5,65 @@
 	    android:paddingLeft="8dp"
 	    android:paddingRight="8dp" >
 
-    <TextView 
-	    android:id="@+id/txtRgstrName" 
-	    android:layout_width="fill_parent" 
-	    android:layout_height="wrap_content" 
-	    android:text= "@string/name"	    	
-        android:layout_marginTop="10dp"	  
-	    android:textSize="18sp"
-	    android:paddingLeft="8dp"
-	    android:paddingRight="8dp"
-       android:textColor="#748ac0"/> 
-	
-   <EditText
+    <EditText
        android:id="@+id/edtTxtRgstrName"
        android:inputType="text"
        android:layout_width="fill_parent"
        android:layout_height="wrap_content"
-       android:layout_below="@+id/txtRgstrName"
-       android:layout_marginTop="5dp"  
-	   android:textSize="18sp"
-	   android:background="@drawable/rounded_edittext"
-       android:textColor="@drawable/text_color"/>
+       android:layout_marginTop="15dp" 
+	   android:textSize="15sp"
+       android:hint="@string/name"/>
    
-   <TextView 
-	    android:id="@+id/txtRgstrMail" 
-	    android:layout_width="fill_parent" 
-	    android:layout_height="wrap_content" 
-	    android:text= "@string/mail"
-		android:layout_below="@+id/edtTxtRgstrName"		
-        android:layout_marginTop="18dp"	  
-	    android:textSize="18sp"
-	    android:paddingLeft="8dp"
-	    android:paddingRight="8dp"
-       android:textColor="#748ac0"/>
-	
    <EditText
        android:id="@+id/edtTxtRgstrMail"
        android:inputType="text"
        android:layout_width="fill_parent"
        android:layout_height="wrap_content"
-       android:layout_below="@+id/txtRgstrMail"
+       android:layout_below="@+id/edtTxtRgstrName"
        android:layout_marginTop="5dp"  
-	   android:textSize="18sp"
-	   android:background="@drawable/rounded_edittext"
-       android:textColor="@drawable/text_color"/>
+	   android:textSize="15sp"
+       android:hint="@string/mail"/>
    
-   <TextView 
-	    android:id="@+id/txtRgstrUser" 
-	    android:layout_width="fill_parent" 
-	    android:layout_height="wrap_content" 
-	    android:text= "@string/username"
-		android:layout_below="@+id/edtTxtRgstrMail"		
-        android:layout_marginTop="18dp"	  
-	    android:textSize="18sp"
-	    android:paddingLeft="8dp"
-	    android:paddingRight="8dp"
-       android:textColor="#748ac0"/>
-	
    <EditText
        android:id="@+id/edtTxtRgstrUser"
        android:inputType="text"
        android:layout_width="fill_parent"
        android:layout_height="wrap_content"
-       android:layout_below="@+id/txtRgstrUser"
+       android:layout_below="@+id/edtTxtRgstrMail"
        android:layout_marginTop="5dp"   
-	   android:textSize="18sp"
-	   android:background="@drawable/rounded_edittext"
-       android:textColor="@drawable/text_color"/>
+	   android:textSize="15sp"
+       android:hint="@string/username"/>
    
-   <TextView 
-	    android:id="@+id/txtRgstrPass" 
-	    android:layout_width="fill_parent" 
-	    android:layout_height="wrap_content" 
-	    android:text= "@string/password"
-		android:layout_below="@+id/edtTxtRgstrUser"		
-        android:layout_marginTop="18dp"	  
-	    android:textSize="18sp"
-	    android:paddingLeft="8dp"
-	    android:paddingRight="8dp"
-       android:textColor="#748ac0"/>
-
    <EditText
        android:id="@+id/edtTxtRgstrPass"
        android:inputType="textPassword"
        android:layout_width="fill_parent"
        android:layout_height="wrap_content"
-       android:layout_below="@+id/txtRgstrPass"
+       android:layout_below="@+id/edtTxtRgstrUser"
        android:layout_marginTop="5dp"   
-	   android:textSize="18sp"
-	   android:background="@drawable/rounded_edittext"
-       android:textColor="@drawable/text_color" />
+	   android:textSize="15sp"
+       android:hint="@string/password"/>
    
-   <TextView 
-	    android:id="@+id/txtRgstrRePass" 
-	    android:layout_width="fill_parent" 
-	    android:layout_height="wrap_content" 
-	    android:text= "@string/repassword"
-		android:layout_below="@+id/edtTxtRgstrPass"		
-        android:layout_marginTop="18dp"	  
-	    android:textSize="18sp"
-	    android:paddingLeft="8dp"
-	    android:paddingRight="8dp"
-       android:textColor="#748ac0"/>
-
    <EditText
        android:id="@+id/edtTxtRgstrRePass"
        android:inputType="textPassword"
        android:layout_width="fill_parent"
        android:layout_height="wrap_content"
-       android:layout_below="@+id/txtRgstrRePass"
+       android:layout_below="@+id/edtTxtRgstrPass"
        android:layout_marginTop="5dp"   
-	   android:textSize="18sp"
-	   android:background="@drawable/rounded_edittext"
-       android:textColor="@drawable/text_color" />
+	   android:textSize="15sp"
+       android:hint="@string/repassword" />
    
    <Button
        android:id="@+id/buttonRgstrRegister"
-       android:layout_width="wrap_content"
-       android:layout_height="wrap_content"
-       android:layout_alignBaseline="@+id/buttonRgstrBack"
-       android:layout_alignBottom="@+id/buttonRgstrBack"
-       android:layout_alignParentRight="true"
-       android:layout_marginTop="20dp"
-       android:background="@drawable/button_background"
-       android:text="@string/buttonRegister"
-       android:textColor="@drawable/text_color" />
-
-   <Button
-       android:id="@+id/buttonRgstrBack"
-       android:layout_width="wrap_content"
-       android:layout_alignParentLeft="true"
+       android:layout_width="fill_parent"
+       android:layout_height="50dp"
        android:layout_below="@+id/edtTxtRgstrRePass"
-       android:layout_height="wrap_content"
        android:layout_marginTop="20dp"
        android:background="@drawable/button_background"
-       android:text="@string/buttonBack"
-	   android:textColor="@drawable/text_color" />
+       android:text="@string/buttonRegisterNew"
+	   android:textSize="15sp"
+       android:textColor="#ffffff" />
+
 
 </RelativeLayout>

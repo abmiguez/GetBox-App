@@ -10,21 +10,23 @@ import android.widget.Toast;
 import com.dropbox.client2.DropboxAPI;
 import com.dropbox.client2.DropboxAPI.UploadRequest;
 
+import es.getbox.android.getboxapp.GetBoxActivity;
+
 public class DropboxUploadFile extends AsyncTask<Void, Long, Boolean> {
 
     private DropboxAPI<?> mApi;
     private String mPath;
     private File mFile;
-
+    private GetBoxActivity gba;
     private UploadRequest mRequest;
     private Context mContext;
 
 
     public DropboxUploadFile(Context context, DropboxAPI<?> api, String dropboxPath,
-            File file) {
+            File file,GetBoxActivity g) {
         // We set the context this way so we don't accidentally leak activities
         mContext = context.getApplicationContext();
-
+        gba=g;
         mApi = api;
         mPath = dropboxPath;
         mFile = file;
@@ -61,6 +63,7 @@ public class DropboxUploadFile extends AsyncTask<Void, Long, Boolean> {
     protected void onPostExecute(Boolean result) {
         if (result) {
             showToast(mFile.getName()+" subido con exito");
+            gba.actualizarDirectorio();
         } else {
             showToast("Ha ocurrido un error mientras se subía el archivo");
         }

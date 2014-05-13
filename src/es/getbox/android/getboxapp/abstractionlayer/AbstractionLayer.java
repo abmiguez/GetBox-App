@@ -98,6 +98,21 @@ public class AbstractionLayer{
 		}
 	}
 	
+	public long getSpaceAvaliable(){
+		long space=0;
+		this.sql.openDatabase();
+		for(int i=0;i<newDropboxAccount;i++){
+			space=space+dsp.get(i).getSpaceUsed();
+    	}
+		this.sql.closeDatabase();
+		this.sql.openDatabase();
+		for(int i=0;i<newBoxAccount;i++){
+			space=space+bsp.get(i).getSpaceUsed();
+        }
+		this.sql.closeDatabase();
+		return space;
+	}
+	
 	public Item uploadFile(String file_name){
 		SharedPreferences mPrefs = context.getSharedPreferences("LOGIN",0);
 		int[] cuenta=spp.storagePolicy(newDropboxAccount, newBoxAccount, dsp, bsp);
@@ -109,12 +124,12 @@ public class AbstractionLayer{
             	rutaDropbox=rutaDropbox+directoriosDropbox.get(i);
             }
         	dsp.get(cuenta[1]).uploadFile(file_name, rutaDropbox);
-        	//dsp.get(cuenta[1]).setSpaceUsed(dsp.get(cuenta[1]).getSpace());
+        	dsp.get(cuenta[1]).setSpace();
         	item=new Item(aux.getName(),rutaDropbox+file_name,"dropbox",cuenta[1]);
         }else{
         	bsp.get(cuenta[1]).uploadFile(file_name,
         			bsp.get(cuenta[1]).getDirectory(posicionActual));
-        	bsp.get(cuenta[1]).setSpaceUsed(bsp.get(cuenta[1]).getSpace());
+        	bsp.get(cuenta[1]).setSpace();
         	item=new Item(aux.getName(),bsp.get(cuenta[1]).getDirectory(posicionActual)+file_name,"box",cuenta[1]);
         }
 		return item;
@@ -207,12 +222,12 @@ public class AbstractionLayer{
 		if(item.getName().indexOf(".")>0){
 			if(item.getLocation()=="dropbox"){
 				dsp.get(item.getAccount()).deleteFile(item.getName(),rutaDropbox+item.getName());
-				dsp.get(item.getAccount()).setSpaceUsed(dsp.get(item.getAccount()).getSpace());
+				dsp.get(item.getAccount()).setSpace();
 				mySql.actualizarDropbox(dsp.get(item.getAccount()).getUserName(), dsp.get(item.getAccount()).getSpaceUsed(),mPrefs.getString("userName",""));
 			}else{
 				if(item.getLocation()=="box"){
 					bsp.get(item.getAccount()).deleteFile(item.getName(),item.getId());
-					bsp.get(item.getAccount()).setSpaceUsed(bsp.get(item.getAccount()).getSpace());
+					bsp.get(item.getAccount()).setSpace();
 					mySql.actualizarBoxSpace(bsp.get(item.getAccount()).getUserName(), bsp.get(item.getAccount()).getSpaceUsed(),mPrefs.getString("userName",""));
 				}
 			}
@@ -247,7 +262,7 @@ public class AbstractionLayer{
 	public void startAutentication(){
 		this.sql.openDatabase();
 		for(int i=0;i<newDropboxAccount;i++){
-			dsp.add(new DropboxStorageProvider(context,i));
+			dsp.add(new DropboxStorageProvider(context,i,gba));
 			dsp.get(i).startAuthentication();
     	}
 		this.sql.closeDatabase();
@@ -286,7 +301,7 @@ public class AbstractionLayer{
 	}
 	
 	public void newDBAccount(){
-		dsp_aux=new DropboxStorageProvider(context,newDropboxAccount);
+		dsp_aux=new DropboxStorageProvider(context,newDropboxAccount,gba);
 		newDBAccount=true;
 		dsp_aux.startAuthentication();
 	}
@@ -606,7 +621,7 @@ public class AbstractionLayer{
 	public void startSincAutentication(){
 		this.sql.openDatabase();
 		for(int i=0;i<newDropboxAccount;i++){
-			dsp.add(new DropboxStorageProvider(context,i));
+			dsp.add(new DropboxStorageProvider(context,i,gba));
 			dsp.get(i).startAuthentication();
     	}
 		this.sql.closeDatabase();

@@ -1,6 +1,6 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="fill_parent"
-	android:layout_height="wrap_content"
+	android:layout_height="fill_parent"
 	android:paddingLeft="8dp"
 	    android:paddingRight="8dp"
 	android:orientation="vertical" >
@@ -9,8 +9,7 @@
 	    android:layout_width="wrap_content" 
 	    android:layout_height="wrap_content"	    
 	    android:text= "@string/config"    
-	    android:paddingTop="6dp"	
-	    android:textStyle="bold"   
+	    android:paddingTop="8dp"	
 	    android:textSize="16sp"/> 
     
     <TextView 
@@ -19,51 +18,32 @@
 	    android:layout_height="wrap_content" 
 	    android:textColor="#8fb64f"
 	    android:textSize="16sp"	        
-	    android:paddingTop="6dp"	
+	    android:paddingTop="8dp"	
 	    android:paddingLeft="6dp"
-	    android:textStyle="bold"
 	    android:layout_toRightOf="@+id/textConfigName"
-	    android:paddingBottom="10dp"/> 
+	    android:paddingBottom="2dp"/> 
 	    
     <TextView 
 	    android:id="@+id/textConfigPass1" 
 	    android:layout_width="wrap_content" 
 	    android:layout_height="wrap_content"	    
-	    android:text= "@string/config_pass" 
-	    android:textStyle="bold"   
-	    android:paddingTop="4dp"	
-	    android:layout_below=   "@+id/textConfigUser"
-	    android:textSize="14sp"/>
+	    android:text= "@string/config_pass"
+	    android:paddingTop="8dp"	
+	    android:layout_below= "@+id/textConfigUser"
+	    android:textSize="15sp"/>
     
-    <TextView 
-	    android:id="@+id/textConfigPassOld" 
-	    android:layout_width="wrap_content" 
-	    android:layout_height="wrap_content"	    
-	    android:text= "@string/pass_old"    
-	    android:paddingTop="6dp"	
-	    android:layout_below=   "@+id/textConfigPass1"
-	    android:textSize="14sp"/>
-	    
+      
     <EditText
        android:id="@+id/edtTxtConfigPassOld"
       
        android:inputType="textPassword"
        android:layout_width="fill_parent"
        android:layout_height="wrap_content"
-       android:layout_below="@+id/textConfigPassOld"
-       android:layout_marginTop="4dp"  
-	   android:textSize="14sp"
-	   android:background="@drawable/rounded_edittext"
-       android:textColor="@drawable/text_color" />
+       android:layout_below="@+id/textConfigPass1"
+       android:layout_marginTop="5dp"  
+	   android:textSize="15sp" 
+       android:hint="@string/pass_old" />
     
-    <TextView 
-	    android:id="@+id/textConfigPass2" 
-	    android:layout_width="wrap_content" 
-	    android:layout_height="wrap_content"	    
-	    android:text= "@string/pass"    
-	    android:paddingTop="6dp"	
-	    android:layout_below=   "@+id/edtTxtConfigPassOld"
-	    android:textSize="14sp"/>
 	    
     <EditText
        android:id="@+id/edtTxtConfigPass1"
@@ -71,20 +51,10 @@
        android:inputType="textPassword"
        android:layout_width="fill_parent"
        android:layout_height="wrap_content"
-       android:layout_below="@+id/textConfigPass2"
-       android:layout_marginTop="4dp"  
-	   android:textSize="14sp"
-	   android:background="@drawable/rounded_edittext"
-       android:textColor="@drawable/text_color" />
-    
-    <TextView 
-	    android:id="@+id/textConfigPass3" 
-	    android:layout_width="wrap_content" 
-	    android:layout_height="wrap_content"	    
-	    android:text= "@string/pass_repeat"    
-	    android:paddingTop="6dp"	
-	    android:layout_below=   "@+id/edtTxtConfigPass1"
-	    android:textSize="14sp"/>
+       android:layout_below="@+id/edtTxtConfigPassOld"
+       android:layout_marginTop="3dp"  
+	   android:textSize="15sp"
+       android:hint="@string/pass" />
     
     <EditText
        android:id="@+id/edtTxtConfigPass2"
@@ -92,24 +62,24 @@
        android:inputType="textPassword"
        android:layout_width="fill_parent"
        android:layout_height="wrap_content"
-       android:layout_below="@+id/textConfigPass3"
-       android:layout_marginTop="4dp"  
-	   android:textSize="14sp"
-	   android:background="@drawable/rounded_edittext"
-       android:textColor="@drawable/text_color" />
+       android:layout_below="@+id/edtTxtConfigPass1"
+       android:layout_marginTop="3dp"  
+	   android:textSize="15sp" 
+       android:hint="@string/pass_repeat" />
     
 
     <Button
         android:id="@+id/buttonCnfgChange"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp"
         android:layout_below="@+id/edtTxtConfigPass2"
         android:background="@drawable/button_background"
         android:text="@string/change"
-        android:layout_marginTop="4dp"              
-	    android:textSize="14sp"   
+        android:layout_marginTop="15dp"          
+	   android:textSize="15sp"
+        android:gravity="center"
         android:layout_centerInParent="true"
-        android:textColor="@drawable/text_color" />
+        android:textColor="#fff" />
     
     
     <TextView 
@@ -118,18 +88,8 @@
 	    android:layout_height="wrap_content"	    
 	    android:text= "@string/config_delete"
 	     android:layout_below=   "@+id/buttonCnfgChange"    
-	    android:paddingTop="10dp"	
-	    android:textStyle="bold"   
-	    android:textSize="14sp"/>
-    
-    <TextView 
-	    android:id="@+id/textConfigPassDel" 
-	    android:layout_width="wrap_content" 
-	    android:layout_height="wrap_content"	    
-	    android:text= "@string/password"    
-	    android:paddingTop="6dp"	
-	    android:layout_below=   "@+id/textConfigDelete"
-	    android:textSize="14sp"/>
+	    android:paddingTop="25dp"  
+	    android:textSize="15sp"/>
     
     
     <EditText
@@ -138,23 +98,21 @@
        android:inputType="textPassword"
        android:layout_width="fill_parent"
        android:layout_height="wrap_content"
-       android:layout_below="@+id/textConfigPassDel"
-       android:layout_marginTop="4dp"  
-	   android:textSize="14sp"
-	   android:background="@drawable/rounded_edittext"
-       android:textColor="@drawable/text_color" />
+       android:layout_below="@+id/textConfigDelete"
+       android:layout_marginTop="5dp"  
+	   android:textSize="15sp"
+       android:hint="@string/password" />
     
     <Button
         android:id="@+id/buttonCnfgDelete"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp"
         android:layout_below="@+id/edtTxtConfigPassDel"
-        android:background="@drawable/button_background"
-        android:text="@string/del_account"
-        android:layout_marginTop="4dp"  
-                     
-	    android:textSize="14sp"         
+        android:background="@drawable/button_background_red"
+        android:text="@string/del_account"        
+	   android:textSize="15sp"
+        android:layout_marginTop="15dp"        
         android:layout_centerInParent="true"
-        android:textColor="@drawable/text_color" />
+        android:textColor="#fff" />
 
 </RelativeLayout> 

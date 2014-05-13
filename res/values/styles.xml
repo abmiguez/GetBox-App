@@ -9,6 +9,7 @@
         <item name="android:actionMenuTextColor">#6a83bc</item>
         <item name="android:activatedBackgroundIndicator">@drawable/activated_background</item>
         <item name="android:actionOverflowButtonStyle">@style/customoverflow</item>
+        <item name="android:fontFamily">sans-serif</item>
     </style>
     
     <style name="customoverflow" parent="android:style/Widget.Holo.ActionButton.Overflow">
@@ -23,7 +24,6 @@
 
     <style name="Theme.MyAppTheme.ActionBar.TitleTextStyle" parent="android:style/TextAppearance.Holo.Widget.ActionBar.Title">
     	<item name="android:textColor">#FFFFFF</item>
-    	<item name="android:textStyle">bold</item>
     </style>    
 
     <!-- Application theme. -->

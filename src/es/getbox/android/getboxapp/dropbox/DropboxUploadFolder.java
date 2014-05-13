@@ -9,19 +9,23 @@ import android.widget.Toast;
 
 import com.dropbox.client2.android.AndroidAuthSession;
 
+import es.getbox.android.getboxapp.GetBoxActivity;
+
 public class DropboxUploadFolder extends AsyncTask<Void, Void, Boolean> {
 
 	
     private Context mContext;
     private DropboxAPI<AndroidAuthSession> mApi;
     private String mPath;
+    private GetBoxActivity gba;
 
     
     public DropboxUploadFolder(Context context, DropboxAPI<AndroidAuthSession> api,
-			String dropboxPath) {
+			String dropboxPath,GetBoxActivity g) {
     	mContext=context;
 		mApi = api;
         mPath = dropboxPath;
+        gba=g;
 	}
     
     @Override
@@ -42,6 +46,7 @@ public class DropboxUploadFolder extends AsyncTask<Void, Void, Boolean> {
 		if (!result) {
             showToast("Ha ocurrido un error mientras se creaba la carpeta");
         }else{
+        	 gba.actualizarDirectorio();
         	 showToast(resul[resul.length-1]+" creada con éxito");
         }
     }

@@ -7,13 +7,17 @@ import com.dropbox.client2.DropboxAPI.Account;
 import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.exception.DropboxException;
 
+import es.getbox.android.getboxapp.dropbox.DropboxStorageProvider.DropBoxSpaceCallback;
+
 public class DropboxGetSpace extends AsyncTask<Void, Void, Long> {
 
     private DropboxAPI<AndroidAuthSession> mApi;
     private long space;
+    private DropBoxSpaceCallback dsc;
     
-    public DropboxGetSpace(DropboxAPI<AndroidAuthSession> api) {
+    public DropboxGetSpace(DropboxAPI<AndroidAuthSession> api, DropBoxSpaceCallback d) {
     	mApi = api;
+    	dsc=d;
     }
     
     @Override
@@ -31,5 +35,9 @@ public class DropboxGetSpace extends AsyncTask<Void, Void, Long> {
     }
 	
 	@Override
-    protected void onPostExecute(Long result) {}
+    protected void onPostExecute(Long result) {
+		if(dsc!=null){
+			dsc.onTaskComplete(result);
+		}
+	}
 }

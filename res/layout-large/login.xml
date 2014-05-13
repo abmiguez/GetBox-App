@@ -4,87 +4,60 @@
     android:layout_height="match_parent" 
 	    android:paddingLeft="8dp"
 	    android:paddingRight="8dp"
-	    android:background="#dce1e6">
-
-    <ImageView
+	    android:background="#fff">
+	<ImageView
        android:id="@+id/imageViewLogin"
        android:layout_width="wrap_content"
-       android:layout_height="wrap_content"
-       android:layout_centerHorizontal="true"
-       android:maxWidth="280dip"
+       android:layout_height="wrap_content" 
+       android:maxWidth="300dip"
    		android:scaleType="centerCrop"
         android:adjustViewBounds="true"
-       android:layout_marginTop="150dp"
-       android:src="@drawable/getbox_logo_large" />
-    
-   <TextView 
-	    android:id="@+id/txtLgnUser" 
-	    android:layout_width="fill_parent" 
-	    android:layout_height="wrap_content"	    
-       android:layout_below="@+id/imageViewLogin" 
-	    android:text= "@string/username"	    	
-        android:layout_marginTop="50dp"		  
-	    android:textSize="22sp"
-	    android:paddingLeft="8dp"
-	    android:paddingRight="8dp"
-       android:textColor="#748ac0"/> 
+       android:layout_centerHorizontal="true"
+       android:layout_marginTop="100dp"
+       android:src="@drawable/getbox_logo"/>
 	
-   <EditText
+    <EditText
        android:id="@+id/edtTxtLgnUser"
        android:inputType="text"
        android:layout_width="fill_parent"
        android:layout_height="wrap_content"
-       android:layout_below="@+id/txtLgnUser"
-       android:layout_marginTop="5dp"  
-	   android:textSize="22sp"
-	   android:background="@drawable/rounded_edittext"
-       android:textColor="@drawable/text_color" />
+       android:layout_below="@+id/imageViewLogin"
+       android:layout_marginTop="35dp"  
+	   android:textSize="20sp"
+       android:hint="@string/username"   />
    
-   <TextView 
-	    android:id="@+id/txtLgnPass" 
-	    android:layout_width="fill_parent" 
-	    android:layout_height="wrap_content" 
-	    android:text= "@string/password"
-		android:layout_below="@+id/edtTxtLgnUser"		
-        android:layout_marginTop="18dp"	  
-	    android:textSize="22sp"
-	    android:paddingLeft="8dp"
-	    android:paddingRight="8dp"
-       android:textColor="#748ac0"/>
-
    <EditText
        android:id="@+id/edtTxtLgnPass"
        android:inputType="textPassword"
        android:layout_width="fill_parent"
        android:layout_height="wrap_content"
-       android:layout_below="@+id/txtLgnPass"
-       android:layout_marginTop="5dp" 
-       android:textSize="22sp" 
-	   android:background="@drawable/rounded_edittext" 
-       android:textColor="@drawable/text_color"/>
+       android:layout_below="@+id/edtTxtLgnUser"
+       android:hint="@string/password"  
+       android:layout_marginTop="10dp" 
+       android:textSize="20sp" />
 
    <Button
        android:id="@+id/buttonLgnLogin"
-       android:layout_width="wrap_content"
-       android:layout_height="wrap_content"
-       android:layout_alignBaseline="@+id/buttonLgnRegister"
-       android:layout_alignBottom="@+id/buttonLgnRegister"
-       android:layout_alignParentRight="true"      
-	   android:textSize="22sp"
+       android:layout_width="fill_parent"
+       android:layout_height="70dp"
+       android:gravity ="center"       
        android:background="@drawable/button_background"
-       android:text="@string/buttonLogin"
-       android:textColor="@drawable/text_color"/>
+       android:layout_below="@+id/edtTxtLgnPass"
+       android:text="@string/buttonLogin"       
+       android:layout_marginTop="25dp"
+       android:textSize="20sp"
+       android:textColor="#ffffff"/>
 
    <Button
        android:id="@+id/buttonLgnRegister"
-       android:layout_width="wrap_content"
+       android:layout_width="fill_parent"
        android:layout_height="wrap_content"
-       android:layout_alignLeft="@+id/edtTxtLgnPass"
-       android:layout_below="@+id/edtTxtLgnPass"
-       android:layout_marginTop="40dp"
-	   android:textSize="22sp"
-       android:background="@drawable/button_background"
+       android:layout_below="@+id/buttonLgnLogin"
+       android:layout_marginTop="25dp"
+       android:gravity ="center"  
+       android:background="@drawable/button_background_reg"
        android:text="@string/buttonRegister"
-       android:textColor="@drawable/text_color"/>
+       android:textColor="#000000"
+       android:textSize="18sp" />
 
 </RelativeLayout>

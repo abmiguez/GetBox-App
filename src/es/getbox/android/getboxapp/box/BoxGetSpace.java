@@ -5,15 +5,18 @@ import com.box.boxjavalibv2.exceptions.AuthFatalFailureException;
 import com.box.boxjavalibv2.exceptions.BoxServerException;
 import com.box.restclientv2.exceptions.BoxRestException;
 
+import es.getbox.android.getboxapp.box.BoxStorageProvider.BoxSpaceCallback;
 import android.os.AsyncTask;
 
 public class BoxGetSpace extends AsyncTask<Void, Void, Long> {
 
     private BoxAndroidClient mClient;
     private long space;
+    private BoxSpaceCallback bsc;
     
-    public BoxGetSpace(BoxAndroidClient client) {
+    public BoxGetSpace(BoxAndroidClient client, BoxSpaceCallback b) {
     	mClient = client;
+    	bsc=b;
     }
     
     @Override
@@ -41,5 +44,9 @@ public class BoxGetSpace extends AsyncTask<Void, Void, Long> {
     }
 	
 	@Override
-    protected void onPostExecute(Long result) {}
+    protected void onPostExecute(Long result) {
+		if(bsc!=null){
+			bsc.onTaskComplete(result);
+		}
+	}
 }

@@ -62,10 +62,14 @@
         android:orderInCategory="104"
         android:showAsAction="never"
         android:title="Nueva Carpeta"/>
-        
+     <item
+        android:id="@+id/acercade"
+        android:orderInCategory="105"
+        android:showAsAction="never"
+        android:title="Acerca de"/>
     <item
         android:id="@+id/salir"
-        android:orderInCategory="105"
+        android:orderInCategory="106"
         android:showAsAction="never"
         android:title="Salir"/>
 </menu>

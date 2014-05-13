@@ -41,6 +41,11 @@ public class FragmentAccounts extends Fragment {
         		 getArguments().getStringArrayList("arrayB")));
         getActivity().registerForContextMenu(Baccounts);
         int i = getArguments().getInt(ARG_ACCOUNTS_NUMBER);
+        TextView spaceA=(TextView) rootView.findViewById (R.id.textUserSpace);
+        double aux=getArguments().getLong("spaceAvaliable")/1073741824.0;
+        double gbs=Math.rint(aux*100)/100;
+        spaceA.setText(""+gbs);
+        
         String option = getResources().getStringArray(R.array.options_array)[i];
         getActivity().setTitle(option);
         return rootView;

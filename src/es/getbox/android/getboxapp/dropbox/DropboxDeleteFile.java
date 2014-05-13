@@ -10,6 +10,8 @@ import android.widget.Toast;
 import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.exception.DropboxException;
 
+import es.getbox.android.getboxapp.GetBoxActivity;
+
 
 public class DropboxDeleteFile extends AsyncTask<Void, Void, Boolean> {
 
@@ -17,12 +19,14 @@ public class DropboxDeleteFile extends AsyncTask<Void, Void, Boolean> {
     private Context mContext;
     private DropboxAPI<AndroidAuthSession> mApi;
     private String mFilename;
+    private GetBoxActivity gba;
 
     
     public DropboxDeleteFile(Context context, DropboxAPI<AndroidAuthSession> api,
-			String filename) {
+			String filename, GetBoxActivity g) {
     	mContext=context;
 		mApi = api;
+		gba=g;
         mFilename = filename;
 	}
     
@@ -41,6 +45,7 @@ public class DropboxDeleteFile extends AsyncTask<Void, Void, Boolean> {
 		String[] resul = mFilename.split("/");
 		if (!result) {
            showToast("Ha ocurrido un error mientras se eliminaba el archivo");
+           gba.actualizarDirectorio();
         }else{
         	showToast(resul[resul.length-1]+" eliminado con éxito");
         }

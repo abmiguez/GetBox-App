@@ -18,6 +18,9 @@ import com.dropbox.client2.session.AccessTokenPair;
 import com.dropbox.client2.session.AppKeyPair;
 import com.dropbox.client2.session.Session.AccessType;
 
+import es.getbox.android.getboxapp.GetBoxActivity;
+import es.getbox.android.getboxapp.box.BoxGetSpace;
+import es.getbox.android.getboxapp.box.BoxStorageProvider.BoxSpaceCallback;
 import es.getbox.android.getboxapp.interfaces.AsyncTaskCompleteListener;
 import es.getbox.android.getboxapp.mysql.MySQL;
 import es.getbox.android.getboxapp.utils.Item;
@@ -41,15 +44,17 @@ public class DropboxStorageProvider {
 	private boolean isLoc;
 	private SQL sql;
 	private MySQL mySql;
+	private GetBoxActivity gba;
 	
 	public DropboxAPI<AndroidAuthSession> getApi(){
 		return this.mDBApi;
 	}
 	
-	public DropboxStorageProvider(Context context,int dropboxAccount){
+	public DropboxStorageProvider(Context context,int dropboxAccount,GetBoxActivity g){
 		this.mContext=context;
 		this.dropboxAccount=dropboxAccount;
 		this.isLoc=true;
+		gba=g;
 		sql=new SQL(context);
 		mySql=new MySQL(context);
 	}
@@ -227,7 +232,7 @@ public class DropboxStorageProvider {
 	}
 	
 	public long getSpace(){
-		DropboxGetSpace dgs=new DropboxGetSpace(mDBApi);
+		DropboxGetSpace dgs=new DropboxGetSpace(mDBApi,null);
 		try {
 			dgs.execute();
 			long a=dgs.get();
@@ -238,6 +243,18 @@ public class DropboxStorageProvider {
 			return 0;
 		}				
 	}
+	
+	 public void setSpace(){
+	    	DropBoxSpaceCallback dsc= new DropBoxSpaceCallback(); 
+	    	DropboxGetSpace dgs=new DropboxGetSpace(mDBApi,dsc);
+			dgs.execute();
+	    }
+	    
+	    public class DropBoxSpaceCallback implements AsyncTaskCompleteListener<Long>{
+	    	public void onTaskComplete( Long result){
+	    		setSpaceUsed(result);
+	    	}
+	    }
 
 	public void getFiles(String directory_path, AsyncTaskCompleteListener<ArrayList<Item>> cb,boolean dialog) {
 		DropboxListDirectory ld = new DropboxListDirectory(mContext, mDBApi, directory_path, cb, dialog, dropboxAccount,this);
@@ -259,13 +276,13 @@ public class DropboxStorageProvider {
 	
 	public void uploadFile(String file_name, String file_id) {
 		File file = new File(file_name);
-		DropboxUploadFile upload = new DropboxUploadFile(mContext, mDBApi, file_id, file);
+		DropboxUploadFile upload = new DropboxUploadFile(mContext, mDBApi, file_id, file,gba);
         upload.execute();
 	}
 	
 	public void deleteFile(String file_name, String file_id) {
 
-		DropboxDeleteFile delf=new DropboxDeleteFile(mContext,mDBApi,file_id);
+		DropboxDeleteFile delf=new DropboxDeleteFile(mContext,mDBApi,file_id,gba);
 		try{	
         	delf.execute();
         	delf.get();
@@ -282,7 +299,7 @@ public class DropboxStorageProvider {
 	}
 	
 	public void deleteFolder(String file_name, String file_id) {
-		DropboxDeleteFile delf=new DropboxDeleteFile(mContext,mDBApi,file_id);
+		DropboxDeleteFile delf=new DropboxDeleteFile(mContext,mDBApi,file_id,gba);
 		try{	
         	delf.execute();
         	delf.get();
@@ -299,7 +316,7 @@ public class DropboxStorageProvider {
 	}
 	
 	public void uploadFolder(String file_name, String file_id) {
-		DropboxUploadFolder folder=new DropboxUploadFolder(mContext,mDBApi,file_name);
+		DropboxUploadFolder folder=new DropboxUploadFolder(mContext,mDBApi,file_name,gba);
     	try{	
         	folder.execute();
         	folder.get();

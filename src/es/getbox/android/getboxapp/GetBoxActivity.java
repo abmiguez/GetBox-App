@@ -39,6 +39,7 @@ import java.util.Set;
 import java.util.Collections;
 
 import es.getbox.android.getboxapp.abstractionlayer.AbstractionLayer;
+import es.getbox.android.getboxapp.fragments.FragmentAbout;
 import es.getbox.android.getboxapp.fragments.FragmentArchives;
 import es.getbox.android.getboxapp.fragments.FragmentClose;
 import es.getbox.android.getboxapp.fragments.FragmentAccounts;
@@ -83,10 +84,10 @@ public class GetBoxActivity extends Activity implements OnClickListener{
 	private Button buttonLgnLogin;
 	private Button buttonLgnRegister;
 	private Button buttonRgstrRegister;
-	private Button buttonRgstrBack;
 	private short button;
 	private ProgressDialog dialog;
 	private boolean errorToast;
+	private boolean inRegister;
 	
 	//Drawer
 	private DrawerLayout mDrawerLayout;
@@ -96,6 +97,7 @@ public class GetBoxActivity extends Activity implements OnClickListener{
     private CharSequence mTitle;
     private String[] mOptionTitles;	
 	private short actualDrawer; 
+	private short lastDrawer;
      
     //Subidas de la camara
 	private final static int NEW_PICTURE = 1;
@@ -133,7 +135,8 @@ public class GetBoxActivity extends Activity implements OnClickListener{
         if (savedInstanceState != null) {
             mCameraFileName = savedInstanceState.getString("mCameraFileName");   
         }  
-        
+        lastDrawer=0;
+        inRegister=false;
         boolArchives=false;
         errorToast=true;
     	itemCallback=new ItemCallback();
@@ -153,7 +156,9 @@ public class GetBoxActivity extends Activity implements OnClickListener{
         	showMain();
         	button=2;
         } else {
-        	noTitle();
+
+        	invalidateOptionsMenu();
+        	//noTitle();
         	boolCallback=new BooleanCallback();
         	intCallback=new IntCallback();
         	showLogIn();
@@ -199,33 +204,45 @@ public class GetBoxActivity extends Activity implements OnClickListener{
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         // If the nav drawer is open, hide action items related to the content view
-    	
-    	boolean drawerOpen = mDrawerLayout.isDrawerOpen(mDrawerList);
-		menu.findItem(R.id.actualizar).setVisible(!drawerOpen);
-		menu.findItem(R.id.nueva_carpeta).setVisible(!drawerOpen);
-		menu.findItem(R.id.subir).setVisible(!drawerOpen);
-		menu.findItem(R.id.salir).setVisible(!drawerOpen);
-		menu.findItem(R.id.anhadir).setVisible(!drawerOpen);
-		menu.findItem(R.id.sincronizar).setVisible(!drawerOpen);
-    	if(!drawerOpen){
-	    	menu.findItem(R.id.sincronizar).setVisible(false);
+    	mPrefs = this.getSharedPreferences("LOGIN",0);
+        if(mPrefs.getBoolean("logueado",false)){
+	    	boolean drawerOpen = mDrawerLayout.isDrawerOpen(mDrawerList);
+			menu.findItem(R.id.actualizar).setVisible(!drawerOpen);
+			menu.findItem(R.id.nueva_carpeta).setVisible(!drawerOpen);
+			menu.findItem(R.id.subir).setVisible(!drawerOpen);
+			menu.findItem(R.id.salir).setVisible(!drawerOpen);
+			menu.findItem(R.id.anhadir).setVisible(!drawerOpen);
+			menu.findItem(R.id.acercade).setVisible(!drawerOpen);
+			menu.findItem(R.id.sincronizar).setVisible(!drawerOpen);
+	    	if(!drawerOpen){
+		    	menu.findItem(R.id.sincronizar).setVisible(false);
+		    	menu.findItem(R.id.actualizar).setVisible(false);
+				menu.findItem(R.id.nueva_carpeta).setVisible(false);
+				menu.findItem(R.id.subir).setVisible(false);
+				menu.findItem(R.id.acercade).setVisible(true);
+				menu.findItem(R.id.salir).setVisible(true);
+				menu.findItem(R.id.anhadir).setVisible(false);
+		    	switch(actualDrawer){
+				case 0:
+					menu.findItem(R.id.actualizar).setVisible(true);
+					menu.findItem(R.id.nueva_carpeta).setVisible(true);
+					menu.findItem(R.id.subir).setVisible(true);
+					break;
+				case 1:
+					menu.findItem(R.id.sincronizar).setVisible(true);
+					menu.findItem(R.id.anhadir).setVisible(true);			
+					break;
+				}
+	    	}   
+    	}else{
+    		menu.findItem(R.id.sincronizar).setVisible(false);
 	    	menu.findItem(R.id.actualizar).setVisible(false);
 			menu.findItem(R.id.nueva_carpeta).setVisible(false);
 			menu.findItem(R.id.subir).setVisible(false);
-			menu.findItem(R.id.salir).setVisible(true);
+			menu.findItem(R.id.salir).setVisible(false);
 			menu.findItem(R.id.anhadir).setVisible(false);
-	    	switch(actualDrawer){
-			case 0:
-				menu.findItem(R.id.actualizar).setVisible(true);
-				menu.findItem(R.id.nueva_carpeta).setVisible(true);
-				menu.findItem(R.id.subir).setVisible(true);
-				break;
-			case 1:
-				menu.findItem(R.id.sincronizar).setVisible(true);
-				menu.findItem(R.id.anhadir).setVisible(true);			
-				break;
-			}
-    	}    	
+			menu.findItem(R.id.acercade).setVisible(false);
+    	}
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -283,6 +300,19 @@ public class GetBoxActivity extends Activity implements OnClickListener{
         	showDialog("Sincronizando cuentas...");
         	aLayer.accountsSincToBD();
         	return true;
+        	
+        case R.id.acercade:
+        	Fragment fragment;
+            Bundle args = new Bundle();
+        	fragment = new FragmentAbout();
+        	args.putInt(FragmentAbout.ARG_ABOUT_NUMBER, 1);
+        	fragment.setArguments(args);
+        	boolArchives=false;
+        	lastDrawer=actualDrawer;
+        	actualDrawer=7;
+            FragmentManager fragmentManager = getFragmentManager();
+            fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).commit();
+        	return true;
         
         case R.id.subir_archivo:
         	goFromUpload=true;
@@ -339,6 +369,7 @@ public class GetBoxActivity extends Activity implements OnClickListener{
         	args.putInt(FragmentAccounts.ARG_ACCOUNTS_NUMBER, position);
         	args.putStringArrayList("arrayDB", aLayer.getDbAccounts());
         	args.putStringArrayList("arrayB", aLayer.getbAccounts());
+        	args.putLong("spaceAvaliable",aLayer.getSpaceAvaliable());
         	args.putString("userName", mPrefs.getString("userName",""));
         	fragment.setArguments(args);
         	boolArchives=false;
@@ -387,7 +418,8 @@ public class GetBoxActivity extends Activity implements OnClickListener{
     @Override
     public void setTitle(CharSequence title) {
         mTitle = title;
-        getActionBar().setTitle(mTitle);
+        mPrefs = this.getSharedPreferences("LOGIN",0);
+	    getActionBar().setTitle(mTitle);
     }
 
     /**
@@ -450,8 +482,12 @@ public class GetBoxActivity extends Activity implements OnClickListener{
             }
         };
         mDrawerLayout.setDrawerListener(mDrawerToggle);
-
-        selectItem(0);
+        if(aLayer.zero()){
+        	selectItem(1);
+        	showToast("Sincroniza tus cuentas de Dropbox y Box pulsando en +");
+        }else{
+            selectItem(0);        	
+        }
     }
     
     private void noTitle(){
@@ -459,9 +495,10 @@ public class GetBoxActivity extends Activity implements OnClickListener{
     	requestWindowFeature(Window.FEATURE_NO_TITLE);
     }
     
-    private void showLogIn(){  
+    private void showLogIn(){ 
+    	inRegister=false;
     	setContentView(R.layout.login);
-    	invalidateOptionsMenu();
+    	setTitle("Iniciar sesión en Getbox");
 		buttonLgnLogin = (Button) findViewById(R.id.buttonLgnLogin);
 		buttonLgnLogin.setOnClickListener(this);
 		buttonLgnRegister = (Button) findViewById(R.id.buttonLgnRegister);
@@ -469,12 +506,12 @@ public class GetBoxActivity extends Activity implements OnClickListener{
     }
     
     private void showRegister(){  
+    	inRegister=true;
     	setContentView(R.layout.register);
     	invalidateOptionsMenu();
+    	setTitle("Registrate en Getbox");
 		buttonRgstrRegister = (Button) findViewById(R.id.buttonRgstrRegister);
 		buttonRgstrRegister.setOnClickListener(this);
-		buttonRgstrBack = (Button) findViewById(R.id.buttonRgstrBack);
-		buttonRgstrBack.setOnClickListener(this);
     }
     
     
@@ -530,8 +567,12 @@ public class GetBoxActivity extends Activity implements OnClickListener{
     		        if(!isOnline()){
 						showToast("Error al conectar con la base de datos");
 					}else{
-						showDialog("Logueandose, espere...");
-						mySql.login(lgnUser.getText().toString(),lgnPass.getText().toString(),boolCallback);
+						if(lgnUser.getText().toString().equals("")){
+							showToast("Introduce un usuario válido");
+						}else{
+							showDialog("Logueandose, espere...");
+							mySql.login(lgnUser.getText().toString(),lgnPass.getText().toString(),boolCallback);
+						}
 					}
 				}
 				if(v.getId()==buttonLgnRegister.getId()){
@@ -541,10 +582,6 @@ public class GetBoxActivity extends Activity implements OnClickListener{
     		break;
     		
     		case 1:
-    			if(v.getId()==buttonRgstrBack.getId()){
-					showLogIn();
-					button=0;
-				}
 				if(v.getId()==buttonRgstrRegister.getId()){
     				EditText regUser=(EditText) findViewById(R.id.edtTxtRgstrUser);
     				EditText regPass=(EditText) findViewById(R.id.edtTxtRgstrPass);
@@ -670,68 +707,68 @@ public class GetBoxActivity extends Activity implements OnClickListener{
  			label.setText(listDirectory.get(position).getName());
  		
  			String name=listDirectory.get(position).getName();
- 			if( name.indexOf(".")<0 ) {
+ 			if( !name.contains(".") ) {
  				icon.setImageResource(R.drawable.foldericon);
  			}else{
- 				if(name.indexOf(".jpg")>=0 || name.indexOf(".JPG")>=0 ||
-							name.indexOf(".jpeg")>=0 || name.indexOf(".JPEG")>=0){
+ 				if(name.endsWith(".jpg") || name.endsWith(".JPG") ||
+							name.endsWith(".jpeg") || name.endsWith(".JPEG")){
  					icon.setImageResource(R.drawable.jpgicon);
  				}else{
- 					if(name.indexOf(".txt")>=0 || name.indexOf(".TXT")>=0 ){
+ 					if(name.endsWith(".txt") || name.endsWith(".TXT") ){
  	 					icon.setImageResource(R.drawable.txticon);
  	 				}else{
-	 	 				if(name.indexOf(".gif")>=0 || name.indexOf(".GIF")>=0 ){
+	 	 				if(name.endsWith(".gif") || name.endsWith(".GIF") ){
 	 	 					icon.setImageResource(R.drawable.gificon);
 	 	 				}else{
-		 	 				if(name.indexOf(".png")>=0 || name.indexOf(".PNG")>=0 ){
+		 	 				if(name.endsWith(".png") || name.endsWith(".PNG") ){
 		 	 					icon.setImageResource(R.drawable.pngicon);
 		 	 				}else{
-			 	 				if(name.indexOf(".pdf")>=0 || name.indexOf(".PDF")>=0 ){
+			 	 				if(name.endsWith(".pdf") || name.endsWith(".PDF") ){
 			 	 					icon.setImageResource(R.drawable.pdficon);
 			 	 				}else{
-			 	 					if(name.indexOf(".doc")>=0 || name.indexOf(".DOC")>=0 ||
-			 	 							name.indexOf(".docx")>=0 || name.indexOf(".DOCX")>=0 ||
-			 	 							name.indexOf(".odt")>=0 || name.indexOf(".ODT")>=0){
+			 	 					if(name.endsWith(".doc") || name.endsWith(".DOC") ||
+			 	 							name.endsWith(".docx") || name.endsWith(".DOCX") ||
+			 	 							name.endsWith(".odt") || name.endsWith(".ODT")){
 			 	 						icon.setImageResource(R.drawable.docicon);
 			 	 					}else{
-			 	 						if(name.indexOf(".ppt")>=0 || name.indexOf(".PPT")>=0 ||
-				 	 							name.indexOf(".pptx")>=0 || name.indexOf(".PPTX")>=0 ||
-				 	 							name.indexOf(".odp")>=0 || name.indexOf(".ODP")>=0){
+			 	 						if(name.endsWith(".ppt") || name.endsWith(".PPT") ||
+				 	 							name.endsWith(".pptx") || name.endsWith(".PPTX") ||
+				 	 							name.endsWith(".odp") || name.endsWith(".ODP")){
 			 	 							icon.setImageResource(R.drawable.ppticon);		 	 							
 			 	 						}else{
-			 	 							if(name.indexOf(".xls")>=0 || name.indexOf(".XLS")>=0 ||
-					 	 							name.indexOf(".xlsx")>=0 || name.indexOf(".XLSX")>=0 ||
-					 	 							name.indexOf(".ods")>=0 || name.indexOf(".ODS")>=0){
+			 	 							if(name.endsWith(".xls") || name.endsWith(".XLS") ||
+					 	 							name.endsWith(".xlsx") || name.endsWith(".XLSX") ||
+					 	 							name.endsWith(".ods") || name.endsWith(".ODS")){
 				 	 							icon.setImageResource(R.drawable.xlsicon);
 			 	 							}else{
-			 	 								if(name.indexOf(".zip")>=0 || name.indexOf(".ZIP")>=0 ){
+			 	 								if(name.endsWith(".zip") || name.endsWith(".ZIP") ){
 			 				 	 					icon.setImageResource(R.drawable.zipicon);
 			 	 								}else{
-			 	 									if(name.indexOf(".rar")>=0 || name.indexOf(".RAR")>=0 ){
+			 	 									if(name.endsWith(".rar") || name.endsWith(".RAR") ){
 			 	 				 	 					icon.setImageResource(R.drawable.raricon);
 			 	 									}else{
-			 	 										if(name.indexOf(".apk")>=0 || name.indexOf(".APK")>=0 ){
+			 	 										if(name.endsWith(".apk") || name.endsWith(".APK") ){
 				 	 				 	 					icon.setImageResource(R.drawable.apkicon);
 				 	 									}else{
-				 	 										if(name.indexOf(".epub")>=0 || name.indexOf(".EPUB")>=0 ){
+				 	 										if(name.endsWith(".epub") || name.endsWith(".EPUB") ){
 					 	 				 	 					icon.setImageResource(R.drawable.epubicon);
 					 	 									}else{
-					 	 										if(name.indexOf(".exe")>=0 || name.indexOf(".EXE")>=0 ){
+					 	 										if(name.endsWith(".exe") || name.endsWith(".EXE") ){
 						 	 				 	 					icon.setImageResource(R.drawable.exeicon);
 						 	 									}else{
-						 	 										if(name.indexOf(".mp3")>=0 || name.indexOf(".MP3")>=0 ){
+						 	 										if(name.endsWith(".mp3") || name.endsWith(".MP3") ){
 							 	 				 	 					icon.setImageResource(R.drawable.mp3icon);
 							 	 									}else{
-							 	 										if(name.indexOf(".wav")>=0 || name.indexOf(".WAV")>=0 ){
+							 	 										if(name.endsWith(".wav") || name.endsWith(".WAV") ){
 								 	 				 	 					icon.setImageResource(R.drawable.wavicon);
 								 	 									}else{
-								 	 										if(name.indexOf(".mp4")>=0 || name.indexOf(".MP4")>=0 ){
+								 	 										if(name.endsWith(".mp4") || name.endsWith(".MP4") ){
 									 	 				 	 					icon.setImageResource(R.drawable.mp4icon);
 									 	 									}else{
-									 	 										if(name.indexOf(".avi")>=0 || name.indexOf(".AVI")>=0 ){
+									 	 										if(name.endsWith(".avi") || name.endsWith(".AVI") ){
 										 	 				 	 					icon.setImageResource(R.drawable.aviicon);
 										 	 									}else{
-										 	 										if(name.indexOf(".mpeg")>=0 || name.indexOf(".MPEG")>=0 ){
+										 	 										if(name.endsWith(".mpeg") || name.endsWith(".MPEG") ){
 											 	 				 	 					icon.setImageResource(R.drawable.mpegicon);
 											 	 									}else{
 											 	 										icon.setImageResource(R.drawable.archivoicon); 
@@ -863,6 +900,7 @@ public class GetBoxActivity extends Activity implements OnClickListener{
     	args.putInt(FragmentAccounts.ARG_ACCOUNTS_NUMBER, 1);
     	args.putStringArrayList("arrayDB", aLayer.getDbAccounts());
     	args.putStringArrayList("arrayB", aLayer.getbAccounts());
+    	args.putLong("spaceAvaliable",aLayer.getSpaceAvaliable());
     	args.putString("userName", mPrefs.getString("userName",""));
     	fragment.setArguments(args);
     	boolArchives=false;
@@ -890,7 +928,7 @@ public class GetBoxActivity extends Activity implements OnClickListener{
 	                }
 	                Log.i(TAG,mCameraFileName);
 	                if (uri != null) {
-	                	listDirectory.add(aLayer.uploadFile(mCameraFileName));
+	                	aLayer.uploadFile(mCameraFileName);
 	                	orderDirectory();
 	                }
 	            }else {
@@ -905,7 +943,7 @@ public class GetBoxActivity extends Activity implements OnClickListener{
 			}else{
 	        	try{
 	            	if (data.hasExtra("archivo_seleccionado")) {
-	                listDirectory.add(aLayer.uploadFile(data.getExtras().getString("archivo_seleccionado")));
+	                aLayer.uploadFile(data.getExtras().getString("archivo_seleccionado"));
 	                orderDirectory();
 	            }
 	            }catch(NullPointerException e){
@@ -918,6 +956,10 @@ public class GetBoxActivity extends Activity implements OnClickListener{
         	restartAccountsFragment();
         } 
         
+    }
+    
+    public void actualizarDirectorio(){
+    	aLayer.actualize(itemCallback);
     }
     
     private void orderDirectory(){
@@ -989,7 +1031,22 @@ public class GetBoxActivity extends Activity implements OnClickListener{
     
     public void onBackPressed(){
     	if(boolArchives==false){
-    		this.finish();
+    		mPrefs = this.getSharedPreferences("LOGIN",0);
+            if(!mPrefs.getBoolean("logueado",false)){
+	    		if(!inRegister){
+	        		this.finish();
+	    		}else{
+	    			showLogIn();
+					button=0;
+	    		}
+    		}else{
+    			if(actualDrawer==7){
+	    			selectItem(lastDrawer);
+    			}else{
+    				this.finish();
+    			}
+    		}
+    		
     	}else{
     		if(aLayer.enableBack()){
 	    		if(aLayer.goBack(itemCallback)){
@@ -1012,10 +1069,10 @@ public class GetBoxActivity extends Activity implements OnClickListener{
     	
     }   
     
-    public void finishLogin(){
-        hideDialog();
+    public void finishLogin(){        
         Intent intent = new Intent(this,GetBoxActivity.class);
 		startActivity(intent);
+		hideDialog();
         this.finish();
     }
     
@@ -1095,7 +1152,7 @@ public class GetBoxActivity extends Activity implements OnClickListener{
     public class ItemCallback implements AsyncTaskCompleteListener<ArrayList<Item>>{
     	public void onTaskComplete( ArrayList<Item> result){
     		onListingComplete(result);
-    	}
+    	} 
     }
     
     public class BooleanCallback implements AsyncTaskCompleteListener<Boolean>{
