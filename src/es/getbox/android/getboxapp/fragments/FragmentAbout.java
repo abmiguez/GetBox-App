@@ -18,7 +18,6 @@ public class FragmentAbout extends Fragment {
             Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_about, container, false);
         
-        int i = getArguments().getInt(ARG_ABOUT_NUMBER);
         getActivity().setTitle("Acerca de");
         return rootView;
     }

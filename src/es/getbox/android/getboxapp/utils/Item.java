@@ -1,14 +1,17 @@
 package es.getbox.android.getboxapp.utils;
 
 public class Item {
+	//atributos
 	private String mName;
 	private String mId;
 	private String mLocation;
 	private int mAccount;
 	
+	//constructor por defecto
 	public Item(){
 	}
 	
+	//constructor parametrizado
 	public Item(String name, String id, String location, int account){
 		this.mName=name;
 		this.mId=id;
@@ -16,6 +19,8 @@ public class Item {
 		this.mAccount=account;
 	}
 	
+	
+	//metodos get y set
 	public String getName(){
 		return mName;
 	}
@@ -48,6 +53,8 @@ public class Item {
 		this.mAccount=account;
 	}
 
+	
+	//metodos hascode y equals
 	@Override
 	public int hashCode() {
 		final int prime = 31;

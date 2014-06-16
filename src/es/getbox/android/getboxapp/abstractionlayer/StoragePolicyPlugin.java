@@ -7,16 +7,18 @@ import es.getbox.android.getboxapp.dropbox.DropboxStorageProvider;
 
 public class StoragePolicyPlugin{
 	
-	public StoragePolicyPlugin(){
-		
+	//constructor
+	public StoragePolicyPlugin(){		
 	}
 	
+	//devuelve que cuenta es la mejor para subir el archivo
 	public int[]  storagePolicy(int newDropboxAccount, int newBoxAccount, ArrayList<DropboxStorageProvider> dsp, ArrayList<BoxStorageProvider> bsp){
 		int[] cuenta=new int[2];
 		long longDB=0;
 		long longB=0;
 		int intDB=0;
 		int intB=0;
+		//comprueba cual posee mas almacenamiento disponible
 		for(int i=0;i<newDropboxAccount;i++){
 			if(dsp.get(i).getSpaceUsed()>longDB && dsp.get(i).getNoLocation()){
 				longDB=dsp.get(i).getSpaceUsed();
@@ -29,6 +31,7 @@ public class StoragePolicyPlugin{
 				intB=i;
 			}
         }
+        //retorna la que posee mas almacenamiento
         if(longDB>longB){
         	cuenta[0]=0;
             cuenta[1]=intDB;

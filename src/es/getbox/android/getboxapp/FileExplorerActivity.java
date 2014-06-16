@@ -15,6 +15,7 @@ import android.widget.TextView;
 
 public class FileExplorerActivity extends ListActivity {
 
+   //atributos
    private List<String> item = null;
    private List<String> path = null;
    private String root="/";
@@ -22,6 +23,7 @@ public class FileExplorerActivity extends ListActivity {
    private String archivo_seleccionado;
    private String archivo_nombre;
 
+   //al seleccionar un archivo se llama a finish y retorna a la activity principal el archivo
    public void finish() {
        Intent data = new Intent();
        data.putExtra("archivo_seleccionado", archivo_seleccionado);
@@ -39,6 +41,7 @@ public class FileExplorerActivity extends ListActivity {
           getDir(root);
    }
 
+   //navegar entre directorios
    private void getDir(String dirPath){
        myPath.setText(dirPath);
        item = new ArrayList<String>();
@@ -69,6 +72,7 @@ public class FileExplorerActivity extends ListActivity {
 
    }
 
+   //seleccionar un archivo
    @Override
    protected void onListItemClick(ListView l, View v, int position, long id) {
      

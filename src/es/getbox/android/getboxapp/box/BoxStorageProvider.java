@@ -1,7 +1,6 @@
 package es.getbox.android.getboxapp.box;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
@@ -18,7 +17,6 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.box.boxandroidlibv2.BoxAndroidClient;
@@ -40,7 +38,7 @@ import es.getbox.android.getboxapp.utils.SQL;
 
 public class BoxStorageProvider { 
 
-	final static private String TAG = "BoxSP";
+	//Atributos
 	private Context context;
 	private int boxAccount;
 	private BoxAndroidClient mClient;
@@ -54,7 +52,7 @@ public class BoxStorageProvider {
 	private SharedPreferences mPrefs;
 	private GetBoxActivity gba;
 	
-	
+	//Constructor
     public BoxStorageProvider(Context context, int newBoxAccount,GetBoxActivity g){
     	this.context=context;
     	this.boxAccount=newBoxAccount;
@@ -67,11 +65,9 @@ public class BoxStorageProvider {
     	this.gba=g;
     }
         
-    public BoxAndroidClient getClient(){
-    	return this.mClient;
-    }
-        
-    public void onAuthenticated(int resultCode, Intent data) {
+    //terminar la autenticacion de una nueva cuenta 
+    @SuppressWarnings({ "unused", "static-access" })
+	public void onAuthenticated(int resultCode, Intent data) {
 		
     	if (Activity.RESULT_OK != resultCode) {
    		Toast.makeText(context, "Fallo al autenticar", Toast.LENGTH_LONG).show();
@@ -91,7 +87,6 @@ public class BoxStorageProvider {
                 @Override
                 public void onRefresh(IAuthData newAuthData) {
                 	try {
-                		Log.i(TAG,"refrescando");
                 		BoxOAuthToken oauthObject=mClient.getAuthData();
 						String refreshtoken=newAuthData.getRefreshToken();
 						sql.openDatabase();
@@ -120,59 +115,7 @@ public class BoxStorageProvider {
 
    }
     
-    public class RefreshCallback implements AsyncTaskCompleteListener<String>{
-    	public void onTaskComplete( String result){
-    		sql.openDatabase();
-    		BoxOAuthToken oauthObject=new BoxOAuthToken();
-        	oauthObject.setAccessToken(sql.getBoxAccessTokens(boxAccount));
-        	sql.closeDatabase();
-        	String reftoken=result;
-        	sql.openDatabase();
-        	if(!sql.getBoxRefreshTokens(boxAccount).equals(reftoken)){
-    			sql.updateBoxToken(boxAccount, reftoken);
-    		}
-        	sql.closeDatabase();
-        	sql.openDatabase();
-        	if(!sql.getBoxRefreshTokens(boxAccount).equals("")){
-        		Log.i(TAG,"hay refresh token");
-        		oauthObject.setRefreshToken(sql.getBoxRefreshTokens(boxAccount));
-        	}
-        	BoxAndroidClient client = new BoxAndroidClient(CLIENT_ID, CLIENT_SECRET, null, null);
-
-    		sql.closeDatabase();
-        	client.authenticate(oauthObject);
-    		if (client == null) {
-    			Toast.makeText(context, "Fallo al autenticar", Toast.LENGTH_LONG).show();
-    		}
-    		else {
-            	mClient=client;
-            	//mClient.
-            	mClient.addOAuthRefreshListener(new OAuthRefreshListener() {
-
-                 @Override
-                 public void onRefresh(IAuthData newAuthData) {
-                	 try{
-                		Log.i(TAG,"refrescando");
-                		BoxOAuthToken oauthObject=mClient.getAuthData();
-    					String refreshtoken=newAuthData.getRefreshToken();
-    					sql.openDatabase();
-    		           	sql.updateBoxToken(boxAccount, refreshtoken);
-    		            sql.closeDatabase();
-    		            mySql.actualizarBoxToken(getUserName(), refreshtoken, mPrefs.getString("userName",""));
-    		            oauthObject.setRefreshToken(refreshtoken);
-    		            mClient.authenticate(oauthObject);
-                	 }catch(Exception e){
-                		 
-                	 }
-                 }
-     
-             });
-            refresh();
-            }
-    		gba.actualize(boxAccount);
-    	}
-    }
-    
+    //terminar la autenticación de una cuenta ya vinculada
     public void autenticate(){ 
     	RefreshCallback c=new RefreshCallback();
 		this.sql.openDatabase();
@@ -180,12 +123,13 @@ public class BoxStorageProvider {
 		sql.closeDatabase();
     }
     
-    public void sincAutenticate(){ 
+    //terminar la autenticacion de una cuenta ya vinculada que da error
+    @SuppressWarnings({ "unused", "static-access" })
+	public void sincAutenticate(){ 
 		BoxOAuthToken oauthObject=new BoxOAuthToken();
     	this.sql.openDatabase();
     	oauthObject.setAccessToken(sql.getBoxAccessTokens(boxAccount));
     	if(!sql.getBoxRefreshTokens(boxAccount).equals("")){
-    		Log.i(TAG,"hay refresh token");
     		oauthObject.setRefreshToken(sql.getBoxRefreshTokens(boxAccount));
     	}
     	BoxAndroidClient client = new BoxAndroidClient(this.CLIENT_ID, this.CLIENT_SECRET, null, null);
@@ -203,7 +147,6 @@ public class BoxStorageProvider {
              @Override
              public void onRefresh(IAuthData newAuthData) {
             	 try{
-            		Log.i(TAG,"refrescando");
             		BoxOAuthToken oauthObject=mClient.getAuthData();
 					String refreshtoken=newAuthData.getRefreshToken();
 					sql.openDatabase();
@@ -222,6 +165,7 @@ public class BoxStorageProvider {
         }
     }
     
+    //refrescar el refresh token
     public void refresh(){
     	AsyncTask<Null, Integer, Boolean> task = new AsyncTask<Null, Integer, Boolean>() {
     		@Override
@@ -230,7 +174,6 @@ public class BoxStorageProvider {
     				mClient.getOAuthDataController().doRefresh();
     				return true;
     			} catch (AuthFatalFailureException e) {
-    				// TODO Auto-generated catch block
     				e.printStackTrace();
     				return false;
     			}
@@ -239,6 +182,7 @@ public class BoxStorageProvider {
         task.execute();
     }
     
+    //recuperar el nombre de usuario de la bd local
     public String getUserName(){
 		this.sql.openDatabase();
     	String account_aux= sql.getBoxUserName(boxAccount);
@@ -246,6 +190,7 @@ public class BoxStorageProvider {
 		return account_aux;
 	}
     
+    //recuperar el nombre de usuario de la bd remota
     public String getUser(){
     	BoxGetUser dgu=new BoxGetUser(mClient);
 		try {
@@ -259,6 +204,7 @@ public class BoxStorageProvider {
 		}
     }
     
+    //recuperar el espacio disponible de la bd local
     public long getSpaceUsed(){
 		this.sql.openDatabase();
     	long space= sql.getBoxSpace(boxAccount);
@@ -266,12 +212,14 @@ public class BoxStorageProvider {
 		return space;
 	}
     
+    //actualizar el espacio disponible en la bd local
     public void setSpaceUsed(long space){
 		this.sql.openDatabase();
     	sql.updateBoxSpace(boxAccount,space);
 		this.sql.closeDatabase();
 	}
     
+    //recuperar el espacio disponible en la bd remota
     public long getSpace(){
     	BoxGetSpace dgs=new BoxGetSpace(mClient,null);
 		try {
@@ -285,23 +233,20 @@ public class BoxStorageProvider {
 		}
     }
     
+    //actualizar el espacio disponible en la bd remota
     public void setSpace(){
     	BoxSpaceCallback bsc= new BoxSpaceCallback(); 
     	BoxGetSpace dgs=new BoxGetSpace(mClient,bsc);
 		dgs.execute();
     }
     
-    public class BoxSpaceCallback implements AsyncTaskCompleteListener<Long>{
-    	public void onTaskComplete( Long result){
-    		setSpaceUsed(result);
-    	}
-    }
-    
+    //listar un directorio
     public void getFiles(String directory_path,AsyncTaskCompleteListener<ArrayList<Item>> cb,boolean dialog){
     	BoxListDirectory task = new BoxListDirectory(directory_path,context,getUserName(),cb, this.getClient(),boxAccount);
         task.execute();
     }
     
+    //descargar un archivo
     public void downloadFile(String file_name, String file_id) {
         final String fPath= file_id;
         final String fName=  file_name;
@@ -317,7 +262,8 @@ public class BoxStorageProvider {
             private NotificationManager notificationManager;
             private Notification notification;
             
-            public void downloadNotification(){
+            @SuppressWarnings("deprecation")
+			public void downloadNotification(){
                	 String ns = Context.NOTIFICATION_SERVICE;
                     notificationManager = (NotificationManager) context.getSystemService(ns);
 
@@ -404,7 +350,8 @@ public class BoxStorageProvider {
                    return intent;
                }
         	
-            @Override
+            @SuppressWarnings("deprecation")
+			@Override
             protected void onPostExecute(Boolean result) {
             	if (result) {
             		contentText =  "Descarga completada";
@@ -452,6 +399,7 @@ public class BoxStorageProvider {
         task.execute();
     }
 
+    //subir un archivo
     public void uploadFile(String file_name, String file_id) {
         final String fPath=file_id;
         final String fName=file_name;
@@ -483,7 +431,6 @@ public class BoxStorageProvider {
                         BoxFileUploadRequestObject.uploadFileRequestObject(fPath, file.getName(), file, client.getJSONParser()));
                 }
                 catch (Exception e) {
-                	Log.i("BoxSP",e.getMessage()+", "+fName);
                 	return false;
                 }
                 return true;
@@ -493,6 +440,7 @@ public class BoxStorageProvider {
     }    
     
     
+    //eliminar un archivo
     public void deleteFile(String file_name, String file_id) {
         final String fPath=file_id;
         final String fName=file_name;
@@ -527,6 +475,7 @@ public class BoxStorageProvider {
         task.execute();
     }    
     
+    //eliminar una carpeta
     public void deleteFolder(String file_name, String file_id) {
         final String fPath=file_id;
         final String fName=file_name;
@@ -560,6 +509,7 @@ public class BoxStorageProvider {
         task.execute();
     }   
     
+    //crear una carpeta
     public void uploadFolder(String file_name, String file_id) {
         final String fPath=file_id;
         final String fName=file_name;
@@ -597,6 +547,75 @@ public class BoxStorageProvider {
     	directories.clear();
     	directories.add("0");
     	currentDirectory.clear();
+    }
+    
+    
+    //callbacks
+    
+    public class BoxSpaceCallback implements AsyncTaskCompleteListener<Long>{
+    	public void onTaskComplete( Long result){
+    		setSpaceUsed(result);
+    	}
+    }
+    
+    public class RefreshCallback implements AsyncTaskCompleteListener<String>{
+    	@SuppressWarnings("unused")
+		public void onTaskComplete( String result){
+    		sql.openDatabase();
+    		BoxOAuthToken oauthObject=new BoxOAuthToken();
+        	oauthObject.setAccessToken(sql.getBoxAccessTokens(boxAccount));
+        	sql.closeDatabase();
+        	String reftoken=result;
+        	sql.openDatabase();
+        	if(!sql.getBoxRefreshTokens(boxAccount).equals(reftoken)){
+    			sql.updateBoxToken(boxAccount, reftoken);
+    		}
+        	sql.closeDatabase();
+        	sql.openDatabase();
+        	if(!sql.getBoxRefreshTokens(boxAccount).equals("")){
+        		oauthObject.setRefreshToken(sql.getBoxRefreshTokens(boxAccount));
+        	}
+        	BoxAndroidClient client = new BoxAndroidClient(CLIENT_ID, CLIENT_SECRET, null, null);
+
+    		sql.closeDatabase();
+        	client.authenticate(oauthObject);
+    		if (client == null) {
+    			Toast.makeText(context, "Fallo al autenticar", Toast.LENGTH_LONG).show();
+    		}
+    		else {
+            	mClient=client;
+            	//mClient.
+            	mClient.addOAuthRefreshListener(new OAuthRefreshListener() {
+
+                 @Override
+                 public void onRefresh(IAuthData newAuthData) {
+                	 try{
+                		BoxOAuthToken oauthObject=mClient.getAuthData();
+    					String refreshtoken=newAuthData.getRefreshToken();
+    					sql.openDatabase();
+    		           	sql.updateBoxToken(boxAccount, refreshtoken);
+    		            sql.closeDatabase();
+    		            mySql.actualizarBoxToken(getUserName(), refreshtoken, mPrefs.getString("userName",""));
+    		            oauthObject.setRefreshToken(refreshtoken);
+    		            mClient.authenticate(oauthObject);
+                	 }catch(Exception e){
+                		 
+                	 }
+                 }
+     
+             });
+            refresh();
+            }
+    		gba.actualize(boxAccount);
+    	}
+    }
+    
+    
+    
+    //gets and sets
+    
+    public BoxAndroidClient getClient(){
+    	return this.mClient;
     }
     
     public ArrayList<String> getDirectories() {

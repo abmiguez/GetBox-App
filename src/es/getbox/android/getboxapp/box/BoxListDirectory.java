@@ -10,14 +10,9 @@ import com.box.boxjavalibv2.dao.BoxTypedObject;
 import com.box.restclientv2.exceptions.BoxSDKException;
 
 import es.getbox.android.getboxapp.interfaces.AsyncTaskCompleteListener;
-import es.getbox.android.getboxapp.mysql.MySQL;
 import es.getbox.android.getboxapp.utils.Item;
-import es.getbox.android.getboxapp.utils.SQL;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
-import android.util.Log;
-import android.widget.Toast;
 
 public class BoxListDirectory extends AsyncTask<Void, Void, ArrayList<Item>> {
 
@@ -25,17 +20,12 @@ public class BoxListDirectory extends AsyncTask<Void, Void, ArrayList<Item>> {
     private AsyncTaskCompleteListener<ArrayList<Item>>callback;
     private String mPath;
     private int boxAccount;
-    private Context context;
-    private String username;
-    
 	
 	public BoxListDirectory(String path,Context c, String u, AsyncTaskCompleteListener<ArrayList<Item>> cb, BoxAndroidClient client, int boxAccount){
 		this.mClient=client;
 		this.callback = cb;
 		this.mPath=path;
 		this.boxAccount=boxAccount;
-		this.context=c;
-		this.username=u;
     }
 	
     @Override
@@ -72,11 +62,9 @@ public class BoxListDirectory extends AsyncTask<Void, Void, ArrayList<Item>> {
         	}
         }
         catch (BoxSDKException e) {
-        	Log.i("Box","boxexcep"+e.getMessage());
         	Item item=new Item("fail","refresh","box",boxAccount);
     		result.add(item);
         }catch(Exception e){
-        	Log.i("a","ex");
         }
     	return result;
     }

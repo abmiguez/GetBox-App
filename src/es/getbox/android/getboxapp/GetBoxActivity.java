@@ -1,11 +1,11 @@
 package es.getbox.android.getboxapp;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
@@ -19,15 +19,12 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
-import android.view.WindowManager.LayoutParams;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
-
 import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -37,7 +34,6 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.Collections;
-
 import es.getbox.android.getboxapp.abstractionlayer.AbstractionLayer;
 import es.getbox.android.getboxapp.fragments.FragmentAbout;
 import es.getbox.android.getboxapp.fragments.FragmentArchives;
@@ -57,7 +53,6 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView.OnItemClickListener;
@@ -66,8 +61,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 public class GetBoxActivity extends Activity implements OnClickListener{
-	//Tag y SharedPreferences
-	private static final String TAG = "GetBox";
+	//SharedPreferences
 	private SharedPreferences mPrefs; 
 	
 	//Rutas
@@ -102,7 +96,6 @@ public class GetBoxActivity extends Activity implements OnClickListener{
     //Subidas de la camara
 	private final static int NEW_PICTURE = 1;
     private String mCameraFileName;
-    private boolean goFromUpload; 
    
 	//Capa de abstraccion
 	private AbstractionLayer aLayer;  
@@ -111,9 +104,9 @@ public class GetBoxActivity extends Activity implements OnClickListener{
 	private MySQL mySql;
 	
 	//Callback Listeners
-	public ItemCallback itemCallback;
-	public BooleanCallback boolCallback;
-	public IntCallback intCallback;
+	private ItemCallback itemCallback;
+	private BooleanCallback boolCallback;
+	private IntCallback intCallback;
 	 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -132,6 +125,7 @@ public class GetBoxActivity extends Activity implements OnClickListener{
         if(!file.exists())
             file.mkdirs();
         
+        //Inicializamos variables
         if (savedInstanceState != null) {
             mCameraFileName = savedInstanceState.getString("mCameraFileName");   
         }  
@@ -144,21 +138,22 @@ public class GetBoxActivity extends Activity implements OnClickListener{
 		mySql=new MySQL(this);
 		aLayer=new AbstractionLayer(this,this,itemCallback);
 		mPrefs = this.getSharedPreferences("LOGIN",0);
+		//Si acabamos de eliminar la cuenta
 		if (mPrefs.getBoolean("deleteAccount",false)) {
 			showToast("Cuenta eliminada");
 			SharedPreferences.Editor ed = mPrefs.edit();
 	        ed.putBoolean("deleteAccount",false);
 	        ed.commit();
 		}
+		//Si ya hemos iniciado sesión anteriormente
         if (mPrefs.getBoolean("logueado",false)) {
         	listDirectory=new ArrayList<Item>();
         	aLayer.startAutentication();
         	showMain();
         	button=2;
+        //Si todavía no se ha iniciado sesión hay que mostrar el login
         } else {
-
         	invalidateOptionsMenu();
-        	//noTitle();
         	boolCallback=new BooleanCallback();
         	intCallback=new IntCallback();
         	showLogIn();
@@ -168,21 +163,17 @@ public class GetBoxActivity extends Activity implements OnClickListener{
     
     protected void onResume() {
         super.onResume();
+        //Si estamos logueados y acabamos de vincular una cuenta, aqui se termina la vinculacion
         if(mPrefs.getBoolean("logueado",false)){
-	       //aLayer.finishAutentication();        
 	       if( aLayer.newDBAccountFinish()){
 	    	   restartAccountsFragment();
-	    	   Toast.makeText(this, "Autenticado con exito", Toast.LENGTH_LONG).show();
-	            
+	    	   Toast.makeText(this, "Autenticado con exito", Toast.LENGTH_LONG).show();        
 	       }
         }
     }
     
     protected void onPause(){
     	super.onPause();
-    	/*SharedPreferences.Editor ed = mPrefs.edit();
-        ed.putBoolean("logueado",mLoggedIn);
-        ed.commit();*/
     }
 
     protected void onStop(){
@@ -193,6 +184,7 @@ public class GetBoxActivity extends Activity implements OnClickListener{
     	super.onDestroy();
     }
 
+    //Crear el menu
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
     	MenuInflater inflater = getMenuInflater();
@@ -200,13 +192,13 @@ public class GetBoxActivity extends Activity implements OnClickListener{
         return super.onCreateOptionsMenu(menu);
     }
 
-    /* Called whenever we call invalidateOptionsMenu() */
+    //Preparamos el menu dependiendo de donde nos encontremos en la aplicacion
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        // If the nav drawer is open, hide action items related to the content view
-    	mPrefs = this.getSharedPreferences("LOGIN",0);
+        mPrefs = this.getSharedPreferences("LOGIN",0);
         if(mPrefs.getBoolean("logueado",false)){
-	    	boolean drawerOpen = mDrawerLayout.isDrawerOpen(mDrawerList);
+	    	//Si el drawer esta abierto no mostramos menu
+        	boolean drawerOpen = mDrawerLayout.isDrawerOpen(mDrawerList);
 			menu.findItem(R.id.actualizar).setVisible(!drawerOpen);
 			menu.findItem(R.id.nueva_carpeta).setVisible(!drawerOpen);
 			menu.findItem(R.id.subir).setVisible(!drawerOpen);
@@ -215,6 +207,7 @@ public class GetBoxActivity extends Activity implements OnClickListener{
 			menu.findItem(R.id.acercade).setVisible(!drawerOpen);
 			menu.findItem(R.id.sincronizar).setVisible(!drawerOpen);
 	    	if(!drawerOpen){
+	    		//Salir y acerca de siempre visibles el resto solo en ciertos casos
 		    	menu.findItem(R.id.sincronizar).setVisible(false);
 		    	menu.findItem(R.id.actualizar).setVisible(false);
 				menu.findItem(R.id.nueva_carpeta).setVisible(false);
@@ -223,17 +216,20 @@ public class GetBoxActivity extends Activity implements OnClickListener{
 				menu.findItem(R.id.salir).setVisible(true);
 				menu.findItem(R.id.anhadir).setVisible(false);
 		    	switch(actualDrawer){
+		    	//Si estamos en el navegador de archivos
 				case 0:
 					menu.findItem(R.id.actualizar).setVisible(true);
 					menu.findItem(R.id.nueva_carpeta).setVisible(true);
 					menu.findItem(R.id.subir).setVisible(true);
 					break;
+				//Si estamos en el gestor de cuentas
 				case 1:
 					menu.findItem(R.id.sincronizar).setVisible(true);
 					menu.findItem(R.id.anhadir).setVisible(true);			
 					break;
 				}
 	    	}   
+	    //Si el drawer esta abierto no mostramos menu
     	}else{
     		menu.findItem(R.id.sincronizar).setVisible(false);
 	    	menu.findItem(R.id.actualizar).setVisible(false);
@@ -246,17 +242,16 @@ public class GetBoxActivity extends Activity implements OnClickListener{
         return super.onPrepareOptionsMenu(menu);
     }
 
-    @Override
+    //Seleccionar accion del menu
+    @SuppressLint("SimpleDateFormat") @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-         // The action bar home/up action should open or close the drawer.
-         // ActionBarDrawerToggle will take care of this.
         if (mDrawerToggle.onOptionsItemSelected(item)) {
             return true;
         }
-        // Handle action buttons
+        //Diferentes acciones
         switch(item.getItemId()) {
+        //Subir una nueva foto, se llama a la camara del dispositivo y se saca la foto.
         case R.id.subir_foto:
-        	goFromUpload=true;
         	Intent intent = new Intent();
             // Picture from camera
             intent.setAction(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -264,6 +259,7 @@ public class GetBoxActivity extends Activity implements OnClickListener{
             Date date = new Date();
             DateFormat df = new SimpleDateFormat("yyyy-MM-dd-kk-mm-ss");
 
+            //La foto tambien se guarda en el dispositivo en la carpeta Getbox/Photos
             String newPicFile = df.format(date) + ".jpg";
             String outPath = rutaCamera + "/" + newPicFile;
             File outFile = new File(outPath);
@@ -271,17 +267,19 @@ public class GetBoxActivity extends Activity implements OnClickListener{
             mCameraFileName = outFile.toString();
             Uri outuri = Uri.fromFile(outFile);
             intent.putExtra(MediaStore.EXTRA_OUTPUT, outuri);
-            Log.i(TAG, "Importing New Picture: " + mCameraFileName);
             try {
                 startActivityForResult(intent, NEW_PICTURE);
             } catch (ActivityNotFoundException e) {
                 showToast("There doesn't seem to be a camera.");
             }
-            return true;	
+            return true;
+        //Salir de la aplicacion
         case R.id.salir:
         	this.finish();
-			return true;	
+			return true;
+		//Actualizar el directorio actual en el navegador de archivos
         case R.id.actualizar:
+        	//Si no hay red da error de red y sino actualiza
         	if(!isOnline()){
 				showToast("Error de red. Compruebe su conexión a Internet.");
 			}else{
@@ -290,18 +288,19 @@ public class GetBoxActivity extends Activity implements OnClickListener{
 	        	showDialog("Actualizando...");
 			}
         	return true;
-        
+        //Crea un dialog con un formulario para crear la nueva carpeta
         case R.id.nueva_carpeta:
         	AlertDialog dialog = crearCarpetaDialog();
         	dialog.show();
         	return true;
-        	
+        //Sincronizar las cuentas con la base de datos	
         case R.id.sincronizar:
         	showDialog("Sincronizando cuentas...");
         	aLayer.accountsSincToBD();
         	return true;
-        	
+        //Ventana de acerca de	
         case R.id.acercade:
+        	//Cambia el fragment
         	Fragment fragment;
             Bundle args = new Bundle();
         	fragment = new FragmentAbout();
@@ -313,17 +312,16 @@ public class GetBoxActivity extends Activity implements OnClickListener{
             FragmentManager fragmentManager = getFragmentManager();
             fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).commit();
         	return true;
-        
+        //Subir un archivo de la SDCard, se llama a la actividad de seleccion de archivo de la SD
         case R.id.subir_archivo:
-        	goFromUpload=true;
         	Intent file_explorer = new Intent(GetBoxActivity.this,FileExplorerActivity.class);
             startActivityForResult(file_explorer, 555);// <-- ¿?
             return true;
-            
+        //Vincular una nueva cuenta de dropbox    
         case R.id.anhadir_dropbox:
         	aLayer.newDBAccount();
             return true;
-            
+        //Vincular una nueva cuenta de box
         case R.id.anhadir_box:
         	aLayer.newBAccount(this);
             return true;
@@ -332,7 +330,7 @@ public class GetBoxActivity extends Activity implements OnClickListener{
         }
     }
 
-    /* The click listner for ListView in the navigation drawer */
+    //Click listener para el drawer
     private class DrawerItemClickListener implements ListView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -340,18 +338,21 @@ public class GetBoxActivity extends Activity implements OnClickListener{
         }
     }
    
+    //Seleccionar un item del drawer
     private void selectItem(int position) {
-        // update the main content by replacing fragments
-    	Fragment fragment;
+        Fragment fragment;
         Bundle args = new Bundle();
         fragment = new FragmentArchives();
         switch(position) {        
+        //Navegador de ficheros
         case 0:
             listDirectory.clear(); 
             aLayer.restartWidget(); 
+            //Comprobamos que hay red
             if(!isOnline()){
             	showToast("Error de red. Compruebe su conexión a Internet.");
-			}else{
+			//Si hay red sincronizamos, si no tenemos cuentas vinculadas muestra mensaje
+            }else{
 	        	showDialog("Sincronizando...");  	
 	            if(aLayer.zero()){
 	            	hideDialog();
@@ -364,32 +365,34 @@ public class GetBoxActivity extends Activity implements OnClickListener{
     		args.putInt(FragmentArchives.ARG_ARCHIVE_NUMBER, position);
             fragment.setArguments(args);
         break;
+        //Gestor de cuentas
         case 1:        	
         	fragment = new FragmentAccounts();
         	args.putInt(FragmentAccounts.ARG_ACCOUNTS_NUMBER, position);
         	args.putStringArrayList("arrayDB", aLayer.getDbAccounts());
         	args.putStringArrayList("arrayB", aLayer.getbAccounts());
+        	//Recupera el espacio disponible y el nombre de usuario
         	args.putLong("spaceAvaliable",aLayer.getSpaceAvaliable());
         	args.putString("userName", mPrefs.getString("userName",""));
         	fragment.setArguments(args);
         	boolArchives=false;
         break;
+        //Configuracion
         case 2:
         	fragment = new FragmentOptions();
     		args.putInt(FragmentOptions.ARG_OPTION_NUMBER, position);
+    		//Recupera el nombre de usuario
     		args.putString("userName", mPrefs.getString("userName",""));
             fragment.setArguments(args);
             boolArchives=false;
         break;
+        //Cerrar sesion
         case 3:
         	fragment = new FragmentClose();
         	boolArchives=false;
-        	mPrefs = getSharedPreferences("Splash",0);
-			SharedPreferences.Editor ed = mPrefs.edit();
-	        ed.putBoolean("splash",false);
-	        ed.commit();    				
-		    mPrefs = getSharedPreferences("LOGIN",0);
-	        ed = mPrefs.edit();
+        	//Ciera este intent y crea uno nuevo
+        	mPrefs = getSharedPreferences("LOGIN",0);
+		    SharedPreferences.Editor ed = mPrefs.edit();
 	        ed.putBoolean("logueado",false);
 	        ed.commit();
         	Intent intento = new Intent(this,GetBoxActivity.class);
@@ -401,12 +404,12 @@ public class GetBoxActivity extends Activity implements OnClickListener{
         fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).commit();
         
         actualDrawer=(short)position;
-        // update selected item and title, then close the drawer
         mDrawerList.setItemChecked(position, true);
         setTitle(mOptionTitles[position]);
         mDrawerLayout.closeDrawer(mDrawerList);  
     }
   
+    //Inicializa el listview del navegador de ficheros
     public void initArchives(View rootView){
     	Myonclicklistneer myonclicklistneer = new Myonclicklistneer();
 		archivos = (ListView) rootView.findViewById (R.id.archivos);
@@ -415,23 +418,22 @@ public class GetBoxActivity extends Activity implements OnClickListener{
         archivos.setOnItemClickListener(myonclicklistneer);
     }
     
+    //Poner un titulo en la barra de titulo de la app
     @Override
     public void setTitle(CharSequence title) {
         mTitle = title;
-        mPrefs = this.getSharedPreferences("LOGIN",0);
-	    getActionBar().setTitle(mTitle);
+        getActionBar().setTitle(mTitle);
     }
 
     /**
-     * When using the ActionBarDrawerToggle, you must call it during
-     * onPostCreate() and onConfigurationChanged()...
+     * Cuando se usa ActionBar hay que llamar a 
+     * onPostCreate() y a onConfigurationChanged()
      */
  
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        // Sync the toggle state after onRestoreInstanceState has occurred.
-        if(mPrefs.getBoolean("logueado",false)){
+       if(mPrefs.getBoolean("logueado",false)){
         	mDrawerToggle.syncState(); 
         }
         
@@ -440,13 +442,13 @@ public class GetBoxActivity extends Activity implements OnClickListener{
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        // Pass any configuration change to the drawer toggls
         mDrawerToggle.onConfigurationChanged(newConfig);
     }
     
+    //Si ya hay sesion iniciada se muestra las funcionalidades
     private void showMain(){
 		setContentView(R.layout.activity_getbox);
-
+		//Inicializar action bar
         mTitle = mDrawerTitle = getTitle();
         mOptionTitles = getResources().getStringArray(R.array.options_array);
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -482,19 +484,17 @@ public class GetBoxActivity extends Activity implements OnClickListener{
             }
         };
         mDrawerLayout.setDrawerListener(mDrawerToggle);
+        //Si no hay cuentas vinculadas se muestra el gestor de cuentas
         if(aLayer.zero()){
         	selectItem(1);
         	showToast("Sincroniza tus cuentas de Dropbox y Box pulsando en +");
+       //Si las hay, se muestra el navegador de ficheros
         }else{
             selectItem(0);        	
         }
     }
     
-    private void noTitle(){
-    	setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-    	requestWindowFeature(Window.FEATURE_NO_TITLE);
-    }
-    
+    //Muestra el formulario de login
     private void showLogIn(){ 
     	inRegister=false;
     	setContentView(R.layout.login);
@@ -505,6 +505,7 @@ public class GetBoxActivity extends Activity implements OnClickListener{
 		buttonLgnRegister.setOnClickListener(this);
     }
     
+    //Muestra el formulario de registro
     private void showRegister(){  
     	inRegister=true;
     	setContentView(R.layout.register);
@@ -514,18 +515,21 @@ public class GetBoxActivity extends Activity implements OnClickListener{
 		buttonRgstrRegister.setOnClickListener(this);
     }
     
-    
+    //Mostrar un dialog con un mensaje, se utiliza para los mensajes de cargando...,
+    //actualizando..., etc
     private void showDialog(String message){
     	dialog.setMessage(message); 
 		dialog.show();    	
     }
-    
+   
+    //Ocultar el dialog
     public void hideDialog(){
     	if (dialog.isShowing()) { 
         	dialog.dismiss(); 
         } 
     }
     
+    //Incializa el dialog para crear una neuva carpeta
     private AlertDialog crearCarpetaDialog(){ 
     	AlertDialog.Builder builder = new AlertDialog.Builder(this);
     	final EditText nCarpeta = new EditText(this);
@@ -533,6 +537,7 @@ public class GetBoxActivity extends Activity implements OnClickListener{
     	builder.setView(nCarpeta); 
     	builder.setTitle("Nueva Carpeta"); 
    	 	builder.setMessage("Escribe el nombre de la carpeta"); 
+   	 	//Crear la carpeta
    	 	builder.setPositiveButton("Crear", new DialogInterface.OnClickListener() { 
    	 		public void onClick(DialogInterface dialog, int whichButton) { 	
 	   	 		if(!isOnline()){
@@ -544,10 +549,11 @@ public class GetBoxActivity extends Activity implements OnClickListener{
 				}
    	 		} 
    	 	});
+   	 	//Cancelar el creado
    	 	builder.setNeutralButton("Cancelar", new DialogInterface.OnClickListener() { 
    	 		public void onClick(DialogInterface dialog, int whichButton) { 
    	 			
-   		 	}//OnClick 
+   		 	} 
    	 	});
    	 	AlertDialog dialog = builder.create();
    	 	nCarpeta.requestFocus();
@@ -555,32 +561,38 @@ public class GetBoxActivity extends Activity implements OnClickListener{
     	return dialog;
      } 
     
+    //On click 
     public void onClick(View v) { 
     	switch (button) {
     		case 0:
+    			//boton de login
     			if(v.getId()==buttonLgnLogin.getId()){
     				EditText lgnUser=(EditText) findViewById(R.id.edtTxtLgnUser);
     				EditText lgnPass=(EditText) findViewById(R.id.edtTxtLgnPass);
     				InputMethodManager inputMethodManager = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
     		        inputMethodManager.hideSoftInputFromWindow(lgnUser.getWindowToken(), 0);
     		        inputMethodManager.hideSoftInputFromWindow(lgnPass.getWindowToken(), 0);
+    		        //si no hay red
     		        if(!isOnline()){
 						showToast("Error al conectar con la base de datos");
 					}else{
+						//si deja el usuario vacion
 						if(lgnUser.getText().toString().equals("")){
 							showToast("Introduce un usuario válido");
+						//logueandose
 						}else{
 							showDialog("Logueandose, espere...");
 							mySql.login(lgnUser.getText().toString(),lgnPass.getText().toString(),boolCallback);
 						}
 					}
 				}
+    			//acceder a la ventana de registro
 				if(v.getId()==buttonLgnRegister.getId()){
 					showRegister();
 					button=1;
 				}
     		break;
-    		
+    		//boton de registro
     		case 1:
 				if(v.getId()==buttonRgstrRegister.getId()){
     				EditText regUser=(EditText) findViewById(R.id.edtTxtRgstrUser);
@@ -594,15 +606,19 @@ public class GetBoxActivity extends Activity implements OnClickListener{
     		        inputMethodManager.hideSoftInputFromWindow(regPass.getWindowToken(), 0);
     		        inputMethodManager.hideSoftInputFromWindow(regEmail.getWindowToken(), 0);
     		        inputMethodManager.hideSoftInputFromWindow(regName.getWindowToken(), 0);
-	    			if(regUser.getText().toString().equals("") || regPass.getText().toString().equals("") || regRePass.getText().toString().equals("")
+	    			//si hay campos incompletos
+    		        if(regUser.getText().toString().equals("") || regPass.getText().toString().equals("") || regRePass.getText().toString().equals("")
     						|| regEmail.getText().toString().equals("") || regName.getText().toString().equals("")){
 	    				showToast("Hay campos incompletos");
 	    			}else{
+	    				//si las contraseñas no coinciden
     		        	if(!regRePass.getText().toString().equals(regPass.getText().toString())){
     		        		showToast("Las contraseñas no coiciden");
 	    				}else{
+	    					//si no hay red
 	    					if(!isOnline()){
 	    						showToast("Error al conectar con la base de datos");
+	    					//registrando
 	    					}else{
 	    						mySql.comprobarDuplicidad(regUser.getText().toString(),
 	    							regPass.getText().toString(),
@@ -614,23 +630,30 @@ public class GetBoxActivity extends Activity implements OnClickListener{
 				}
     		break;
     	}
-	}//onClick
-        
+	}
+    
+    //mostrar o no toast de error
     public void setErrorToast(boolean e){
     	errorToast=e;
     }
     
-    public void onListingComplete(ArrayList<Item> result) {
+    //proceso de listar un directorio, se llamara tantas veces a esta funcion
+    //como cuentas de almacenamiento haya vinculadas
+    private void onListingComplete(ArrayList<Item> result) {
     	try{
     		archivos = (ListView) findViewById (R.id.archivos);
+    		//no se permite la interacion con el listview hasta que se listen todos
     		archivos.setEnabled(false);
     		
 	    	if(result.size()>0){
+	    		//si no listamos nada de una cuenta de box
 	    		if(result.get(0).getName().equals("")){
 	    			aLayer.saveDirectory(result,result.get(0).getLocation(),result.get(0).getAccount());
 	    		}else{
+	    			//si no listamos nada de una cuenta de dropbox
 	    			if(result.get(0).getName().equals("fail") && result.get(0).getId().equals("refresh")){
-	    				errorToast=false;	    				    				
+	    				errorToast=false;
+	    			//si listamos algo
 	    			}else{
 			    		aLayer.saveDirectory(result,result.get(0).getLocation(),result.get(0).getAccount());
 				    	for(int i=0;i<result.size();i++){
@@ -640,6 +663,7 @@ public class GetBoxActivity extends Activity implements OnClickListener{
 	    		}
 	    	}
 
+	    	//vamos añadiendo ficheros al listview y ordenandolos alfabeticamente
 	    	Set<Item> hs = new LinkedHashSet<Item>();
 	        hs.addAll(listDirectory);
 	        listDirectory.clear();
@@ -648,7 +672,8 @@ public class GetBoxActivity extends Activity implements OnClickListener{
     		Myonclicklistneer myonclicklistneer = new Myonclicklistneer();
     		registerForContextMenu(archivos);
             archivos.setOnItemClickListener(myonclicklistneer);
-
+            //si ya listamos todas las cuentas aceptamos la interaccion con el widget y 
+            //ocultamos el dialog
             boolean auxBool=aLayer.enableWidget();
 	        archivos.setEnabled(auxBool);
 	        if(auxBool){
@@ -663,19 +688,22 @@ public class GetBoxActivity extends Activity implements OnClickListener{
     	}catch(Exception e){}
     }
     
+    //click listener del listview de archivos
     class Myonclicklistneer implements OnItemClickListener
     {
 
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long arg3) {
         	if( (listDirectory.get(position).getName()).indexOf(".")<0 ) {
+        		//si no hay red
         		if(!isOnline()){
 					showToast("Error de red. Compruebe su conexión a Internet.");
-				}else{	
+				//si hay red
+        		}else{	
 	        		archivos = (ListView) findViewById (R.id.archivos);
 	        		archivos.setEnabled(false);
 	        		String aux=listDirectory.get(position).getName();
-	        		
+	        		//listamos el directorio
 	        		aLayer.navigateTo(listDirectory.get(position).getName(),itemCallback);
 	        		listDirectory.clear();
 	        		mTitle = aux;
@@ -687,10 +715,13 @@ public class GetBoxActivity extends Activity implements OnClickListener{
 
     }
     
-    class CustomIconLabelAdapter extends ArrayAdapter {
+    //iconos del listview dependiendo del tipo de archivo
+    @SuppressWarnings("rawtypes")
+	class CustomIconLabelAdapter extends ArrayAdapter {
  		Context context;
 
- 		CustomIconLabelAdapter(Context context) {
+ 		@SuppressWarnings("unchecked")
+		CustomIconLabelAdapter(Context context) {
  			super(context, R.layout.row_icon_label, listDirectory);
  			this.context = context;			
  		}
@@ -705,7 +736,7 @@ public class GetBoxActivity extends Activity implements OnClickListener{
  			ImageView icon = (ImageView) row.findViewById(R.id.icon);
  			
  			label.setText(listDirectory.get(position).getName());
- 		
+ 			//dependiendo de que tipo de archivo sea le ponemos un icono distinto
  			String name=listDirectory.get(position).getName();
  			if( !name.contains(".") ) {
  				icon.setImageResource(R.drawable.foldericon);
@@ -792,10 +823,10 @@ public class GetBoxActivity extends Activity implements OnClickListener{
  				}
  			}
  			return (row);
- 		}// getView
- 	}// CustomIconLabelAdapter
+ 		}
+ 	}
     
-    
+    //Crear el menu contextual
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v,
                                     ContextMenuInfo menuInfo)
@@ -803,7 +834,7 @@ public class GetBoxActivity extends Activity implements OnClickListener{
         super.onCreateContextMenu(menu, v, menuInfo);
      
         MenuInflater inflater = getMenuInflater();
-        
+        //menu para los ficheros
         if(v.getId() == R.id.archivos)
         {
             AdapterView.AdapterContextMenuInfo info =
@@ -813,11 +844,12 @@ public class GetBoxActivity extends Activity implements OnClickListener{
             		listDirectory.get(info.position).getName());
             
             inflater.inflate(R.menu.context_menu_archivos, menu);
+            //si es una carpeta no permite descargar
             if((listDirectory.get(info.position).getName()).indexOf(".")<0){
                 menu.findItem(R.id.descargar).setVisible(false);
         	}
         }
-        
+        //menu para las cuentas de dropbox
         if(v.getId() == R.id.DBAccounts)
         {
             AdapterView.AdapterContextMenuInfo info = 
@@ -828,7 +860,7 @@ public class GetBoxActivity extends Activity implements OnClickListener{
      
             inflater.inflate(R.menu.context_menu_dbaccounts, menu);
         }
-        
+        //menu para las cuentas de box
         if(v.getId() == R.id.BAccounts)
         {
             AdapterView.AdapterContextMenuInfo info =
@@ -840,16 +872,20 @@ public class GetBoxActivity extends Activity implements OnClickListener{
         }
     }
     
+    //seleccionar un item del menu contextual
     @Override
     public boolean onContextItemSelected(MenuItem item) {
     	AdapterContextMenuInfo info =
     	        (AdapterContextMenuInfo) item.getMenuInfo();
         switch (item.getItemId()) {
+        	//descargar un archivo
             case R.id.descargar:
             	aLayer.download(listDirectory.get(info.position));
             	return true;
+            //borrar un archivo
             case R.id.borrar:
             	final int index=info.position;
+            	//dialog que pide confirmacion
             	DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
             	    @Override
             	    public void onClick(DialogInterface dialog, int which) {
@@ -872,7 +908,9 @@ public class GetBoxActivity extends Activity implements OnClickListener{
             	builder.setMessage("¿Seguro que deseas borrar?").setPositiveButton("Si", dialogClickListener)
             	    .setNegativeButton("No", dialogClickListener).show();
                 return true;
+            //desvincular cuenta de dropbox
             case R.id.deleteDBAccount:
+            	//comprueba si hay red
             	if(!isOnline()){
 					Toast.makeText(this, "Error al conectar con la base de datos", Toast.LENGTH_LONG).show();		
 				}else{
@@ -880,7 +918,9 @@ public class GetBoxActivity extends Activity implements OnClickListener{
 	            	restartAccountsFragment();
 				}
     			return true;
+    		//desvincular cuenta de box
             case R.id.deleteBAccount:
+            	//comprueba si hay red
             	if(!isOnline()){
 					Toast.makeText(this, "Error al conectar con la base de datos", Toast.LENGTH_LONG).show();		
 				}else{
@@ -893,6 +933,7 @@ public class GetBoxActivity extends Activity implements OnClickListener{
         }
     }
     
+    //Restart del gestor de cuentas al vincular una nueva cuenta para que pueda aparecer
     public void restartAccountsFragment(){
     	Fragment fragment;
         Bundle args = new Bundle();
@@ -910,14 +951,16 @@ public class GetBoxActivity extends Activity implements OnClickListener{
     
     
     
- // This is what gets called on finishing a media piece to import
-    @Override
+ 	//Resultado que producen ciertas actividades
+    @SuppressWarnings("static-access")
+	@Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == NEW_PICTURE) {
-        	if(!isOnline()){
+        //subida de la camara
+    	if (requestCode == NEW_PICTURE) {
+        	//comprobamos que hay red
+    		if(!isOnline()){
 				showToast("Error de red. Compruebe su conexión a Internet.");
 			}else{
-        	// return from file upload
 	            if (resultCode == Activity.RESULT_OK) {
 	                Uri uri = null;
 	                if (data != null) {
@@ -926,18 +969,16 @@ public class GetBoxActivity extends Activity implements OnClickListener{
 	                if (uri == null && mCameraFileName != null) {
 	                    uri = Uri.fromFile(new File(mCameraFileName));
 	                }
-	                Log.i(TAG,mCameraFileName);
 	                if (uri != null) {
 	                	aLayer.uploadFile(mCameraFileName);
 	                	orderDirectory();
 	                }
-	            }else {
-	                Log.w(TAG, "Unknown Activity Result from mediaImport: "
-	                        + resultCode);
 	            }
 			}
         }
+    	//subir un archivo
         if (resultCode == RESULT_OK && requestCode == 555) {
+        	//comprobamos que hay red
         	if(!isOnline()){
 				showToast("Error de red. Compruebe su conexión a Internet.");
 			}else{
@@ -947,10 +988,10 @@ public class GetBoxActivity extends Activity implements OnClickListener{
 	                orderDirectory();
 	            }
 	            }catch(NullPointerException e){
-	            	Log.i(TAG,"Se ha saido del gestor sin seleccionar archivo");
 	            }
 			}	
         }
+        //finalizar de vincular una cuenta de box
         if (requestCode == aLayer.AUTH_BOX_REQUEST && aLayer.isNewBAccount()) {
         	aLayer.newBAccountFinish(resultCode, data);
         	restartAccountsFragment();
@@ -958,12 +999,14 @@ public class GetBoxActivity extends Activity implements OnClickListener{
         
     }
     
+    //actualizar el directorio actual
     public void actualizarDirectorio(){
     	aLayer.actualize(itemCallback);
     }
     
+    //ordear alfabeticamente el listview, y carpetas y archivos por separado
     private void orderDirectory(){
-    	
+    	//por un lado los archivos
 		ArrayList<Item> aux=new ArrayList<Item> ();
         for(int i=0; i<listDirectory.size();i++){
         	if(listDirectory.get(i).getName().indexOf(".")>=0){
@@ -973,13 +1016,13 @@ public class GetBoxActivity extends Activity implements OnClickListener{
         
         Collections.sort(aux, new Comparator<Item>(){
        	 
-			@Override
 			public int compare(Item o1, Item o2) {
 				return (o1.getName().toLowerCase()).compareTo(o2.getName().toLowerCase());
 			}
 			
 			
 		});
+        //por otro las carpetas
         ArrayList<Item> auxx=new ArrayList<Item> ();
         for(int i=0; i<listDirectory.size();i++){
         	if(listDirectory.get(i).getName().indexOf(".")<0){
@@ -997,7 +1040,7 @@ public class GetBoxActivity extends Activity implements OnClickListener{
 		});
         
         listDirectory.clear();
-
+        //lo unimos
         for(int i=0; i<auxx.size();i++){
         	listDirectory.add(auxx.get(i));
         }
@@ -1011,13 +1054,14 @@ public class GetBoxActivity extends Activity implements OnClickListener{
 		archivos.setAdapter(new CustomIconLabelAdapter(GetBoxActivity.this));
     }
     
+    //mostrar toast
     private void showToast(String msg) {
         Toast error = Toast.makeText(this, msg, Toast.LENGTH_LONG);
         error.show();
     }
     
-    
-    public boolean isOnline() {
+    //comprobar si hay red
+    private boolean isOnline() {
     	ConnectivityManager cm = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
 
     	NetworkInfo netInfo = cm.getActiveNetworkInfo();
@@ -1029,26 +1073,34 @@ public class GetBoxActivity extends Activity implements OnClickListener{
     	return false;
     }
     
+    //acciones del boton atras
     public void onBackPressed(){
+    	//si no estamos en el navegador de ficheros
     	if(boolArchives==false){
     		mPrefs = this.getSharedPreferences("LOGIN",0);
             if(!mPrefs.getBoolean("logueado",false)){
-	    		if(!inRegister){
+	    		//si estamos en login cerramos la app
+            	if(!inRegister){
 	        		this.finish();
-	    		}else{
+	    		//si estamos en registro volvemos al login
+            	}else{
 	    			showLogIn();
 					button=0;
 	    		}
     		}else{
+    			//si estamos en acerca de volcemos al anterior
     			if(actualDrawer==7){
 	    			selectItem(lastDrawer);
+    			//sino cerramos la app
     			}else{
     				this.finish();
     			}
     		}
-    		
+    	//si estamos en el navegador de ficheros	
     	}else{
+    		//si se permite volve atras
     		if(aLayer.enableBack()){
+    			//se va al directorio anterior6
 	    		if(aLayer.goBack(itemCallback)){
 	    			listDirectory.clear();
 	    			if(aLayer.getPosicionActual()>0){
@@ -1060,7 +1112,8 @@ public class GetBoxActivity extends Activity implements OnClickListener{
 	    				mTitle = mOptionTitles[0];
 	                    getActionBar().setTitle(mTitle);
 	                    showDialog("Cargando...");
-	    			}
+	    			}	
+	    		//si estamos en el directorio raiz se cierra la app
 	    		}else{
 	    			this.finish();
 	    		}
@@ -1069,6 +1122,7 @@ public class GetBoxActivity extends Activity implements OnClickListener{
     	
     }   
     
+    //finalizar el login
     public void finishLogin(){        
         Intent intent = new Intent(this,GetBoxActivity.class);
 		startActivity(intent);
@@ -1076,20 +1130,22 @@ public class GetBoxActivity extends Activity implements OnClickListener{
         this.finish();
     }
     
+    //actualizar una cuenta de box que de error al listar
     public void actualize(int boxAccount){
     	if(!isOnline()){
 			showToast("Error de red. Compruebe su conexión a Internet.");
 		}else{
-			//listDirectory.clear();
-        	aLayer.actualizeBox(itemCallback,boxAccount);
+			aLayer.actualizeBox(itemCallback,boxAccount);
         	showDialog("Sincronizando...");
 		}	
     }
     
-    public void login(boolean result){
+    //login
+    private void login(boolean result){
 		EditText lgnUser=(EditText) findViewById(R.id.edtTxtLgnUser);
 		EditText lgnPass=(EditText) findViewById(R.id.edtTxtLgnPass);
-    	if(result){
+    	//login correcto
+		if(result){
 			mPrefs = getSharedPreferences("Splash",0);
 			SharedPreferences.Editor ed = mPrefs.edit();
 	        ed.putBoolean("splash",true);
@@ -1102,22 +1158,24 @@ public class GetBoxActivity extends Activity implements OnClickListener{
 	        ed.commit();
 	        
 	       	aLayer.sincToBD();
-		}else{  
+		//fallo de autenticacion
+    	}else{  
 			hideDialog();
 			showToast("Nombre de usuario o contraseña incorrectos");
-			//lgnUser.setText("");
 			lgnPass.setText("");   
 			
 		}
     }
     
-    public void comprobarDuplicidad(int result){
+    //comprobar que los campos esten correctos en el registro
+    private void comprobarDuplicidad(int result){
     	EditText regUser=(EditText) findViewById(R.id.edtTxtRgstrUser);
 		EditText regPass=(EditText) findViewById(R.id.edtTxtRgstrPass);
 		EditText regEmail=(EditText) findViewById(R.id.edtTxtRgstrMail);
 		EditText regName=(EditText) findViewById(R.id.edtTxtRgstrName);
     	switch (result){
-		case 0:
+		//registro correcto
+    	case 0:
 			mySql.registrar(regUser.getText().toString(),
 					regPass.getText().toString(),
 					regEmail.getText().toString(),regName.getText().toString());
@@ -1125,43 +1183,53 @@ public class GetBoxActivity extends Activity implements OnClickListener{
 			showLogIn();
 			button=0;
 		break;
-		case 2:
+		//nombre de usuario en uso
+    	case 2:
 			hideDialog();
 			Toast.makeText(this, "El nombre de usuario no está disponible", Toast.LENGTH_LONG).show();	
 			regUser.setText("");
 		break;
-		case 3:
+		//email en uso
+    	case 3:
 			hideDialog();
 			Toast.makeText(this, "El email introducido ya está siendo utilizado en otra cuenta", Toast.LENGTH_LONG).show();
 			regEmail.setText("");
 		break;
-		case 5:
+		//registro con exito si el usuario estaba borrado
+    	case 5:
 			hideDialog();
 			Toast.makeText(this, "El usuario ha sido registrado correctamente",
     				Toast.LENGTH_LONG).show();
 			showLogIn();
 			button=0;
 		break;
-		case 4:
+		//error de red o de bd
+    	case 4:
 			hideDialog();
 			showToast("Error al conectar con la base de datos"); 
 		break;
 	}
     }
     
-    public class ItemCallback implements AsyncTaskCompleteListener<ArrayList<Item>>{
+    
+    //Callbacks
+    
+    //Para listar archivos
+    private class ItemCallback implements AsyncTaskCompleteListener<ArrayList<Item>>{
     	public void onTaskComplete( ArrayList<Item> result){
     		onListingComplete(result);
     	} 
     }
     
-    public class BooleanCallback implements AsyncTaskCompleteListener<Boolean>{
+    //Para hacer el login
+    private class BooleanCallback implements AsyncTaskCompleteListener<Boolean>{
     	public void onTaskComplete( Boolean result){
     		login(result);
     	}
     }
     
-    public class IntCallback implements AsyncTaskCompleteListener<Integer>{
+    //Para hacer el registro
+    private class IntCallback implements AsyncTaskCompleteListener<Integer>{
     	public void onTaskComplete( Integer result){
     		comprobarDuplicidad(result);
     	}

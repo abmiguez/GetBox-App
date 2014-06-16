@@ -12,8 +12,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.util.Log;
-import android.widget.Toast;
 
 import com.dropbox.client2.DropboxAPI;
 import com.dropbox.client2.DropboxAPI.DropboxFileInfo;
@@ -45,7 +43,8 @@ public class DropboxDownloadFile extends AsyncTask<Void, Long, Boolean> {
         mPath = dropboxPath;        
     }
     
-    public void downloadNotification(){
+    @SuppressWarnings("deprecation")
+	private void downloadNotification(){
     	 String[] resul = mPath.split("/");
     	 String ns = Context.NOTIFICATION_SERVICE;
          notificationManager = (NotificationManager) mContext.getSystemService(ns);
@@ -139,7 +138,8 @@ public class DropboxDownloadFile extends AsyncTask<Void, Long, Boolean> {
     	downloadNotification();
     }
 
-    @Override
+    @SuppressWarnings("unused")
+	@Override
     protected Boolean doInBackground(Void... params) {
     	FileOutputStream outputStream = null;
     	try {
@@ -147,7 +147,7 @@ public class DropboxDownloadFile extends AsyncTask<Void, Long, Boolean> {
     		outputStream = new FileOutputStream(file);
     		DropboxFileInfo info = mApi.getFile(mPath, null,
     							outputStream,null);
-    		Log.i("DropboxSP","The file's rev is: " + info.getMetadata().rev);
+    		
         } catch (Exception e) {
         	return false;
         } finally {
@@ -163,9 +163,9 @@ public class DropboxDownloadFile extends AsyncTask<Void, Long, Boolean> {
 		return true;
     }
 
-    @Override
+    @SuppressWarnings("deprecation")
+	@Override
     protected void onPostExecute(Boolean result) {
-    	String[] resul = mPath.split("/");
     	if (result) {
     		contentText =  "Descarga completada";
     		tickerText = "Descargado con éxito";
@@ -185,10 +185,5 @@ public class DropboxDownloadFile extends AsyncTask<Void, Long, Boolean> {
             notificationManager.notify(HELLO_ID, notification);
         	
         }
-    }
-
-    private void showToast(String msg) {
-        Toast error = Toast.makeText(mContext, msg, Toast.LENGTH_LONG);
-        error.show();
     }
 }

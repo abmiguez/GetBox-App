@@ -182,7 +182,6 @@ int layout login 0x7f030013
 int layout login1 0x7f030014
 int layout register 0x7f030015
 int layout row_icon_label 0x7f030016
-int layout splash_screen 0x7f030017
 int menu context_menu_archivos 0x7f090000
 int menu context_menu_baccounts 0x7f090001
 int menu context_menu_dbaccounts 0x7f090002

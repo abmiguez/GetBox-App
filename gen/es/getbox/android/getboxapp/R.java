@@ -211,7 +211,6 @@ public final class R {
         public static final int login1=0x7f030014;
         public static final int register=0x7f030015;
         public static final int row_icon_label=0x7f030016;
-        public static final int splash_screen=0x7f030017;
     }
     public static final class menu {
         public static final int context_menu_archivos=0x7f090000;

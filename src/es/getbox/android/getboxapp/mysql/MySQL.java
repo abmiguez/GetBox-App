@@ -1,8 +1,6 @@
 package es.getbox.android.getboxapp.mysql;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang.ObjectUtils.Null;
 import org.jasypt.util.password.StrongPasswordEncryptor;
@@ -11,41 +9,37 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
-import android.util.Log;
 import android.widget.Toast;
 
 
 import es.getbox.android.getboxapp.interfaces.AsyncTaskCompleteListener;
-import es.getbox.android.getboxapp.utils.Item;
 import es.getbox.android.getboxapp.utils.SQL;
 
 public class MySQL {
 
-	static String host      = "193.147.87.47"; 
-	static String baseDatos = "getboxapp";
-    static String usuario   = "getboxuser";
-    static String password  = "getboxpass";
-    static String cadCon	= "jdbc:mysql://"+host+"/"+baseDatos;
+	//atributos de conexion
+	private static String host      = "193.147.87.47"; 
+	private static String baseDatos = "getboxapp";
+	private static String usuario   = "getboxuser";
+	private static String password  = "getboxpass";
+	private static String cadCon	= "jdbc:mysql://"+host+"/"+baseDatos;
 
-    public static Connection con;
-    public static Statement st;
+	private static Connection con;
+	private static Statement st;
     
+    //contexto
     private Context context;
 
+    //base de datos local
 	private SQL sql;
     
+	//constructor
     public MySQL(Context context){
     	this.context=context;
 		sql=new SQL(context);
     }
     
-    /**
-     * Crea la conexion con la BBD
-     * @throws ClassNotFoundException
-     * @throws IllegalAccessException
-     * @throws InstantiationException
-     * @throws SQLException
-     */
+    //crea la conexion con la base de datos
     public static void crearConexion() throws InstantiationException, IllegalAccessException, ClassNotFoundException {
        
     	Class.forName( "com.mysql.jdbc.Driver").newInstance();
@@ -59,9 +53,7 @@ public class MySQL {
         
     }
 
-    /**
-     * Cierra la conexion con la BBDD
-     */
+    //cierra la conexion con la base de datos
     public static void cerrarConexion() {
         try {
             if (st != null) {
@@ -74,6 +66,7 @@ public class MySQL {
         }
     }
     
+    //elimina un usuario
     public boolean deleteUser(String user){
     	final String username=user;
     	AsyncTask<Null, Integer, Boolean> task = new AsyncTask<Null, Integer, Boolean>() {
@@ -85,8 +78,7 @@ public class MySQL {
     	            crearConexion();
     	            st.executeUpdate( q );
     	        } catch (Exception e) {
-    	        	Log.i("ex",""+e.getMessage());
-        	    	return false;       	    	
+    	        	return false;       	    	
     	        } 
     	    	cerrarConexion();
     	    	
@@ -96,8 +88,7 @@ public class MySQL {
     	            crearConexion();
     	            st.executeUpdate( q );
     	        } catch (Exception e) {
-    	        	Log.i("ex",""+e.getMessage());
-        	    	return false;       	    	
+    	        	return false;       	    	
     	        } 
     	    	cerrarConexion();
     	    	
@@ -107,8 +98,7 @@ public class MySQL {
     	            crearConexion();
     	            st.executeUpdate( q );
     	        } catch (Exception e) {
-    	        	Log.i("ex",""+e.getMessage());
-        	    	return false;       	    	
+    	        	return false;       	    	
     	        } 
     	    	cerrarConexion();
     	    	
@@ -123,6 +113,7 @@ public class MySQL {
         }
     }
     
+    //cambia la contraseña de un usuario
     public boolean refreshUser(String user, String password){
     	final String username=user;
     	final String pass=password;
@@ -140,8 +131,7 @@ public class MySQL {
     	            crearConexion();
     	            st.executeUpdate( q );
     	        } catch (Exception e) {
-    	        	Log.i("ex",""+e.getMessage());
-        	    	return false;       	    	
+    	        	return false;       	    	
     	        } 
     	    	cerrarConexion();
     	    	
@@ -156,6 +146,7 @@ public class MySQL {
         }
     }
     
+    //comprueba que los datos del login sean correctos
     public void login(String user, String pass,AsyncTaskCompleteListener<Boolean> c){
     	final String username=user;
     	final String passwrd=pass;
@@ -180,8 +171,7 @@ public class MySQL {
     	            }
     	            rs.close();
     	        } catch (Exception e) {
-    	            Log.i("ex",""+e.getMessage());
-        	    	a=false;
+    	            a=false;
         	    	x=true;        	    	
     	        } finally {
     	        	if(x!=true){
@@ -198,6 +188,7 @@ public class MySQL {
         task.execute();
     }
     
+    //recupera el refresh token de una cuenta de box
     public void getRefresh(String userid, String user, AsyncTaskCompleteListener<String> c){
     	final String username=user;
     	final String id=userid;
@@ -216,7 +207,6 @@ public class MySQL {
     	            }
     	            rs.close();
     	        } catch (Exception e) {
-    	            Log.i("ex",""+e.getMessage());
     	            return "";
     	        }
     	        cerrarConexion();
@@ -233,6 +223,7 @@ public class MySQL {
 		
     }
 
+    //comprueba que la contraseña de un usuario es correcta
     public boolean comprobarContrasena(String user, String pass){
     	final String username=user;
     	final String passwrd=pass;
@@ -256,8 +247,7 @@ public class MySQL {
     	            }
     	            rs.close();
     	        } catch (Exception e) {
-    	            Log.i("ex",""+e.getMessage());
-        	    	a=false;
+    	            a=false;
         	    	x=true;        	    	
     	        } finally {
     	        	if(x!=true){
@@ -272,7 +262,6 @@ public class MySQL {
 		    try{
 		    	return task.get();
 		    }catch(Exception e){
-		    	Log.i("MYSQL",""+e.getMessage());
 		    	return false;
 		    }
         }else{
@@ -280,6 +269,7 @@ public class MySQL {
         }
     }
     
+    //recupera todas las cuentas de dropbox de un usuario
     public void vincularDropbox(String user,AsyncTaskCompleteListener<Boolean> c){
     	final String username=user;
 
@@ -301,7 +291,6 @@ public class MySQL {
     	            sql.closeDatabase();
     	            rs.close();
     	        } catch (Exception e) {
-    	            Log.i("ex",""+e.getMessage()); 
     	            return false;
     	        } 
     			cerrarConexion();
@@ -316,6 +305,7 @@ public class MySQL {
         task.execute();
     }
     
+    //recupera todas las cuentas de box de un usuario
     public void vincularBox(String user, AsyncTaskCompleteListener<Boolean> c){
     	final String username=user;
     	final AsyncTaskCompleteListener<Boolean> callback=c;
@@ -338,7 +328,6 @@ public class MySQL {
     	            sql.closeDatabase();
     	            rs.close();
     	        } catch (Exception e) {
-    	            Log.i("ex",""+e.getMessage());  
     	            return false;
     	        } 
     			cerrarConexion();
@@ -354,6 +343,7 @@ public class MySQL {
 	    task.execute();
     }
     
+    //comprueba que el usuario o el email esten ya registrados
     public void comprobarDuplicidad(String user, String pass, String email, String name, AsyncTaskCompleteListener<Integer>a){
     	final String username=user;
     	final String passwrd=pass;
@@ -370,8 +360,7 @@ public class MySQL {
     	            crearConexion();
     	            rs = st.executeQuery( q );
     			} catch (Exception e) {
-    	        	Log.i("ex",""+e.getMessage());
-        	    	return 1;
+    	        	return 1;
     			}
     			try{
 		            if (rs.next()) {  
@@ -396,8 +385,7 @@ public class MySQL {
 	            		}
 		            }
     			} catch (Exception e) {
-    	        	Log.i("ex",""+e.getMessage());
-        	    	return 4;
+    	        	return 4;
     			}
 	            cerrarConexion();
 	            return 0;
@@ -411,6 +399,7 @@ public class MySQL {
         task.execute();
     }
     
+    //registra un usuario
     public boolean registrar(String user, String pass, String email, String name){
     	final String username=user;
     	final String passwrd=pass;
@@ -430,12 +419,10 @@ public class MySQL {
     			boolean a=false;
     	    	try {
     	            crearConexion();
-    	            Log.i("a",q);
     	            st.executeUpdate( q );
     	            a=true;
     	        } catch (Exception e) {
-    	        	Log.i("ex",""+e.getMessage());
-        	    	a=false;
+    	        	a=false;
         	    	x=true;        	    	
     	        } finally {
     	        	if(x!=true){
@@ -455,7 +442,6 @@ public class MySQL {
 		    	}
 		    	return aux;
 		    }catch(Exception e){
-		    	Log.i("MYSQL",""+e.getMessage());
 		    	return false;
 		    }
         }else{
@@ -463,6 +449,7 @@ public class MySQL {
         }
     }
     
+    //inserta una nueva cuenta de dropbox
     public boolean insertDropbox(String tokenkey, String tokensecret, String user, long spaceused,String uName){
     	final String username=user;
     	final String name=uName;
@@ -482,8 +469,7 @@ public class MySQL {
     	            crearConexion();
     	            st.executeUpdate( q );
     	        } catch (Exception e) {
-    	        	Log.i("ex",""+e.getMessage());
-        	    	return null;       	    	
+    	        	return null;       	    	
     	        } 
     	    	cerrarConexion();
     	        return null;
@@ -497,6 +483,7 @@ public class MySQL {
         }
     }
     
+    //inserta una nueva cuenta de box
     public boolean insertBox(String accesstoken, String user, long spaceused,String uName){
     	final String username=user;
     	final String name=uName;
@@ -514,8 +501,7 @@ public class MySQL {
     	            crearConexion();
     	            st.executeUpdate( q );
     	        } catch (Exception e) {
-    	        	Log.i("ex",""+e.getMessage());
-        	    	return null;       	    	
+    	        	return null;       	    	
     	        } 
     	    	cerrarConexion();
     	        return null;
@@ -529,6 +515,7 @@ public class MySQL {
         }
     }
     
+    //actualiza el espacio de una cuenta de box
     public boolean actualizarBoxSpace(String user, long spaceused, String uName){
     	final String username=user;
     	final String name=uName;
@@ -543,8 +530,7 @@ public class MySQL {
     	            crearConexion();
     	            st.executeUpdate( q );
     	        } catch (Exception e) {
-    	        	Log.i("ex",""+e.getMessage());
-        	    	return null;       	    	
+    	        	return null;       	    	
     	        } 
     	    	cerrarConexion();
     	    	
@@ -558,7 +544,8 @@ public class MySQL {
         	return false;
         }
     }
-    
+   
+    //actualiza el refresh token de una cuenta de box
     public boolean actualizarBoxToken(String user, String refreshtoken, String uName){
     	final String username=user;
     	final String name=uName;
@@ -573,8 +560,7 @@ public class MySQL {
     	            crearConexion();
     	            st.executeUpdate( q );
     	        } catch (Exception e) {
-    	        	Log.i("ex",""+e.getMessage());
-        	    	return null;       	    	
+    	        	return null;       	    	
     	        } 
     	    	cerrarConexion();
     	    	
@@ -589,6 +575,7 @@ public class MySQL {
         }
     }
     
+    //actualiza el espacio de una cuenta de dropbox
     public boolean actualizarDropbox(String user, long spaceused, String uName){
     	final String username=user;
     	final String name=uName;
@@ -603,8 +590,7 @@ public class MySQL {
     	            crearConexion();
     	            st.executeUpdate( q );
     	        } catch (Exception e) {
-    	        	Log.i("ex",""+e.getMessage());
-        	    	return null;       	    	
+    	        	return null;       	    	
     	        } 
     	    	cerrarConexion();
     	    	
@@ -619,6 +605,7 @@ public class MySQL {
         }
     }
     
+    //elimina una cuenta de dropbox
     public boolean deleteDropbox(String user, String uName){
     	final String username=user;
     	final String name=uName;
@@ -631,8 +618,7 @@ public class MySQL {
     	            crearConexion();
     	            st.executeUpdate( q );
     	        } catch (Exception e) {
-    	        	Log.i("ex",""+e.getMessage());
-        	    	return null;       	    	
+    	        	return null;       	    	
     	        } 
     	    	cerrarConexion();
     	    	
@@ -647,6 +633,7 @@ public class MySQL {
         }
     }
     
+    //elimina una cuenta de box
     public boolean deleteBox(String user, String uName){
     	final String username=user;
     	final String name=uName;
@@ -659,8 +646,7 @@ public class MySQL {
     	            crearConexion();
     	            st.executeUpdate( q );
     	        } catch (Exception e) {
-    	        	Log.i("ex",""+e.getMessage());
-        	    	return null;       	    	
+    	        	return null;       	    	
     	        } 
     	    	cerrarConexion();
     	    	
@@ -675,6 +661,7 @@ public class MySQL {
         }
     }
     
+    //comprueba que hay red
     public boolean isOnline() {
     	ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
 
